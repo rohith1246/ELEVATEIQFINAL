@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account — Elevate IQ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/logo.jpg" alt="Elevate IQ Logo">
+    <span>Elevate IQ</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="about.html">About us</a></li>
+    <li><a href="openings.html">Open roles</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="login.html" class="btn-login">Log in</a>
+    <a href="register.html" class="btn-primary">Get started</a>
+  </div>
+</nav>
+
+<section class="auth-wrap">
+  <div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="sub">Apply faster and track your applications</p>
+
+    <form id="registerForm">
+      <div class="field"><label for="name">Full name</label><input type="text" id="name" required></div>
+      <div class="field"><label for="email">Email address</label><input type="email" id="email" required></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" minlength="6" required></div>
+      <button type="submit" class="btn-primary auth-submit">Create account</button>
+    </form>
+
+    <div class="msg error" id="errorMsg"></div>
+    <div class="msg success" id="successMsg"></div>
+
+    <div class="auth-foot">Already have an account? <a href="login.html">Log in</a></div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+</footer>
+
+<script>
+const API_BASE = "http://localhost:5000"; // change to your deployed backend URL
+
+document.getElementById('registerForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  errorMsg.style.display = 'none';
+  successMsg.style.display = 'none';
+
+  const payload = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      successMsg.textContent = data.message || 'Account created successfully.';
+      successMsg.style.display = 'block';
+      setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+    } else {
+      errorMsg.textContent = data.error || 'Something went wrong.';
+      errorMsg.style.display = 'block';
+    }
+  } catch (err) {
+    errorMsg.textContent = 'Could not reach the server. Make sure the backend is running.';
+    errorMsg.style.display = 'block';
+  }
+});
+</script>
+
+</body>
+</html>

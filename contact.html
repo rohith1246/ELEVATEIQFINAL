@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Elevate IQ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/logo.jpg" alt="Elevate IQ Logo">
+    <span>Elevate IQ</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="about.html">About us</a></li>
+    <li><a href="openings.html">Open roles</a></li>
+    <li><a href="contact.html" class="active">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="login.html" class="btn-login">Log in</a>
+    <a href="register.html" class="btn-primary">Get started</a>
+  </div>
+</nav>
+
+<section class="auth-wrap">
+  <div class="auth-card" style="max-width:500px;">
+    <h1>Get in touch</h1>
+    <p class="sub">Have a question, or want to send your resume directly? Fill this out.</p>
+    <form id="contactForm">
+      <div class="field"><label for="name">Full name</label><input type="text" id="name" required></div>
+      <div class="field"><label for="email">Email address</label><input type="email" id="email" required></div>
+      <div class="field"><label for="message">Message</label><input type="text" id="message" placeholder="Tell us a bit about yourself" required></div>
+      <button type="submit" class="btn-primary auth-submit">Send message</button>
+    </form>
+    <div class="msg success" id="msg">Thanks — we'll get back to you soon.</div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+</footer>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  document.getElementById('msg').style.display = 'block';
+  this.reset();
+});
+</script>
+
+</body>
+</html>

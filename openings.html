@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open roles — Elevate IQ</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.job-row{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+  background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px;
+  padding:22px 26px; backdrop-filter:blur(16px);
+  transition:transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  margin-bottom: 14px;
+}
+.job-row:hover{ transform:translateY(-4px) translateX(2px); border-color:rgba(255,255,255,0.3); box-shadow:0 14px 34px rgba(0,0,0,0.35); }
+.job-meta span{ font-size:12px; color:var(--ink-faint); padding:4px 10px; border-radius:100px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); margin-right:8px; }
+.btn-apply{
+  padding:11px 24px; border-radius:100px; font-size:13px; font-weight:600;
+  text-decoration:none; color:#fff; background:linear-gradient(135deg, var(--pink), var(--blue));
+  transition:transform 0.25s ease, box-shadow 0.25s ease; white-space:nowrap;
+  cursor: pointer; border: none;
+}
+.btn-apply:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(124,92,255,0.4); }
+.filter-chip{
+  padding:8px 18px; border-radius:100px; font-size:13px; font-weight:500;
+  border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--ink-soft);
+  cursor:pointer; transition:all 0.3s ease;
+}
+.filter-chip:hover, .filter-chip.active{ color:var(--ink); border-color:var(--pink); background:rgba(236,47,123,0.12); }
+
+/* Modal overlay */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 11, 23, 0.85);
+  backdrop-filter: blur(10px);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal.open {
+  display: flex;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/logo.jpg" alt="Elevate IQ Logo">
+    <span>Elevate IQ</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="about.html">About us</a></li>
+    <li><a href="openings.html" class="active">Open roles</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <div class="nav-right" id="navRight">
+    <a href="login.html" class="btn-login">Log in</a>
+    <a href="register.html" class="btn-primary">Get started</a>
+  </div>
+</nav>
+
+<section class="section" style="padding-top:160px;">
+  <div class="section-head">
+    <div class="label">Careers</div>
+    <h2>Open positions</h2>
+    <p>Don't see a perfect fit? <a href="contact.html" style="color:var(--blue);">Send us your resume directly</a>.</p>
+  </div>
+
+  <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
+    <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
+    <div class="filter-chip" id="chip_eng" onclick="filterDepartment('Engineering')">Engineering</div>
+    <div class="filter-chip" id="chip_design" onclick="filterDepartment('Design')">Design</div>
+    <div class="filter-chip" id="chip_sales" onclick="filterDepartment('Sales')">Sales</div>
+  </div>
+
+  <div id="jobsContainer" style="display:flex; flex-direction:column; gap:14px;">
+     <!-- Job openings loaded dynamically -->
+     <div style="text-align:center; color:var(--ink-soft);">Loading current openings...</div>
+  </div>
+</section>
+
+<!-- Resume Application Modal -->
+<div class="modal" id="applyModal">
+  <div class="auth-card" style="position:relative; max-width:480px; width:100%;">
+    <button onclick="closeApplyModal()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--ink-faint); font-size:24px; cursor:pointer;">&times;</button>
+    <h2 style="font-size:22px; text-align:center; margin-bottom:6px;">Submit Application</h2>
+    <p id="applyJobTitle" style="text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:20px;"></p>
+    
+    <form id="applyForm">
+      <input type="hidden" id="applyJobId">
+      <div class="field"><label>Full Name</label><input type="text" id="applyName" required></div>
+      <div class="field"><label>Email Address</label><input type="email" id="applyEmail" required></div>
+      <div class="field"><label>Phone Number</label><input type="text" id="applyPhone"></div>
+      <div class="field"><label>Upload Resume (PDF/DOCX/TXT)</label><input type="file" id="applyResume" required style="padding:10px;"></div>
+      <button type="submit" class="btn-primary auth-submit">Submit Application</button>
+    </form>
+    <div class="msg error" id="applyErrorMsg"></div>
+    <div class="msg success" id="applySuccessMsg"></div>
+  </div>
+</div>
+
+<footer>
+  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+</footer>
+
+<script>
+const API_BASE = "http://localhost:5000";
+let allJobs = [];
+
+// Session check
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (token && user) {
+  document.getElementById("navRight").innerHTML = `
+    <a href="dashboard.html" class="btn-login" style="margin-right:15px; font-weight:600;">Dashboard</a>
+    <a href="#" onclick="logout(event)" class="btn-primary" style="padding:9px 20px;">Log out</a>
+  `;
+}
+function logout(e) {
+  e.preventDefault();
+  localStorage.clear();
+  window.location.reload();
+}
+
+// Load Jobs
+async function loadJobs() {
+  try {
+    const res = await fetch(`${API_BASE}/jobs`);
+    allJobs = await res.json();
+    renderJobs(allJobs);
+  } catch (err) {
+    document.getElementById("jobsContainer").innerHTML = `<div style="text-align:center; color:#ff9999;">Could not load job postings. Make sure the server is running.</div>`;
+  }
+}
+
+function renderJobs(list) {
+  const container = document.getElementById("jobsContainer");
+  container.innerHTML = "";
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:var(--ink-faint);">No open job roles at this time. Check back later!</div>`;
+    return;
+  }
+
+  list.forEach(job => {
+    container.innerHTML += `
+      <div class="job-row">
+        <div>
+          <h3 style="font-size:16px; font-weight:600; margin-bottom:6px;">${job.title}</h3>
+          <div class="job-meta">
+            <span>${job.department}</span>
+            <span>${job.location || 'Remote'}</span>
+            <span>${job.experience_required || 'Full-time'}</span>
+          </div>
+          <p style="font-size: 13px; color:var(--ink-soft); margin-top: 10px; max-width: 600px; line-height: 1.5;">${job.description || ''}</p>
+        </div>
+        <button onclick="openApplyModal(${job.id}, '${job.title}')" class="btn-apply">Apply now</button>
+      </div>
+    `;
+  });
+}
+
+function filterDepartment(dept) {
+  // Update chips
+  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+  if (dept === 'All') {
+    document.getElementById("chip_all").classList.add("active");
+    renderJobs(allJobs);
+  } else {
+    if (dept === 'Engineering') document.getElementById("chip_eng").classList.add("active");
+    if (dept === 'Design') document.getElementById("chip_design").classList.add("active");
+    if (dept === 'Sales') document.getElementById("chip_sales").classList.add("active");
+    
+    const filtered = allJobs.filter(j => j.department.toLowerCase().includes(dept.toLowerCase()));
+    renderJobs(filtered);
+  }
+}
+
+// Modal actions
+function openApplyModal(jobId, jobTitle) {
+  document.getElementById("applyJobId").value = jobId;
+  document.getElementById("applyJobTitle").textContent = `Position: ${jobTitle}`;
+  document.getElementById("applyErrorMsg").style.display = "none";
+  document.getElementById("applySuccessMsg").style.display = "none";
+  
+  // Auto fill details if user is candidate
+  if (user) {
+    document.getElementById("applyName").value = user.name;
+    document.getElementById("applyEmail").value = user.email;
+  } else {
+    document.getElementById("applyName").value = "";
+    document.getElementById("applyEmail").value = "";
+  }
+  document.getElementById("applyPhone").value = "";
+  document.getElementById("applyResume").value = "";
+
+  document.getElementById("applyModal").classList.add("open");
+}
+
+function closeApplyModal() {
+  document.getElementById("applyModal").classList.remove("open");
+}
+
+document.getElementById("applyForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const errorMsg = document.getElementById("applyErrorMsg");
+  const successMsg = document.getElementById("applySuccessMsg");
+  errorMsg.style.display = "none";
+  successMsg.style.display = "none";
+
+  const formData = new FormData();
+  formData.append("job_id", document.getElementById("applyJobId").value);
+  formData.append("name", document.getElementById("applyName").value);
+  formData.append("email", document.getElementById("applyEmail").value);
+  formData.append("phone", document.getElementById("applyPhone").value);
+  formData.append("resume", document.getElementById("applyResume").files[0]);
+
+  try {
+    const res = await fetch(`${API_BASE}/applications`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      successMsg.textContent = data.message || "Application submitted successfully!";
+      successMsg.style.display = "block";
+      setTimeout(() => { closeApplyModal(); }, 1500);
+    } else {
+      errorMsg.textContent = data.error || "Failed to submit application.";
+      errorMsg.style.display = "block";
+    }
+  } catch (err) {
+    errorMsg.textContent = "Could not reach the server.";
+    errorMsg.style.display = "block";
+  }
+});
+
+// Init load
+loadJobs();
+</script>
+
+</body>
+</html>

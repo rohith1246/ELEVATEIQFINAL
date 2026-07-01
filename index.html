@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elevate IQ — We're hiring</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+    <a href="index.html" class="logo">
+        <img src="images/logo.jpg" alt="Elevate IQ Logo">
+        <span>Elevate IQ</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="about.html">About us</a></li>
+        <li><a href="openings.html">Open roles</a></li>
+        <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right" id="navRight">
+        <a href="login.html" class="btn-login">Log in</a>
+        <a href="register.html" class="btn-primary">Get started</a>
+    </div>
+</nav>
+
+<section class="auth-wrap" style="min-height:100vh; padding-top:140px;">
+
+    <div style="text-align:center; position:relative; z-index:2; max-width:1000px; margin:auto;">
+
+        <div style="
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            font-weight:500;
+            letter-spacing:1px;
+            text-transform:uppercase;
+            color:var(--ink-soft);
+            padding:8px 16px;
+            border-radius:100px;
+            background:var(--glass-bg);
+            border:1px solid var(--glass-border);
+            backdrop-filter:blur(10px);
+            opacity:0;
+            animation:fadeUp .8s ease forwards .1s;
+            margin-bottom:30px;
+        ">
+            <span style="
+                width:6px;
+                height:6px;
+                border-radius:50%;
+                background:var(--blue);
+                animation:pulse 1.8s infinite;
+            "></span>
+            We're hiring across 6 teams
+        </div>
+
+        <div style="
+            display:flex;
+            justify-content:center;
+            margin-bottom:18px;
+            opacity:0;
+            animation:fadeUp .9s ease forwards .15s;
+        ">
+            <img src="images/logo.jpg" alt="Elevate IQ"
+                 style="
+                 width:120px;
+                 height:120px;
+                 border-radius:50%;
+                 object-fit:cover;
+                 border:3px solid rgba(255,255,255,.18);
+                 box-shadow:
+                 0 0 40px rgba(236,47,123,.45),
+                 0 0 55px rgba(255,201,60,.35),
+                 0 0 70px rgba(255,122,24,.25);
+                 transition:.5s;
+                 cursor:pointer;
+                 "
+                 onmouseover="this.style.transform='scale(1.06) rotate(2deg)'"
+                 onmouseout="this.style.transform='scale(1) rotate(0deg)'">
+        </div>
+
+        <h1 style="
+            font-size:clamp(46px,8vw,86px);
+            font-weight:800;
+            line-height:1;
+            letter-spacing:-2px;
+            background:linear-gradient(120deg,#ffffff 10%, var(--pink) 40%, var(--orange) 65%, var(--blue) 95%);
+            background-size:200% auto;
+            -webkit-background-clip:text;
+            background-clip:text;
+            color:transparent;
+            opacity:0;
+            animation:fadeUp .9s ease forwards .25s;
+        ">
+            Elevate IQ
+        </h1>
+        <div style="
+            font-size:13px;
+            letter-spacing:6px;
+            text-transform:uppercase;
+            color:var(--ink-soft);
+            margin-top:10px;
+            opacity:0;
+            animation:fadeUp .9s ease forwards .3s;
+        ">Soft Tech Private Limited</div>
+
+        <p style="
+            max-width:560px;
+            margin:26px auto 0;
+            color:var(--ink-soft);
+            font-size:17px;
+            line-height:1.7;
+            opacity:0;
+            animation:fadeUp .9s ease forwards .4s;
+        ">
+            We're building the next generation of intelligent tools—and looking for people who want to do the best work of their career while doing it.
+        </p>
+
+        <div style="
+            display:flex;
+            gap:14px;
+            margin-top:38px;
+            justify-content:center;
+            flex-wrap:wrap;
+            opacity:0;
+            animation:fadeUp .9s ease forwards .55s;
+        ">
+            <a href="openings.html" class="btn-primary" style="padding:13px 30px;">View Open Roles</a>
+            <a href="about.html" class="btn-ghost">About the Team</a>
+            <a href="register.html" class="btn-ghost">Create Account</a>
+        </div>
+
+    </div>
+
+</section>
+<style>
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+</style>
+
+<section class="section" id="about">
+  <div class="section-head">
+    <div class="label">Why join us</div>
+    <h2>A team that moves fast and means it</h2>
+    <p>Small enough that your work matters on day one. Ambitious enough that it scales fast.</p>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:22px;">
+    <div class="glass-card">
+      <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(236,47,123,0.18); color:var(--pink);">◆</div>
+      <h3 style="font-size:17px; font-weight:600; margin-bottom:8px;">Real ownership</h3>
+      <p style="font-size:14px; color:var(--ink-soft); line-height:1.6;">You'll ship things that matter from week one — no waiting in line for impact.</p>
+    </div>
+    <div class="glass-card">
+      <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(63,208,255,0.18); color:var(--blue);">◇</div>
+      <h3 style="font-size:17px; font-weight:600; margin-bottom:8px;">Remote-first</h3>
+      <p style="font-size:14px; color:var(--ink-soft); line-height:1.6;">Work from anywhere, with quarterly team gatherings to stay connected in person.</p>
+    </div>
+    <div class="glass-card">
+      <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(255,138,61,0.18); color:var(--orange);">◈</div>
+      <h3 style="font-size:17px; font-weight:600; margin-bottom:8px;">Real growth</h3>
+      <p style="font-size:14px; color:var(--ink-soft); line-height:1.6;">Learning budget, mentorship, and a culture that pushes you to level up fast.</p>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; gap:20px; background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:18px; padding:36px 40px; backdrop-filter:blur(18px); margin-top:60px; flex-wrap:wrap;">
+    <div style="text-align:center; flex:1;"><div style="font-size:clamp(26px,3vw,38px); font-weight:700;">42</div><div style="font-size:12px; color:var(--ink-faint); letter-spacing:1px; text-transform:uppercase; margin-top:6px;">Team members</div></div>
+    <div style="text-align:center; flex:1;"><div style="font-size:clamp(26px,3vw,38px); font-weight:700;">12</div><div style="font-size:12px; color:var(--ink-faint); letter-spacing:1px; text-transform:uppercase; margin-top:6px;">Countries</div></div>
+    <div style="text-align:center; flex:1;"><div style="font-size:clamp(26px,3vw,38px); font-weight:700;">$18M</div><div style="font-size:12px; color:var(--ink-faint); letter-spacing:1px; text-transform:uppercase; margin-top:6px;">Raised</div></div>
+    <div style="text-align:center; flex:1;"><div style="font-size:clamp(26px,3vw,38px); font-weight:700;">9</div><div style="font-size:12px; color:var(--ink-faint); letter-spacing:1px; text-transform:uppercase; margin-top:6px;">Open roles</div></div>
+  </div>
+</section>
+
+<div style="text-align:center; padding:70px 6vw; margin:0 6vw 80px; border-radius:24px; background:linear-gradient(135deg, rgba(236,47,123,0.9), rgba(255,122,24,0.85) 50%, rgba(255,201,60,0.85)); position:relative; z-index:2;">
+  <h2 style="font-size:clamp(26px,3.6vw,38px); font-weight:600; letter-spacing:-0.5px;">Don't see your role? We still want to hear from you.</h2>
+  <p style="opacity:0.85; margin-top:12px; font-size:15px;">We're always looking for sharp, kind, fast-moving people.</p>
+  <div style="display:flex; gap:14px; justify-content:center; margin-top:26px; flex-wrap:wrap;">
+    <a href="register.html" class="btn-primary" style="background:#fff; color:#060B18; box-shadow:none;">Send your resume</a>
+    <a href="contact.html" class="btn-ghost" style="border-color:rgba(255,255,255,0.4);">Contact us</a>
+  </div>
+</div>
+
+<footer>
+  © 2026 Elevate IQ Soft Tech Private Limited. Building the next generation of intelligent tools.
+</footer>
+
+<script>
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (token && user) {
+  document.getElementById("navRight").innerHTML = `
+    <a href="dashboard.html" class="btn-login" style="margin-right:15px; font-weight:600;">Dashboard</a>
+    <a href="#" onclick="logout(event)" class="btn-primary" style="padding:9px 20px;">Log out</a>
+  `;
+}
+function logout(e) {
+  e.preventDefault();
+  localStorage.clear();
+  window.location.reload();
+}
+</script>
+
+</body>
+</html>

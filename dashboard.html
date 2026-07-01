@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Elevate IQ</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Dashboard Specific Styles */
+.dash-container {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 80px;
+    position: relative;
+    z-index: 2;
+}
+.sidebar {
+    width: 260px;
+    background: rgba(8, 22, 38, 0.6);
+    border-right: 1px solid var(--glass-border);
+    backdrop-filter: blur(25px);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: fixed;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-left: 3px solid var(--orange);
+    padding-left: 15px;
+}
+.dash-content {
+    margin-left: 260px;
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 22px;
+    margin-bottom: 40px;
+}
+.stat-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(15px);
+}
+.stat-card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 1px;
+}
+.stat-card .val {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 10px;
+}
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, rgba(255, 140, 50, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.section-panel {
+    display: none;
+}
+.section-panel.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Table design */
+.table-wrap {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow-x: auto;
+    margin-top: 20px;
+    backdrop-filter: blur(10px);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+th {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--ink);
+    font-weight: 600;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+td {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--ink-soft);
+}
+tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+    color: #fff;
+}
+.badge {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.pending { background: rgba(255, 140, 50, 0.15); color: #ffbc85; border: 1px solid rgba(255, 140, 50, 0.3); }
+.badge.approved { background: rgba(62, 166, 255, 0.15); color: #8ad2ff; border: 1px solid rgba(62, 166, 255, 0.3); }
+.badge.rejected { background: rgba(255, 75, 75, 0.15); color: #ff9999; border: 1px solid rgba(255, 75, 75, 0.3); }
+.badge.active { background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3); }
+.badge.inactive { background: rgba(255, 255, 255, 0.1); color: var(--ink-faint); }
+.badge.shortlisted { background: rgba(230, 230, 75, 0.15); color: #ffffaa; border: 1px solid rgba(230, 230, 75, 0.3); }
+
+/* Forms input custom style */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+@media(max-width:760px) {
+    .dash-container { flex-direction: column; }
+    .sidebar { width: 100%; position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--glass-border); }
+    .dash-content { margin-left: 0; padding: 20px; }
+    .form-grid { grid-template-columns: 1fr; }
+}
+.btn-action {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-approve { background: rgba(62, 166, 255, 0.2); color: #8ad2ff; border: 1px solid rgba(62, 166, 255, 0.4); }
+.btn-approve:hover { background: rgba(62, 166, 255, 0.4); }
+.btn-reject { background: rgba(255, 75, 75, 0.2); color: #ff9999; border: 1px solid rgba(255, 75, 75, 0.4); margin-left: 6px; }
+.btn-reject:hover { background: rgba(255, 75, 75, 0.4); }
+.btn-edit { background: rgba(255, 255, 255, 0.08); color: var(--ink-soft); border: 1px solid var(--glass-border); }
+.btn-edit:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(4, 11, 23, 0.85);
+    backdrop-filter: blur(10px);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.modal.open {
+    display: flex;
+}
+.modal-content {
+    background: rgba(8, 22, 38, 0.95);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    max-width: 600px;
+    width: 100%;
+    padding: 36px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    position: relative;
+}
+.close-modal {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: none; border: none; color: var(--ink-faint);
+    font-size: 24px; cursor: pointer;
+}
+.close-modal:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/logo.jpg" alt="Elevate IQ Logo">
+    <span>Elevate IQ</span>
+  </a>
+  <div class="nav-right">
+    <span id="userGreeting" style="font-size:14px; color:var(--ink-soft); margin-right:15px;"></span>
+    <button onclick="logout()" class="btn-ghost" style="padding: 8px 20px; font-size:13px;">Log out</button>
+  </div>
+</nav>
+
+<div class="dash-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebarMenu">
+        <!-- Rendered Dynamically based on role -->
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="dash-content">
+        <h1 id="dashTitle" style="font-size:28px; margin-bottom:6px;">Dashboard</h1>
+        <p id="dashSub" style="color:var(--ink-soft); font-size:14px; margin-bottom:30px;"></p>
+
+        <!-- Dynamic Content Panels -->
+        <div id="panelContainer">
+            <!-- Panels injected by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal" id="editEmployeeModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('editEmployeeModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Edit Employee Details</h2>
+        <form id="editEmployeeForm">
+            <input type="hidden" id="editEmpId">
+            <div class="form-grid">
+                <div class="field"><label>Full Name</label><input type="text" id="editName" required></div>
+                <div class="field"><label>Email</label><input type="email" id="editEmail" required></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="editPhone"></div>
+                <div class="field"><label>Department</label><input type="text" id="editDept" required></div>
+                <div class="field"><label>Designation</label><input type="text" id="editDesg" required></div>
+                <div class="field">
+                    <label>Status</label>
+                    <select id="editStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const API_BASE = "http://localhost:5000";
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user") || "null");
+
+if (!token || !user) {
+    window.location.href = "login.html";
+}
+
+document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
+
+// --- Sidebar Menu Defs ---
+const menus = {
+    admin: [
+        { id: "overview", label: "Overview", icon: "📊" },
+        { id: "employees", label: "Employees", icon: "👥" },
+        { id: "attendance", label: "Attendance Register", icon: "📅" },
+        { id: "leaves", label: "Leave Requests", icon: "✉️" },
+        { id: "recruitment", label: "Recruitment Board", icon: "🎯" },
+        { id: "announcements", label: "Announcements", icon: "📢" },
+        { id: "reports", label: "Reports & Audits", icon: "📈" }
+    ],
+    employee: [
+        { id: "emp_overview", label: "Overview", icon: "📊" },
+        { id: "emp_attendance", label: "My Attendance", icon: "📅" },
+        { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
+        { id: "emp_announcements", label: "Announcements", icon: "📢" },
+        { id: "profile", label: "My Profile", icon: "👤" }
+    ],
+    candidate: [
+        { id: "cand_overview", label: "My Applications", icon: "💼" },
+        { id: "profile", label: "My Profile", icon: "👤" }
+    ]
+};
+
+// Render Sidebar
+const sidebar = document.getElementById("sidebarMenu");
+menus[user.role].forEach((m, idx) => {
+    const a = document.createElement("a");
+    a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
+    a.innerHTML = `<span>${m.icon}</span> ${m.label}`;
+    a.onclick = () => switchTab(m.id, a);
+    sidebar.appendChild(a);
+});
+
+// Logout Helper
+function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+}
+
+// Switch Tabs/Panels
+function switchTab(panelId, element) {
+    document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+    if (element) element.classList.add("active");
+
+    document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
+    const targetPanel = document.getElementById(`panel_${panelId}`);
+    if (targetPanel) {
+        targetPanel.classList.add("active");
+        loadPanelData(panelId);
+    }
+}
+
+// Open / Close Modal
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+// --- AJAX Fetch Helper ---
+async function apiCall(endpoint, method = "GET", body = null) {
+    const options = {
+        method,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    };
+    if (body) options.body = JSON.stringify(body);
+    
+    try {
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Request failed");
+        return data;
+    } catch (err) {
+        alert(err.message);
+        throw err;
+    }
+}
+
+// Generate Panel HTML Layouts on load
+const container = document.getElementById("panelContainer");
+
+const layouts = {
+    // === ADMIN PANELS ===
+    overview: `
+        <div class="stats-grid" id="adminStatsGrid">
+            <div class="stat-card"><h3>Total Employees</h3><div class="val" id="stat_total_emp">-</div></div>
+            <div class="stat-card"><h3>Present Today</h3><div class="val" id="stat_present">-</div></div>
+            <div class="stat-card"><h3>Absent Today</h3><div class="val" id="stat_absent">-</div></div>
+            <div class="stat-card"><h3>Pending Leaves</h3><div class="val" id="stat_pending_leaves">-</div></div>
+            <div class="stat-card"><h3>Open Careers</h3><div class="val" id="stat_open_jobs">-</div></div>
+            <div class="stat-card"><h3>Total Applications</h3><div class="val" id="stat_total_apps">-</div></div>
+        </div>
+        <div class="glass-card" style="margin-top:20px;">
+            <h2 style="font-size:18px; margin-bottom:15px;">Live Company Notice Board</h2>
+            <div id="adminNoticeList" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+    `,
+    employees: `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <input type="text" id="empSearchInput" placeholder="Search employee name or ID..." onkeyup="filterEmployees()" style="padding:10px 16px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; width:300px; outline:none;">
+            <button onclick="openModal('addEmployeeModal')" class="btn-primary">+ Add New Employee</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Add Employee Modal -->
+        <div class="modal" id="addEmployeeModal">
+            <div class="modal-content" style="max-width: 650px;">
+                <button class="close-modal" onclick="closeModal('addEmployeeModal')">&times;</button>
+                <h2 style="margin-bottom: 20px;">Register New Employee</h2>
+                <form id="addEmployeeForm">
+                    <div class="form-grid">
+                        <div class="field"><label>Employee ID (e.g. EMP001)</label><input type="text" id="addEmpId" required></div>
+                        <div class="field"><label>Full Name</label><input type="text" id="addName" required></div>
+                        <div class="field"><label>Email Address</label><input type="email" id="addEmail" required></div>
+                        <div class="field"><label>Password (Leave empty to auto-generate)</label><input type="password" id="addPassword" placeholder="Auto-generated"></div>
+                        <div class="field"><label>Phone Number</label><input type="text" id="addPhone"></div>
+                        <div class="field"><label>Department</label><input type="text" id="addDept" placeholder="e.g. Engineering" required></div>
+                        <div class="field"><label>Designation</label><input type="text" id="addDesg" placeholder="e.g. Backend Lead" required></div>
+                        <div class="field"><label>Date of Joining</label><input type="date" id="addJoinDate"></div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 20px; width:100%;">Create Employee Profile</button>
+                </form>
+            </div>
+        </div>
+    `,
+    attendance: `
+        <h2 style="font-size:18px;">Daily Attendance Registry</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Hours Worked</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    leaves: `
+        <h2 style="font-size:18px;">Pending & Processed Leave Applications</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Balances</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="leavesTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    recruitment: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-size:18px;">Active Job Postings</h2>
+            <button onclick="openModal('addJobModal')" class="btn-primary">+ Create Job Posting</button>
+        </div>
+        <div class="table-wrap" style="margin-bottom:40px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Location</th>
+                        <th>Salary Range</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="jobsTableBody"></tbody>
+            </table>
+        </div>
+
+        <h2 style="font-size:18px;">Candidate Applications Received</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Email</th>
+                        <th>Applied Role</th>
+                        <th>Resume</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Add Job Modal -->
+        <div class="modal" id="addJobModal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeModal('addJobModal')">&times;</button>
+                <h2 style="margin-bottom: 20px;">Create Job Opening</h2>
+                <form id="addJobForm">
+                    <div class="form-grid">
+                        <div class="field"><label>Job Title</label><input type="text" id="jobTitle" required></div>
+                        <div class="field"><label>Department</label><input type="text" id="jobDept" required></div>
+                        <div class="field"><label>Location</label><input type="text" id="jobLoc" placeholder="e.g. Remote / New York" required></div>
+                        <div class="field"><label>Experience Needed</label><input type="text" id="jobExp" placeholder="e.g. 3+ Years"></div>
+                        <div class="field"><label>Salary Range</label><input type="text" id="jobSalary" placeholder="e.g. $80k - $110k"></div>
+                        <div class="field"><label>Skills Required (Comma separated)</label><input type="text" id="jobSkills"></div>
+                    </div>
+                    <div class="field" style="margin-top:10px;"><label>Job Description</label><textarea id="jobDesc" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                    <button type="submit" class="btn-primary" style="margin-top: 20px; width:100%;">Publish Job Posting</button>
+                </form>
+            </div>
+        </div>
+    `,
+    announcements: `
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto 30px;">
+            <h2 style="font-size:18px; margin-bottom:15px;">Create Announcement</h2>
+            <form id="announcementForm">
+                <div class="field"><label>Announcement Title</label><input type="text" id="annTitle" required></div>
+                <div class="field"><label>Content Details</label><textarea id="annContent" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Publish Board Notification</button>
+            </form>
+        </div>
+        <div class="glass-card">
+            <h2 style="font-size:18px; margin-bottom:15px;">Announcement History Log</h2>
+            <div id="announcementLog" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+    `,
+    reports: `
+        <h2 style="font-size:18px; margin-bottom:20px;">Generate Standard Reports</h2>
+        <div style="display:flex; gap:14px; margin-bottom:40px; flex-wrap:wrap;">
+            <button onclick="generateReport('attendance')" class="btn-primary">📊 Attendance Audit Report</button>
+            <button onclick="generateReport('employee')" class="btn-primary">👥 Department Breakdown Report</button>
+            <button onclick="generateReport('recruitment')" class="btn-primary">🎯 Recruitment Funnel Report</button>
+        </div>
+        <div class="glass-card" id="reportOutputCard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:15px;">
+                <h3 id="reportTitle" style="font-size:18px;">Report View</h3>
+                <button onclick="window.print()" class="btn-edit" style="padding: 6px 14px; border-radius:8px; font-size:12px;">🖨️ Print / Save PDF</button>
+            </div>
+            <div id="reportContainer"></div>
+        </div>
+    `,
+
+    // === EMPLOYEE PANELS ===
+    emp_overview: `
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Casual Leaves Left</h3><div class="val" id="bal_casual">-</div></div>
+            <div class="stat-card"><h3>Sick Leaves Left</h3><div class="val" id="bal_sick">-</div></div>
+            <div class="stat-card"><h3>Earned Leaves Left</h3><div class="val" id="bal_earned">-</div></div>
+            <div class="stat-card"><h3>Emergency Leaves Left</h3><div class="val" id="bal_emergency">-</div></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-top:20px;">
+            <div class="glass-card" style="text-align:center;">
+                <h2 style="font-size:18px; margin-bottom:20px;">Mark Daily Attendance</h2>
+                <div style="display:flex; gap:14px; justify-content:center; margin-bottom:20px;">
+                    <button onclick="markCheckIn()" class="btn-primary" style="background: linear-gradient(135deg,#00a86b,#3ea6ff);">Check In</button>
+                    <button onclick="markCheckOut()" class="btn-primary" style="background: linear-gradient(135deg,#ff4b4b,#ff8c32);">Check Out</button>
+                </div>
+                <p id="attendanceTimerStatus" style="color:var(--ink-soft); font-size:13px;"></p>
+            </div>
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Recent Board Announcements</h2>
+                <div id="empNoticeList" style="display:flex; flex-direction:column; gap:12px; max-height: 250px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    `,
+    emp_attendance: `
+        <h2 style="font-size:18px;">My Attendance History</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In Time</th>
+                        <th>Check Out Time</th>
+                        <th>Working Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="empAttendanceTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    emp_leaves: `
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:22px;">
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Apply for Leave</h2>
+                <form id="applyLeaveForm">
+                    <div class="field">
+                        <label>Leave Type</label>
+                        <select id="leaveType" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;" required>
+                            <option value="Casual">Casual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Earned">Earned Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Start Date</label><input type="date" id="leaveStart" required></div>
+                    <div class="field"><label>End Date</label><input type="date" id="leaveEnd" required></div>
+                    <div class="field"><label>Reason</label><textarea id="leaveReason" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Submit Leave Application</button>
+                </form>
+            </div>
+            <div>
+                <h2 style="font-size:18px; margin-bottom:15px;">Leave History</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Duration</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empLeavesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `,
+    emp_announcements: `
+        <h2 style="font-size:18px; margin-bottom:20px;">Notice Board announcements</h2>
+        <div id="empAnnouncementBoard" style="display:flex; flex-direction:column; gap:16px;"></div>
+    `,
+    profile: `
+        <div class="glass-card" style="max-width:600px; margin:0 auto;">
+            <h2 style="font-size:18px; margin-bottom:20px;">Personal Profile Settings</h2>
+            <form id="profileForm">
+                <div class="field"><label>Full Name</label><input type="text" id="profName" required></div>
+                <div class="field"><label>Email Address</label><input type="email" id="profEmail" required></div>
+                <div class="field" id="profEmpIdField" style="display:none;"><label>Employee ID</label><input type="text" id="profEmpId" disabled></div>
+                <div class="field" id="profDeptField" style="display:none;"><label>Department</label><input type="text" id="profDept" disabled></div>
+                <div class="field" id="profDesgField" style="display:none;"><label>Designation</label><input type="text" id="profDesg" disabled></div>
+                <div class="field" id="profPhoneField" style="display:none;"><label>Phone Number</label><input type="text" id="profPhone"></div>
+                <div class="field"><label>New Password (Leave blank to keep current)</label><input type="password" id="profPassword"></div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top:10px;">Save Profile Information</button>
+            </form>
+        </div>
+    `,
+
+    // === CANDIDATE PANELS ===
+    cand_overview: `
+        <h2 style="font-size:18px; margin-bottom:15px;">Job Applications Status Tracker</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Applied On</th>
+                        <th>Application Status</th>
+                    </tr>
+                </thead>
+                <tbody id="candApplicationsTableBody"></tbody>
+            </table>
+        </div>
+    `
+};
+
+// Inject HTML panels into container
+Object.keys(layouts).forEach(panelId => {
+    const div = document.createElement("div");
+    div.id = `panel_${panelId}`;
+    div.className = "section-panel";
+    div.innerHTML = layouts[panelId];
+    container.appendChild(div);
+});
+
+// Load the default tab depending on the role
+const defaultTabs = { admin: "overview", employee: "emp_overview", candidate: "cand_overview" };
+switchTab(defaultTabs[user.role]);
+
+
+// --- Sub-Controller Loading Logic ---
+function loadPanelData(panelId) {
+    if (panelId === "overview") loadAdminOverview();
+    else if (panelId === "employees") loadAdminEmployees();
+    else if (panelId === "attendance") loadAdminAttendance();
+    else if (panelId === "leaves") loadAdminLeaves();
+    else if (panelId === "recruitment") loadAdminRecruitment();
+    else if (panelId === "announcements") loadAdminAnnouncements();
+    else if (panelId === "reports") { /* triggered by buttons */ }
+    else if (panelId === "emp_overview") loadEmpOverview();
+    else if (panelId === "emp_attendance") loadEmpAttendance();
+    else if (panelId === "emp_leaves") loadEmpLeaves();
+    else if (panelId === "emp_announcements") loadEmpAnnouncements();
+    else if (panelId === "profile") loadProfile();
+    else if (panelId === "cand_overview") loadCandidateOverview();
+}
+
+// 1. Admin Overview
+async function loadAdminOverview() {
+    const stats = await apiCall("/dashboard/stats");
+    document.getElementById("stat_total_emp").textContent = stats.active_employees;
+    document.getElementById("stat_present").textContent = stats.present_today;
+    document.getElementById("stat_absent").textContent = stats.absent_today;
+    document.getElementById("stat_pending_leaves").textContent = stats.pending_leaves;
+    document.getElementById("stat_open_jobs").textContent = stats.active_jobs;
+    document.getElementById("stat_total_apps").textContent = stats.total_applications;
+
+    const noticeList = document.getElementById("adminNoticeList");
+    noticeList.innerHTML = "";
+    const notices = await apiCall("/announcements");
+    if (notices.length === 0) noticeList.innerHTML = `<div style="color:var(--ink-faint); font-size:13px;">No announcements published.</div>`;
+    notices.slice(0, 3).forEach(n => {
+        noticeList.innerHTML += `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:15px; border-radius:12px;">
+                <h4 style="font-weight:600; font-size:14px; margin-bottom:4px;">${n.title}</h4>
+                <p style="font-size:13px; color:var(--ink-soft);">${n.content}</p>
+                <div style="font-size:11px; color:var(--ink-faint); margin-top:8px;">${new Date(n.created_at).toLocaleString()}</div>
+            </div>
+        `;
+    });
+}
+
+// 2. Admin Employees Management
+let allEmployees = [];
+async function loadAdminEmployees() {
+    allEmployees = await apiCall("/employees");
+    renderEmployeesTable(allEmployees);
+}
+
+function renderEmployeesTable(list) {
+    const tbody = document.getElementById("employeesTableBody");
+    tbody.innerHTML = "";
+    list.forEach(emp => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${emp.employee_id}</td>
+                <td>${emp.name}</td>
+                <td>${emp.email}</td>
+                <td>${emp.department}</td>
+                <td>${emp.designation}</td>
+                <td><span class="badge ${emp.status.toLowerCase()}">${emp.status}</span></td>
+                <td>
+                    <button onclick="editEmployeePopup(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-edit">Edit</button>
+                    <button onclick="deleteEmployee(${emp.id})" class="btn-action btn-reject">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function filterEmployees() {
+    const q = document.getElementById("empSearchInput").value.toLowerCase();
+    const filtered = allEmployees.filter(emp => 
+        emp.name.toLowerCase().includes(q) || 
+        emp.employee_id.toLowerCase().includes(q) || 
+        emp.department.toLowerCase().includes(q) || 
+        emp.designation.toLowerCase().includes(q)
+    );
+    renderEmployeesTable(filtered);
+}
+
+document.getElementById("addEmployeeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        employee_id: document.getElementById("addEmpId").value,
+        name: document.getElementById("addName").value,
+        email: document.getElementById("addEmail").value,
+        password: document.getElementById("addPassword").value,
+        phone_number: document.getElementById("addPhone").value,
+        department: document.getElementById("addDept").value,
+        designation: document.getElementById("addDesg").value,
+        date_of_joining: document.getElementById("addJoinDate").value
+    };
+    await apiCall("/employees", "POST", payload);
+    alert("Employee profile created successfully!");
+    closeModal("addEmployeeModal");
+    this.reset();
+    loadAdminEmployees();
+});
+
+function editEmployeePopup(emp) {
+    document.getElementById("editEmpId").value = emp.id;
+    document.getElementById("editName").value = emp.name;
+    document.getElementById("editEmail").value = emp.email;
+    document.getElementById("editPhone").value = emp.phone_number || '';
+    document.getElementById("editDept").value = emp.department;
+    document.getElementById("editDesg").value = emp.designation;
+    document.getElementById("editStatus").value = emp.status;
+    openModal("editEmployeeModal");
+}
+
+document.getElementById("editEmployeeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const empId = document.getElementById("editEmpId").value;
+    const payload = {
+        name: document.getElementById("editName").value,
+        email: document.getElementById("editEmail").value,
+        phone_number: document.getElementById("editPhone").value,
+        department: document.getElementById("editDept").value,
+        designation: document.getElementById("editDesg").value,
+        status: document.getElementById("editStatus").value
+    };
+    await apiCall(`/employees/${empId}`, "PUT", payload);
+    alert("Employee record updated successfully!");
+    closeModal("editEmployeeModal");
+    loadAdminEmployees();
+});
+
+async function deleteEmployee(id) {
+    if (confirm("Are you sure you want to permanently delete this employee? This will also remove their user account.")) {
+        await apiCall(`/employees/${id}`, "DELETE");
+        alert("Employee deleted.");
+        loadAdminEmployees();
+    }
+}
+
+// 3. Admin Attendance Register
+async function loadAdminAttendance() {
+    const records = await apiCall("/attendance");
+    const tbody = document.getElementById("attendanceTableBody");
+    tbody.innerHTML = "";
+    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No attendance logs found.</td></tr>`;
+    records.forEach(r => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${r.employee_id}</td>
+                <td>${r.name}</td>
+                <td>${r.department}</td>
+                <td>${r.date}</td>
+                <td>${r.check_in || '-'}</td>
+                <td>${r.check_out || '-'}</td>
+                <td>${r.working_hours ? r.working_hours.toFixed(2) : '0.00'}</td>
+                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+            </tr>
+        `;
+    });
+}
+
+// 4. Admin Leaves Requests Review
+async function loadAdminLeaves() {
+    const leaves = await apiCall("/leaves");
+    const tbody = document.getElementById("leavesTableBody");
+    tbody.innerHTML = "";
+    if (leaves.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No leave applications found.</td></tr>`;
+    leaves.forEach(l => {
+        const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+        const start = new Date(l.start_date).toLocaleDateString();
+        const end = new Date(l.end_date).toLocaleDateString();
+        
+        let actionBtn = "";
+        if (l.status === "Pending") {
+            actionBtn = `
+                <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve">Approve</button>
+                <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+            `;
+        } else {
+            actionBtn = `<span style="font-size:12px; color:var(--ink-faint);">Processed</span>`;
+        }
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${l.employee_id}</td>
+                <td>${l.name}</td>
+                <td>${l.leave_type}</td>
+                <td>
+                    <div style="font-weight:500;">${leaveDays} Days</div>
+                    <div style="font-size:11px; color:var(--ink-faint);">${start} to ${end}</div>
+                </td>
+                <td style="max-width:180px; word-break:break-all;">${l.reason || '-'}</td>
+                <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+                <td style="font-size:12px; line-height:1.4;">
+                    C:${l.casual_leave} | S:${l.sick_leave}<br>
+                    E:${l.earned_leave} | Em:${l.emergency_leave}
+                </td>
+                <td>${actionBtn}</td>
+            </tr>
+        `;
+    });
+}
+
+async function reviewLeave(id, action) {
+    await apiCall(`/leaves/${id}`, "PUT", { status: action });
+    alert(`Leave request ${action.toLowerCase()} successfully.`);
+    loadAdminLeaves();
+}
+
+// 5. Admin Recruitment Board (Jobs + Applications)
+async function loadAdminRecruitment() {
+    // Jobs
+    const jobs = await apiCall("/jobs");
+    const jobsTbody = document.getElementById("jobsTableBody");
+    jobsTbody.innerHTML = "";
+    if (jobs.length === 0) jobsTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No job openings published.</td></tr>`;
+    jobs.forEach(j => {
+        const toggleStatus = j.status === 'Open' ? 'Closed' : 'Open';
+        jobsTbody.innerHTML += `
+            <tr>
+                <td>${j.title}</td>
+                <td>${j.department}</td>
+                <td>${j.location}</td>
+                <td>${j.salary_range}</td>
+                <td><span class="badge ${j.status.toLowerCase()}">${j.status}</span></td>
+                <td>
+                    <button onclick="toggleJobStatus(${j.id}, '${toggleStatus}')" class="btn-action btn-edit">Set ${toggleStatus}</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    // Applications
+    const apps = await apiCall("/applications");
+    const appsTbody = document.getElementById("applicationsTableBody");
+    appsTbody.innerHTML = "";
+    if (apps.length === 0) appsTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No applications received.</td></tr>`;
+    apps.forEach(a => {
+        const date = new Date(a.applied_at).toLocaleDateString();
+        const resumeUrl = `${API_BASE}/uploads/resumes/${a.resume_filename}?Authorization=Bearer ${token}`; // standard headers preferred, but we will download/fetch
+        appsTbody.innerHTML += `
+            <tr>
+                <td>${a.candidate_name}</td>
+                <td>${a.email}</td>
+                <td>
+                    <div style="font-weight:500;">${a.job_title}</div>
+                    <div style="font-size:11px; color:var(--ink-faint);">${a.job_department}</div>
+                </td>
+                <td><a href="#" onclick="viewResumeFile('${a.resume_filename}')" style="color:var(--blue); text-decoration:none;">📄 View Resume</a></td>
+                <td>${date}</td>
+                <td><span class="badge ${a.status.toLowerCase()}">${a.status}</span></td>
+                <td>
+                    <button onclick="updateAppStatus(${a.id}, 'Shortlisted')" class="btn-action btn-approve" style="background:rgba(230,230,75,0.2); color:#ffffaa; border-color:rgba(230,230,75,0.4)">Shortlist</button>
+                    <button onclick="updateAppStatus(${a.id}, 'Accepted')" class="btn-action btn-approve">Accept</button>
+                    <button onclick="updateAppStatus(${a.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function viewResumeFile(filename) {
+    // Authenticated download
+    fetch(`${API_BASE}/uploads/resumes/${filename}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    })
+    .catch(err => alert("Error downloading resume file: " + err));
+}
+
+async function toggleJobStatus(id, newStatus) {
+    await apiCall(`/jobs/${id}`, "PUT", { status: newStatus });
+    alert(`Job status updated to ${newStatus}`);
+    loadAdminRecruitment();
+}
+
+async function updateAppStatus(id, newStatus) {
+    await apiCall(`/applications/${id}`, "PUT", { status: newStatus });
+    alert(`Application status updated to ${newStatus}`);
+    loadAdminRecruitment();
+}
+
+document.getElementById("addJobForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        title: document.getElementById("jobTitle").value,
+        department: document.getElementById("jobDept").value,
+        location: document.getElementById("jobLoc").value,
+        experience_required: document.getElementById("jobExp").value,
+        salary_range: document.getElementById("jobSalary").value,
+        skills_required: document.getElementById("jobSkills").value,
+        description: document.getElementById("jobDesc").value
+    };
+    await apiCall("/jobs", "POST", payload);
+    alert("Job posting created!");
+    closeModal("addJobModal");
+    this.reset();
+    loadAdminRecruitment();
+});
+
+// 6. Admin Announcements Panel
+async function loadAdminAnnouncements() {
+    const list = await apiCall("/announcements");
+    const log = document.getElementById("announcementLog");
+    log.innerHTML = "";
+    if (list.length === 0) log.innerHTML = `<div style="color:var(--ink-faint); font-size:13px;">No announcements published yet.</div>`;
+    list.forEach(a => {
+        log.innerHTML += `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:20px; border-radius:16px;">
+                <h4 style="font-weight:600; font-size:15px; margin-bottom:6px;">${a.title}</h4>
+                <p style="font-size:14px; color:var(--ink-soft); line-height:1.6;">${a.content}</p>
+                <div style="font-size:11px; color:var(--ink-faint); margin-top:10px;">Published on ${new Date(a.created_at).toLocaleString()}</div>
+            </div>
+        `;
+    });
+}
+
+document.getElementById("announcementForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        title: document.getElementById("annTitle").value,
+        content: document.getElementById("annContent").value
+    };
+    await apiCall("/announcements", "POST", payload);
+    alert("Board announcement posted successfully!");
+    this.reset();
+    loadAdminAnnouncements();
+});
+
+// 7. Admin Reports Module
+async function generateReport(type) {
+    const data = await apiCall(`/reports/${type}`);
+    const card = document.getElementById("reportOutputCard");
+    const title = document.getElementById("reportTitle");
+    const container = document.getElementById("reportContainer");
+
+    card.style.display = "block";
+    container.innerHTML = "";
+
+    if (type === "attendance") {
+        title.innerHTML = "📊 Company Attendance History (Recent 30 Days)";
+        let table = `
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>Status Type</th><th>Records Count</th></tr>
+                </thead>
+                <tbody>
+        `;
+        data.forEach(r => {
+            table += `<tr><td>${r.date}</td><td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td><td>${r.count} Employees</td></tr>`;
+        });
+        table += `</tbody></table>`;
+        container.innerHTML = table;
+    } else if (type === "employee") {
+        title.innerHTML = "👥 Active Headcount breakdown by Department";
+        let table = `
+            <table>
+                <thead>
+                    <tr><th>Department</th><th>Active Headcount</th></tr>
+                </thead>
+                <tbody>
+        `;
+        data.forEach(r => {
+            table += `<tr><td>${r.department}</td><td><strong>${r.employee_count}</strong> Employees</td></tr>`;
+        });
+        table += `</tbody></table>`;
+        container.innerHTML = table;
+    } else if (type === "recruitment") {
+        title.innerHTML = "🎯 Recruitment Funnel — Applications breakdown by Status";
+        let table = `
+            <table>
+                <thead>
+                    <tr><th>Application Status</th><th>Total Count</th></tr>
+                </thead>
+                <tbody>
+        `;
+        data.forEach(r => {
+            table += `<tr><td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td><td><strong>${r.application_count}</strong> Applications</td></tr>`;
+        });
+        table += `</tbody></table>`;
+        container.innerHTML = table;
+    }
+}
+
+
+// === EMPLOYEE PORTAL HANDLERS ===
+
+// 1. Employee Overview
+async function loadEmpOverview() {
+    const stats = await apiCall("/dashboard/stats");
+    document.getElementById("bal_casual").textContent = stats.casual_leave_balance;
+    document.getElementById("bal_sick").textContent = stats.sick_leave_balance;
+    document.getElementById("bal_earned").textContent = stats.earned_leave_balance;
+    document.getElementById("bal_emergency").textContent = stats.emergency_leave_balance;
+
+    const noticeList = document.getElementById("empNoticeList");
+    noticeList.innerHTML = "";
+    const notices = await apiCall("/announcements");
+    if (notices.length === 0) noticeList.innerHTML = `<div style="color:var(--ink-faint); font-size:13px;">No announcements posted.</div>`;
+    notices.slice(0, 3).forEach(n => {
+        noticeList.innerHTML += `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:12px; border-radius:10px; margin-bottom:8px;">
+                <h5 style="font-weight:600; font-size:13px; margin-bottom:3px;">${n.title}</h5>
+                <p style="font-size:12px; color:var(--ink-soft);">${n.content}</p>
+            </div>
+        `;
+    });
+}
+
+async function markCheckIn() {
+    const res = await apiCall("/attendance/checkin", "POST");
+    document.getElementById("attendanceTimerStatus").textContent = res.message;
+    alert(res.message);
+}
+
+async function markCheckOut() {
+    const res = await apiCall("/attendance/checkout", "POST");
+    document.getElementById("attendanceTimerStatus").textContent = res.message;
+    alert(res.message);
+}
+
+// 2. Employee Attendance Logs
+async function loadEmpAttendance() {
+    const records = await apiCall("/attendance");
+    const tbody = document.getElementById("empAttendanceTableBody");
+    tbody.innerHTML = "";
+    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No attendance records registered.</td></tr>`;
+    records.forEach(r => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${r.date}</td>
+                <td>${r.check_in || '-'}</td>
+                <td>${r.check_out || '-'}</td>
+                <td>${r.working_hours ? r.working_hours.toFixed(2) : '0.00'} hours</td>
+                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+            </tr>
+        `;
+    });
+}
+
+// 3. Employee Leave Applying
+async function loadEmpLeaves() {
+    // Leaves list
+    const records = await apiCall("/leaves");
+    const tbody = document.getElementById("empLeavesTableBody");
+    tbody.innerHTML = "";
+    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No leave applications submitted.</td></tr>`;
+    records.forEach(l => {
+        const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+        tbody.innerHTML += `
+            <tr>
+                <td>${l.leave_type}</td>
+                <td>
+                    <div style="font-weight:500;">${leaveDays} Days</div>
+                    <div style="font-size:11px; color:var(--ink-faint);">${new Date(l.start_date).toLocaleDateString()} to ${new Date(l.end_date).toLocaleDateString()}</div>
+                </td>
+                <td>${l.reason || '-'}</td>
+                <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+            </tr>
+        `;
+    });
+}
+
+document.getElementById("applyLeaveForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        leave_type: document.getElementById("leaveType").value,
+        start_date: document.getElementById("leaveStart").value,
+        end_date: document.getElementById("leaveEnd").value,
+        reason: document.getElementById("leaveReason").value
+    };
+    await apiCall("/leaves", "POST", payload);
+    alert("Leave application submitted successfully for review!");
+    this.reset();
+    loadEmpLeaves();
+    loadEmpOverview(); // refresh leave balances
+});
+
+// 4. Employee Announcements Log
+async function loadEmpAnnouncements() {
+    const list = await apiCall("/announcements");
+    const container = document.getElementById("empAnnouncementBoard");
+    container.innerHTML = "";
+    if (list.length === 0) container.innerHTML = `<div style="color:var(--ink-faint); font-size:13px;">No announcements posted.</div>`;
+    list.forEach(a => {
+        container.innerHTML += `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:20px; border-radius:16px;">
+                <h4 style="font-weight:600; font-size:15px; margin-bottom:6px;">${a.title}</h4>
+                <p style="font-size:14px; color:var(--ink-soft); line-height:1.6;">${a.content}</p>
+                <div style="font-size:11px; color:var(--ink-faint); margin-top:10px;">Posted on ${new Date(a.created_at).toLocaleString()}</div>
+            </div>
+        `;
+    });
+}
+
+
+// === PROFILE HANDLERS (Shared) ===
+async function loadProfile() {
+    const prof = await apiCall("/profile");
+    document.getElementById("profName").value = prof.name;
+    document.getElementById("profEmail").value = prof.email;
+    document.getElementById("profPassword").value = "";
+
+    if (user.role === "employee") {
+        document.getElementById("profEmpIdField").style.display = "block";
+        document.getElementById("profDeptField").style.display = "block";
+        document.getElementById("profDesgField").style.display = "block";
+        document.getElementById("profPhoneField").style.display = "block";
+
+        document.getElementById("profEmpId").value = prof.employee_id;
+        document.getElementById("profDept").value = prof.department;
+        document.getElementById("profDesg").value = prof.designation;
+        document.getElementById("profPhone").value = prof.phone_number || "";
+    }
+}
+
+document.getElementById("profileForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        name: document.getElementById("profName").value,
+        email: document.getElementById("profEmail").value
+    };
+    const phone = document.getElementById("profPhone").value;
+    const pwd = document.getElementById("profPassword").value;
+    
+    if (phone) payload.phone_number = phone;
+    if (pwd) payload.password = pwd;
+
+    await apiCall("/profile", "PUT", payload);
+    alert("Profile settings saved successfully!");
+    
+    // Update local storage user name
+    user.name = payload.name;
+    user.email = payload.email;
+    localStorage.setItem("user", JSON.stringify(user));
+    document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
+    loadProfile();
+});
+
+
+// === CANDIDATE PORTAL HANDLERS ===
+async function loadCandidateOverview() {
+    const apps = await apiCall("/applications");
+    const tbody = document.getElementById("candApplicationsTableBody");
+    tbody.innerHTML = "";
+    if (apps.length === 0) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">You have not applied for any positions yet. <a href="openings.html" style="color:var(--blue);">Browse Careers</a></td></tr>`;
+    apps.forEach(a => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${a.job_title}</strong></td>
+                <td>${a.job_department}</td>
+                <td>${new Date(a.applied_at).toLocaleDateString()}</td>
+                <td><span class="badge ${a.status.toLowerCase()}">${a.status}</span></td>
+            </tr>
+        `;
+    });
+}
+</script>
+
+</body>
+</html>
