@@ -137,3 +137,12 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
     email VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 14. ElevateIQ Main Contact inquiries
+CREATE TABLE IF NOT EXISTS elevate_iq_contacts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

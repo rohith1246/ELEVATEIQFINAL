@@ -85,7 +85,7 @@
         </div>
         <button type="submit" class="btn-primary" style="padding: 12px; font-weight: 600; font-size: 15px; border-radius: 8px;">Send Message</button>
       </form>
-      <div class="msg success" id="msg" style="margin-top: 15px; text-align: center;">Thanks — we'll get back to you soon.</div>
+      <div class="msg success" id="msg" style="margin-top: 15px; text-align: center; display: none;">Thanks — we'll get back to you soon.</div>
     </div>
   </div>
 </section>
@@ -95,10 +95,39 @@
 </footer>
 
 <script>
-document.getElementById('contactForm').addEventListener('submit', function(e){
+document.getElementById('contactForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  document.getElementById('msg').style.display = 'block';
-  this.reset();
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  const message = document.getElementById('message').value;
+  
+  const msgEl = document.getElementById('msg');
+  msgEl.style.display = 'none';
+  
+  try {
+    const res = await fetch('/api/elevate-contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, email, message })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      msgEl.textContent = data.message || "Thanks — we'll get back to you soon.";
+      msgEl.style.color = '#86efac';
+      msgEl.style.display = 'block';
+      this.reset();
+    } else {
+      msgEl.textContent = data.error || "Failed to send message. Please try again.";
+      msgEl.style.color = '#fca5a5';
+      msgEl.style.display = 'block';
+    }
+  } catch(err) {
+    msgEl.textContent = "Connection error. Please check your internet connection.";
+    msgEl.style.color = '#fca5a5';
+    msgEl.style.display = 'block';
+  }
 });
 </script>
 

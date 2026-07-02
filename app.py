@@ -1668,6 +1668,45 @@ def save_newsletter():
         conn.close()
 
 
+@app.route('/api/elevate-contact', methods=['POST'])
+def save_elevate_contact():
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "No data received"}), 400
+        
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    message = data.get('message', '').strip()
+    
+    if not name or not email or not message:
+        return jsonify({"success": False, "error": "All fields are required"}), 400
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO elevate_iq_contacts (name, email, message)
+            VALUES (%s, %s, %s)
+            RETURNING id;
+            """,
+            (name, email, message)
+        )
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({
+            "success": True,
+            "message": "Thank you! Your message has been successfully sent.",
+            "id": new_id
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, port=port)
