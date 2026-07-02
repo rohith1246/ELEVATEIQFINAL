@@ -1744,6 +1744,73 @@ def get_elevate_contacts():
         conn.close()
 
 
+@app.route('/dashboard/meetings', methods=['POST'])
+@require_role(["admin"])
+def create_meeting():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data received"}), 400
+        
+    title = data.get('title', '').strip()
+    platform = data.get('platform', '').strip()
+    meeting_link = data.get('meeting_link', '').strip()
+    scheduled_at = data.get('scheduled_at', '').strip()
+    
+    if not title or not platform or not meeting_link or not scheduled_at:
+        return jsonify({"error": "All fields are required"}), 400
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO meetings (title, platform, meeting_link, scheduled_at)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id;
+            """,
+            (title, platform, meeting_link, scheduled_at)
+        )
+        meeting_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({"message": "Meeting created and shared successfully!", "id": meeting_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/dashboard/meetings', methods=['GET'])
+def list_meetings():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute(
+            """
+            SELECT id, title, platform, meeting_link, scheduled_at, created_at
+            FROM meetings
+            WHERE scheduled_at >= NOW() - INTERVAL '2 hours'
+            ORDER BY scheduled_at ASC;
+            """
+        )
+        meetings = cursor.fetchall()
+        for m in meetings:
+            if m.get("scheduled_at"):
+                m["scheduled_at"] = m["scheduled_at"].isoformat()
+            if m.get("created_at"):
+                m["created_at"] = m["created_at"].isoformat()
+        return jsonify(meetings), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, port=port)

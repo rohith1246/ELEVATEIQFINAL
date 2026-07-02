@@ -716,9 +716,48 @@ const layouts = {
             <div class="stat-card"><h3>Open Careers</h3><div class="val" id="stat_open_jobs">-</div></div>
             <div class="stat-card"><h3>Total Applications</h3><div class="val" id="stat_total_apps">-</div></div>
         </div>
-        <div class="glass-card" style="margin-top:20px;">
-            <h2 style="font-size:18px; margin-bottom:15px;">Live Company Notice Board</h2>
-            <div id="adminNoticeList" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:22px; margin-top:20px;">
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Live Company Notice Board</h2>
+                <div id="adminNoticeList" style="display:flex; flex-direction:column; gap:12px;"></div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:22px;">
+                <!-- Create Meeting Form -->
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Schedule Meeting Link</h2>
+                    <form id="createMeetingForm" onsubmit="submitCreateMeeting(event)" style="display:flex; flex-direction:column; gap:12px;">
+                        <div class="field">
+                            <label>Meeting Title</label>
+                            <input type="text" id="meetTitle" placeholder="e.g. Sync & Sprint Review" required>
+                        </div>
+                        <div class="field">
+                            <label>Platform</label>
+                            <select id="meetPlatform" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                                <option value="Zoom">Zoom</option>
+                                <option value="Google Meet">Google Meet</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Meeting Link</label>
+                            <input type="url" id="meetLink" placeholder="e.g. https://zoom.us/j/..." required>
+                        </div>
+                        <div class="field">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="meetTime" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top:10px; width:100%;">Create & Share Meeting</button>
+                    </form>
+                </div>
+
+                <!-- Scheduled Meetings List -->
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Scheduled Meetings</h2>
+                    <div id="adminMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:220px; overflow-y:auto;">
+                        <!-- Meetings loaded dynamically -->
+                    </div>
+                </div>
+            </div>
         </div>
     `,
     employees: `
@@ -948,17 +987,27 @@ const layouts = {
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-top:20px;">
-            <div class="glass-card" style="text-align:center;">
-                <h2 style="font-size:18px; margin-bottom:20px;">Mark Daily Attendance</h2>
-                <div style="display:flex; gap:14px; justify-content:center; margin-bottom:20px;">
-                    <button onclick="markCheckIn()" class="btn-primary" style="background: linear-gradient(135deg,#00a86b,#3ea6ff);">Check In</button>
-                    <button onclick="markCheckOut()" class="btn-primary" style="background: linear-gradient(135deg,#ff4b4b,#ff8c32);">Check Out</button>
+            <div style="display:flex; flex-direction:column; gap:22px;">
+                <div class="glass-card" style="text-align:center;">
+                    <h2 style="font-size:18px; margin-bottom:20px;">Mark Daily Attendance</h2>
+                    <div style="display:flex; gap:14px; justify-content:center; margin-bottom:20px;">
+                        <button onclick="markCheckIn()" class="btn-primary" style="background: linear-gradient(135deg,#00a86b,#3ea6ff);">Check In</button>
+                        <button onclick="markCheckOut()" class="btn-primary" style="background: linear-gradient(135deg,#ff4b4b,#ff8c32);">Check Out</button>
+                    </div>
+                    <p id="attendanceTimerStatus" style="color:var(--ink-soft); font-size:13px;"></p>
                 </div>
-                <p id="attendanceTimerStatus" style="color:var(--ink-soft); font-size:13px;"></p>
+                
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Upcoming Meetings</h2>
+                    <div id="empMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:200px; overflow-y:auto;">
+                        <!-- Meetings loaded dynamically -->
+                    </div>
+                </div>
             </div>
-            <div class="glass-card">
+            
+            <div class="glass-card" style="display:flex; flex-direction:column;">
                 <h2 style="font-size:18px; margin-bottom:15px;">Recent Board Announcements</h2>
-                <div id="empNoticeList" style="display:flex; flex-direction:column; gap:12px; max-height: 250px; overflow-y:auto;"></div>
+                <div id="empNoticeList" style="display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto;"></div>
             </div>
         </div>
     `,
@@ -1216,6 +1265,7 @@ async function loadAdminOverview() {
             </div>
         `;
     });
+    loadAdminMeetings();
 }
 
 // 2. Admin Employees Management
@@ -1589,6 +1639,7 @@ async function loadEmpOverview() {
             </div>
         `;
     });
+    loadEmployeeMeetings();
 }
 
 async function markCheckIn() {
@@ -2340,6 +2391,90 @@ function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
     );
+}
+
+// --- Meetings Controller ---
+async function loadAdminMeetings() {
+    try {
+        const container = document.getElementById("adminMeetingsList");
+        if (!container) return;
+        container.innerHTML = `<div style="color:var(--ink-soft); font-size:12px;">Loading meetings...</div>`;
+        const res = await apiCall("/dashboard/meetings");
+        container.innerHTML = "";
+        if (res.length === 0) {
+            container.innerHTML = `<div style="color:var(--ink-faint); font-size:12px;">No scheduled meetings.</div>`;
+            return;
+        }
+        res.forEach(m => {
+            const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            container.innerHTML += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h4 style="font-size:13px; font-weight:600; margin:0;">${escapeHTML(m.title)}</h4>
+                        <span style="font-size:10px; padding:2px 6px; border-radius:100px; background:rgba(255,140,50,0.1); color:var(--orange); font-weight:600; margin-top:4px; display:inline-block;">${m.platform}</span>
+                        <div style="font-size:11px; color:var(--ink-faint); margin-top:2px;">${timeStr}</div>
+                    </div>
+                    <a href="${m.meeting_link}" target="_blank" class="btn-primary" style="padding:6px 12px; font-size:11px; text-decoration:none;">Join</a>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function loadEmployeeMeetings() {
+    try {
+        const container = document.getElementById("empMeetingsList");
+        if (!container) return;
+        container.innerHTML = `<div style="color:var(--ink-soft); font-size:11px;">Loading meetings...</div>`;
+        const res = await apiCall("/dashboard/meetings");
+        container.innerHTML = "";
+        if (res.length === 0) {
+            container.innerHTML = `<div style="color:var(--ink-faint); font-size:11px;">No scheduled meetings.</div>`;
+            return;
+        }
+        res.forEach(m => {
+            const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            container.innerHTML += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h5 style="font-size:12px; font-weight:600; margin:0;">${escapeHTML(m.title)}</h5>
+                        <span style="font-size:9px; padding:1px 5px; border-radius:100px; background:rgba(255,140,50,0.15); color:var(--orange); font-weight:600; margin-top:3px; display:inline-block;">${m.platform}</span>
+                        <div style="font-size:10px; color:var(--ink-faint); margin-top:1px;">${timeStr}</div>
+                    </div>
+                    <a href="${m.meeting_link}" target="_blank" class="btn-primary" style="padding:5px 10px; font-size:10px; text-decoration:none;">Join</a>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function submitCreateMeeting(event) {
+    event.preventDefault();
+    const title = document.getElementById("meetTitle").value;
+    const platform = document.getElementById("meetPlatform").value;
+    const meeting_link = document.getElementById("meetLink").value;
+    const scheduled_at = document.getElementById("meetTime").value;
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Creating...";
+
+    try {
+        await apiCall("/dashboard/meetings", "POST", { title, platform, meeting_link, scheduled_at });
+        alert("Meeting created and shared with employees!");
+        event.target.reset();
+        loadAdminMeetings();
+    } catch(e) {
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+    }
 }
 </script>
 

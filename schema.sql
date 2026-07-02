@@ -146,3 +146,13 @@ CREATE TABLE IF NOT EXISTS elevate_iq_contacts (
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 15. Meetings Table (Zoom/GMeet Integration)
+CREATE TABLE IF NOT EXISTS meetings (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    platform VARCHAR(50) NOT NULL,
+    meeting_link VARCHAR(500) NOT NULL,
+    scheduled_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
