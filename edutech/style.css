@@ -503,6 +503,10 @@ input,textarea,select{font-family:inherit;}
   border:1px solid var(--line); color:var(--text); outline:none; font-size:14.5px;
   transition:border-color .3s;
 }
+.field select option {
+  background-color: #0c1928;
+  color: #ffffff;
+}
 .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--accent); }
 .field .err{ font-size:12px; color:#F87171; min-height:14px; }
 .field.invalid input, .field.invalid textarea{ border-color:#F87171; }
