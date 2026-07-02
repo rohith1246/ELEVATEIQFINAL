@@ -1058,8 +1058,8 @@ const layouts = {
         <div class="chat-container">
             <div class="chat-sidebar">
                 <div class="chat-sidebar-header">
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">DMs</h3>
-                    <button onclick="openNewDMModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">+ New DM</button>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Workspace Chats</h3>
+                    <button onclick="openNewDMModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">+ New Chat</button>
                 </div>
                 <div class="chat-list" id="dmList">
                     <!-- Loaded dynamically -->
@@ -1078,7 +1078,7 @@ const layouts = {
                 </div>
             </div>
             <div class="chat-main" id="dmPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
-                Select a direct message conversation to start chatting.
+                Select a conversation to start chatting.
             </div>
         </div>
     `,
@@ -1766,7 +1766,7 @@ async function refreshDMList() {
         container.innerHTML = "";
         
         if (list.length === 0) {
-            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No direct messages yet. Click "+ New DM" to start.</div>`;
+            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No workspace chats yet. Click "+ New Chat" to start.</div>`;
             return;
         }
         
