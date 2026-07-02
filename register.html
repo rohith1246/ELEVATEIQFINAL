@@ -76,7 +76,7 @@
 </footer>
 
 <script>
-const API_BASE = "http://localhost:5000"; // change to your deployed backend URL
+const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 
 document.getElementById('registerForm').addEventListener('submit', async function(e){
   e.preventDefault();
@@ -88,7 +88,8 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   const payload = {
     name: document.getElementById('name').value,
     email: document.getElementById('email').value,
-    password: document.getElementById('password').value
+    password: document.getElementById('password').value,
+    role: "candidate"
   };
 
   try {

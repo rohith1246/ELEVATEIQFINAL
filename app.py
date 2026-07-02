@@ -64,7 +64,7 @@ def register():
     name = data.get("name")
     email = data.get("email")
     password = data.get("password")
-    role = data.get("role", "candidate")  # defaults to candidate
+    role = "candidate"  # Enforce candidate role for public registration
 
     if not name or not email or not password:
         return jsonify({"error": "All fields are required"}), 400
