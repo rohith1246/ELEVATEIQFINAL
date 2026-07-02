@@ -148,67 +148,6 @@ def login():
         conn.close()
 
 
-@app.route("/forgot-password", methods=["POST"])
-def forgot_password():
-    data = request.json
-    email = data.get("email")
-
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
-
-    conn = get_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    try:
-        cursor.execute("SELECT id, name FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
-        if not user:
-            return jsonify({"error": "Email not found"}), 404
-
-        # Generate a password reset token (valid for 15 minutes)
-        token = serializer.dumps({"reset_email": email, "timestamp": datetime.now().isoformat()})
-        reset_link = f"reset-password.html?token={token}"
-
-        return jsonify({
-            "message": "Password reset link generated successfully",
-            "reset_link": reset_link
-        }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route("/reset-password", methods=["POST"])
-def reset_password():
-    data = request.json
-    token = data.get("token")
-    new_password = data.get("password")
-
-    if not token or not new_password:
-        return jsonify({"error": "Token and password are required"}), 400
-
-    try:
-        payload = serializer.loads(token)
-        email = payload.get("reset_email")
-    except BadSignature:
-        return jsonify({"error": "Invalid or expired reset token"}), 400
-
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        hashed_password = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        cursor.execute("UPDATE users SET password = %s WHERE email = %s", (hashed_password, email))
-        conn.commit()
-        return jsonify({"message": "Password reset successful"}), 200
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
 # --- Announcements Routes ---
 
 @app.route("/announcements", methods=["GET"])
