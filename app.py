@@ -1707,7 +1707,7 @@ def save_elevate_contact():
         conn.close()
 
 
-@app.route('/api/admin/contacts/edutech', methods=['GET'])
+@app.route('/admin/contacts/edutech', methods=['GET'])
 @require_role(["admin"])
 def get_edutech_contacts():
     conn = get_connection()
@@ -1725,7 +1725,7 @@ def get_edutech_contacts():
         cursor.close()
         conn.close()
 
-@app.route('/api/admin/contacts/elevate', methods=['GET'])
+@app.route('/admin/contacts/elevate', methods=['GET'])
 @require_role(["admin"])
 def get_elevate_contacts():
     conn = get_connection()
