@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS message_reads (
 );
 
 -- 12. EduTech Contact inquiries
-CREATE TABLE IF NOT EXISTS contacts (
+CREATE TABLE IF NOT EXISTS edutech_contacts (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,

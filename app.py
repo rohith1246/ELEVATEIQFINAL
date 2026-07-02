@@ -1608,7 +1608,7 @@ def save_contact():
     try:
         cursor.execute(
             """
-            INSERT INTO contacts (name, email, phone, track, message)
+            INSERT INTO edutech_contacts (name, email, phone, track, message)
             VALUES (%s, %s, %s, %s, %s)
             RETURNING id;
             """,
