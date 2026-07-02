@@ -1707,6 +1707,43 @@ def save_elevate_contact():
         conn.close()
 
 
+@app.route('/api/admin/contacts/edutech', methods=['GET'])
+@require_role(["admin"])
+def get_edutech_contacts():
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT id, name, email, phone, track, message, created_at FROM edutech_contacts ORDER BY created_at DESC")
+        contacts = cursor.fetchall()
+        for c in contacts:
+            if c.get("created_at"):
+                c["created_at"] = c["created_at"].isoformat()
+        return jsonify(contacts), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/admin/contacts/elevate', methods=['GET'])
+@require_role(["admin"])
+def get_elevate_contacts():
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT id, name, email, message, created_at FROM elevate_iq_contacts ORDER BY created_at DESC")
+        contacts = cursor.fetchall()
+        for c in contacts:
+            if c.get("created_at"):
+                c["created_at"] = c["created_at"].isoformat()
+        return jsonify(contacts), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, port=port)

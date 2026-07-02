@@ -605,6 +605,7 @@ function renderSidebar() {
             { id: "recruitment", label: "Recruitment Board", icon: "🎯" },
             { id: "announcements", label: "Announcements", icon: "📢" },
             { id: "reports", label: "Reports & Audits", icon: "📈" },
+            { id: "admin_contacts", label: "Contacts", icon: "📬" },
             { id: "messages", label: "Messages (DMs)", icon: "💬" },
             { id: "groups", label: "Groups", icon: "👥" },
             { id: "oversight", label: "Oversight", icon: "🔍" }
@@ -890,6 +891,51 @@ const layouts = {
             <div id="reportContainer"></div>
         </div>
     `,
+    admin_contacts: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+            <h2 style="font-size:18px; margin:0;">Contact Messages Registry</h2>
+            <div style="display:flex; gap:10px; background:rgba(255,255,255,0.05); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                <button id="btnEduTechContacts" onclick="switchContactTab('edutech')" class="btn-primary" style="padding:6px 16px; font-size:13px; border-radius:8px;">EduTech Portal</button>
+                <button id="btnElevateContacts" onclick="switchContactTab('elevate')" class="btn-login" style="padding:6px 16px; font-size:13px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft);">ElevateIQ Site</button>
+            </div>
+        </div>
+
+        <!-- EduTech Contacts Table -->
+        <div id="edutechContactsSection" class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Interested Course</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="edutechContactsTableBody">
+                    <tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">Loading submissions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ElevateIQ Contacts Table -->
+        <div id="elevateContactsSection" class="table-wrap" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="elevateContactsTableBody">
+                    <tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">Loading messages...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    `,
 
     // === EMPLOYEE PANELS ===
     emp_overview: `
@@ -1134,6 +1180,7 @@ function loadPanelData(panelId) {
     else if (panelId === "recruitment") loadAdminRecruitment();
     else if (panelId === "announcements") loadAdminAnnouncements();
     else if (panelId === "reports") { /* triggered by buttons */ }
+    else if (panelId === "admin_contacts") loadAdminContacts();
     else if (panelId === "emp_overview") loadEmpOverview();
     else if (panelId === "emp_attendance") loadEmpAttendance();
     else if (panelId === "emp_leaves") loadEmpLeaves();
@@ -2202,6 +2249,96 @@ async function refreshOversightThread() {
     } catch(e) {
         console.error(e);
     }
+}
+
+// --- Contacts Tab Controller ---
+async function loadAdminContacts() {
+    try {
+        const edutechBody = document.getElementById("edutechContactsTableBody");
+        const elevateBody = document.getElementById("elevateContactsTableBody");
+
+        // 1. Fetch EduTech Inquiries
+        edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">Loading submissions...</td></tr>`;
+        const edutechData = await apiCall("/admin/contacts/edutech");
+        edutechBody.innerHTML = "";
+        if (edutechData.length === 0) {
+            edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">No EduTech inquiries found.</td></tr>`;
+        } else {
+            edutechData.forEach(c => {
+                const dateStr = new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                edutechBody.innerHTML += `
+                    <tr>
+                        <td style="white-space: nowrap;">${dateStr}</td>
+                        <td style="font-weight: 600;">${escapeHTML(c.name)}</td>
+                        <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email)}</a></td>
+                        <td><a href="tel:${c.phone}" style="color: var(--blue);">${escapeHTML(c.phone)}</a></td>
+                        <td style="color: var(--pink-light); font-weight: 500;">${escapeHTML(c.track)}</td>
+                        <td style="max-width: 300px; word-break: break-word;">${escapeHTML(c.message)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 2. Fetch ElevateIQ Site Messages
+        elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">Loading messages...</td></tr>`;
+        const elevateData = await apiCall("/admin/contacts/elevate");
+        elevateBody.innerHTML = "";
+        if (elevateData.length === 0) {
+            elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint);">No messages from main site.</td></tr>`;
+        } else {
+            elevateData.forEach(c => {
+                const dateStr = new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                elevateBody.innerHTML += `
+                    <tr>
+                        <td style="white-space: nowrap;">${dateStr}</td>
+                        <td style="font-weight: 600;">${escapeHTML(c.name)}</td>
+                        <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email)}</a></td>
+                        <td style="max-width: 400px; word-break: break-word;">${escapeHTML(c.message)}</td>
+                    </tr>
+                `;
+            });
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function switchContactTab(type) {
+    const btnEdu = document.getElementById("btnEduTechContacts");
+    const btnElv = document.getElementById("btnElevateContacts");
+    const secEdu = document.getElementById("edutechContactsSection");
+    const secElv = document.getElementById("elevateContactsSection");
+
+    if (type === 'edutech') {
+        secEdu.style.display = "block";
+        secElv.style.display = "none";
+        
+        btnEdu.className = "btn-primary";
+        btnEdu.style.background = "var(--orange)";
+        btnEdu.style.color = "#ffffff";
+        
+        btnElv.className = "btn-login";
+        btnElv.style.background = "transparent";
+        btnElv.style.color = "var(--ink-soft)";
+    } else {
+        secEdu.style.display = "none";
+        secElv.style.display = "block";
+        
+        btnEdu.className = "btn-login";
+        btnEdu.style.background = "transparent";
+        btnEdu.style.color = "var(--ink-soft)";
+        
+        btnElv.className = "btn-primary";
+        btnElv.style.background = "var(--orange)";
+        btnElv.style.color = "#ffffff";
+    }
+}
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
 }
 </script>
 
