@@ -203,6 +203,154 @@ tr:hover td {
     font-size: 24px; cursor: pointer;
 }
 .close-modal:hover { color: #fff; }
+
+/* Chat Container Styles */
+.chat-container {
+    display: flex;
+    height: 70vh;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+.chat-sidebar {
+    width: 320px;
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.15);
+}
+.chat-sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-list {
+    flex: 1;
+    overflow-y: auto;
+}
+.chat-list-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.chat-list-item:hover, .chat-list-item.active {
+    background: rgba(255, 255, 255, 0.06);
+}
+.chat-list-item .title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.chat-list-item .subtitle {
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+.badge {
+    background: var(--orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.05);
+}
+.chat-main-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-messages {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.msg-bubble {
+    max-width: 65%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+}
+.msg-bubble.incoming {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.msg-bubble.outgoing {
+    background: linear-gradient(135deg, var(--orange), #ff6a00);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+.msg-bubble .sender {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+.msg-bubble.outgoing .sender {
+    color: rgba(255, 255, 255, 0.75);
+}
+.msg-bubble .time {
+    font-size: 10px;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    text-align: right;
+}
+.msg-bubble.outgoing .time {
+    color: rgba(255, 255, 255, 0.6);
+}
+.chat-input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 12px;
+}
+.chat-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-family: inherit;
+    outline: none;
+}
+.chat-input:focus {
+    border-color: var(--orange);
+}
+.group-members-pane {
+    width: 240px;
+    border-left: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+}
 </style>
 </head>
 <body>
@@ -272,6 +420,50 @@ tr:hover td {
     </div>
 </div>
 
+<!-- Start New DM Modal -->
+<div class="modal" id="newDMModal">
+    <div class="modal-content" style="max-width: 480px;">
+        <button class="close-modal" onclick="closeModal('newDMModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Start 1-on-1 Chat</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="dmUserSearch" placeholder="Search employees..." onkeyup="filterDMUsersList()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none;">
+        </div>
+        <div id="dmUsersList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal" id="createGroupModal">
+    <div class="modal-content" style="max-width: 480px;">
+        <button class="close-modal" onclick="closeModal('createGroupModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Create Group Chat</h2>
+        <form id="createGroupForm" onsubmit="submitCreateGroup(event)">
+            <div class="field">
+                <label>Group Name</label>
+                <input type="text" id="newGroupName" required placeholder="e.g. Project Apollo Taskforce">
+            </div>
+            <div style="margin-top: 15px; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--orange);">SELECT INITIAL MEMBERS</div>
+            <div id="groupSelectMembersList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <!-- User checkboxes loaded dynamically -->
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Group</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Group Member Modal -->
+<div class="modal" id="addGroupMemberModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="close-modal" onclick="closeModal('addGroupMemberModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Add Member to Group</h2>
+        <div id="addGroupMembersList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Users list loaded dynamically -->
+        </div>
+    </div>
+</div>
+
 <script>
 const API_BASE = "http://localhost:5000";
 const token = localStorage.getItem("token");
@@ -284,38 +476,71 @@ if (!token || !user) {
 document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
 
 // --- Sidebar Menu Defs ---
-const menus = {
-    admin: [
-        { id: "overview", label: "Overview", icon: "📊" },
-        { id: "employees", label: "Employees", icon: "👥" },
-        { id: "attendance", label: "Attendance Register", icon: "📅" },
-        { id: "leaves", label: "Leave Requests", icon: "✉️" },
-        { id: "recruitment", label: "Recruitment Board", icon: "🎯" },
-        { id: "announcements", label: "Announcements", icon: "📢" },
-        { id: "reports", label: "Reports & Audits", icon: "📈" }
-    ],
-    employee: [
-        { id: "emp_overview", label: "Overview", icon: "📊" },
-        { id: "emp_attendance", label: "My Attendance", icon: "📅" },
-        { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
-        { id: "emp_announcements", label: "Announcements", icon: "📢" },
-        { id: "profile", label: "My Profile", icon: "👤" }
-    ],
-    candidate: [
-        { id: "cand_overview", label: "My Applications", icon: "💼" },
-        { id: "profile", label: "My Profile", icon: "👤" }
-    ]
-};
+let currentUser = user;
 
-// Render Sidebar
-const sidebar = document.getElementById("sidebarMenu");
-menus[user.role].forEach((m, idx) => {
-    const a = document.createElement("a");
-    a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
-    a.innerHTML = `<span>${m.icon}</span> ${m.label}`;
-    a.onclick = () => switchTab(m.id, a);
-    sidebar.appendChild(a);
-});
+async function initDashboard() {
+    try {
+        const details = await apiCall("/chat/user-details");
+        currentUser = details;
+        localStorage.setItem("user", JSON.stringify(details));
+        document.getElementById("userGreeting").textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
+    } catch (e) {
+        console.error("Could not fetch fresh user details", e);
+    }
+    renderSidebar();
+}
+
+function renderSidebar() {
+    const sidebar = document.getElementById("sidebarMenu");
+    sidebar.innerHTML = "";
+    
+    let list = [];
+    if (currentUser.role === 'admin') {
+        list = [
+            { id: "overview", label: "Overview", icon: "📊" },
+            { id: "employees", label: "Employees", icon: "👥" },
+            { id: "attendance", label: "Attendance Register", icon: "📅" },
+            { id: "leaves", label: "Leave Requests", icon: "✉️" },
+            { id: "recruitment", label: "Recruitment Board", icon: "🎯" },
+            { id: "announcements", label: "Announcements", icon: "📢" },
+            { id: "reports", label: "Reports & Audits", icon: "📈" },
+            { id: "messages", label: "Messages (DMs)", icon: "💬" },
+            { id: "groups", label: "Groups", icon: "👥" },
+            { id: "oversight", label: "Oversight", icon: "🔍" }
+        ];
+    } else if (currentUser.role === 'employee') {
+        list = [
+            { id: "emp_overview", label: "Overview", icon: "📊" },
+            { id: "emp_attendance", label: "My Attendance", icon: "📅" },
+            { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
+            { id: "emp_announcements", label: "Announcements", icon: "📢" },
+            { id: "profile", label: "My Profile", icon: "👤" },
+            { id: "messages", label: "Messages (DMs)", icon: "💬" },
+            { id: "groups", label: "Groups", icon: "👥" }
+        ];
+        if (currentUser.is_team_leader) {
+            list.push({ id: "oversight", label: "Group Oversight", icon: "👁️" });
+        }
+    } else {
+        list = [
+            { id: "cand_overview", label: "My Applications", icon: "💼" },
+            { id: "profile", label: "My Profile", icon: "👤" }
+        ];
+    }
+    
+    list.forEach((m, idx) => {
+        const a = document.createElement("a");
+        a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
+        a.innerHTML = `<span>${m.icon}</span> ${m.label}`;
+        a.onclick = () => switchTab(m.id, a);
+        sidebar.appendChild(a);
+    });
+
+    // Auto load first tab on start
+    if (list.length > 0) {
+        switchTab(list[0].id, sidebar.firstChild);
+    }
+}
 
 // Logout Helper
 function logout() {
@@ -327,6 +552,11 @@ function logout() {
 function switchTab(panelId, element) {
     document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
     if (element) element.classList.add("active");
+
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
 
     document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
     const targetPanel = document.getElementById(`panel_${panelId}`);
@@ -668,6 +898,109 @@ const layouts = {
                 <tbody id="candApplicationsTableBody"></tbody>
             </table>
         </div>
+    `,
+    messages: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">DMs</h3>
+                    <button onclick="openNewDMModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">+ New DM</button>
+                </div>
+                <div class="chat-list" id="dmList">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="dmMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="dmActiveTitle">Chat</h3>
+                </div>
+                <div class="chat-messages" id="dmMessages">
+                    <!-- Messages loaded dynamically -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="dmInput" placeholder="Type a message..." onkeydown="handleChatKey(event, 'dm')">
+                    <button onclick="sendChatMessage('dm')" class="btn-primary" style="padding: 10px 20px;">Send</button>
+                </div>
+            </div>
+            <div class="chat-main" id="dmPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a direct message conversation to start chatting.
+            </div>
+        </div>
+    `,
+    groups: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Groups</h3>
+                    <button id="btnCreateGroupSidebar" onclick="openCreateGroupModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px; display: none;">+ Create Group</button>
+                </div>
+                <div class="chat-list" id="groupList">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="groupMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="groupActiveTitle">Group Name</h3>
+                    </div>
+                    <div id="groupActionsArea" style="display: flex; gap: 10px; align-items: center;">
+                        <!-- Add Member shown dynamically -->
+                    </div>
+                </div>
+                <div style="display: flex; flex: 1; overflow: hidden;">
+                    <div class="chat-messages" id="groupMessages" style="flex: 1;">
+                        <!-- Messages loaded dynamically -->
+                    </div>
+                    <div class="group-members-pane">
+                        <div style="padding: 14px; font-weight: 600; border-bottom: 1px solid var(--glass-border); font-size: 13px; color: var(--orange); text-align: center;">MEMBERS</div>
+                        <div id="groupMembersList" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Members loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="groupInput" placeholder="Type to group..." onkeydown="handleChatKey(event, 'group')">
+                    <button onclick="sendChatMessage('group')" class="btn-primary" style="padding: 10px 20px;">Send</button>
+                </div>
+            </div>
+            <div class="chat-main" id="groupPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a group conversation to participate.
+            </div>
+        </div>
+    `,
+    oversight: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Oversight Feed</h3>
+                </div>
+                <div class="chat-list" id="oversightList">
+                    <!-- All conversations loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="oversightMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="oversightActiveTitle">Viewing Mode</h3>
+                        <div style="font-size: 12px; color: var(--orange);" id="oversightMeta">Read-Only Monitoring Mode</div>
+                    </div>
+                </div>
+                <div style="display: flex; flex: 1; overflow: hidden;">
+                    <div class="chat-messages" id="oversightMessages" style="flex: 1;">
+                        <!-- Messages loaded dynamically -->
+                    </div>
+                    <div class="group-members-pane" id="oversightMembersPane" style="display: none;">
+                        <div style="padding: 14px; font-weight: 600; border-bottom: 1px solid var(--glass-border); font-size: 13px; color: var(--orange); text-align: center;">MEMBERS</div>
+                        <div id="oversightMembersList" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Members loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-main" id="oversightPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a conversation from the oversight list to inspect its history.
+            </div>
+        </div>
     `
 };
 
@@ -680,9 +1013,8 @@ Object.keys(layouts).forEach(panelId => {
     container.appendChild(div);
 });
 
-// Load the default tab depending on the role
-const defaultTabs = { admin: "overview", employee: "emp_overview", candidate: "cand_overview" };
-switchTab(defaultTabs[user.role]);
+// Load dynamic dashboard
+initDashboard();
 
 
 // --- Sub-Controller Loading Logic ---
@@ -700,6 +1032,9 @@ function loadPanelData(panelId) {
     else if (panelId === "emp_announcements") loadEmpAnnouncements();
     else if (panelId === "profile") loadProfile();
     else if (panelId === "cand_overview") loadCandidateOverview();
+    else if (panelId === "messages") loadMessagesPanel();
+    else if (panelId === "groups") loadGroupsPanel();
+    else if (panelId === "oversight") loadOversightPanel();
 }
 
 // 1. Admin Overview
@@ -1247,6 +1582,505 @@ async function loadCandidateOverview() {
             </tr>
         `;
     });
+}
+
+// === CHAT & GROUPS SYSTEM CONTROLLERS ===
+
+let chatPollingInterval = null;
+let activeConversationId = null;
+let activeGroupConversationId = null;
+let activeOversightConversationId = null;
+let activeOversightType = null;
+let allUsers = [];
+
+// Messages Panel (DMs)
+async function loadMessagesPanel() {
+    activeConversationId = null;
+    document.getElementById("dmMainArea").style.display = "none";
+    document.getElementById("dmPlaceholder").style.display = "flex";
+    await refreshDMList();
+    chatPollingInterval = setInterval(pollMessages, 3000);
+}
+
+async function refreshDMList() {
+    try {
+        const res = await apiCall("/chat/conversations");
+        const list = res.filter(c => c.type === 'dm');
+        const container = document.getElementById("dmList");
+        container.innerHTML = "";
+        
+        if (list.length === 0) {
+            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No direct messages yet. Click "+ New DM" to start.</div>`;
+            return;
+        }
+        
+        list.forEach(c => {
+            const isSelected = activeConversationId === c.id;
+            const badgeHtml = c.unread_count > 0 ? `<span class="badge">${c.unread_count}</span>` : '';
+            const lastMsg = c.last_message ? c.last_message : 'No messages yet';
+            const name = c.dm_user ? c.dm_user.name : 'Unknown Employee';
+            
+            container.innerHTML += `
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectDMConversation(${c.id}, '${name.replace(/'/g, "\\'")}')">
+                    <div>
+                        <div class="title">${name}</div>
+                        <div class="subtitle">${lastMsg}</div>
+                    </div>
+                    <div>${badgeHtml}</div>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function pollMessages() {
+    await refreshDMList();
+    if (activeConversationId) {
+        await refreshDMThread(false);
+    }
+}
+
+async function selectDMConversation(id, partnerName) {
+    activeConversationId = id;
+    document.getElementById("dmPlaceholder").style.display = "none";
+    document.getElementById("dmMainArea").style.display = "flex";
+    document.getElementById("dmActiveTitle").textContent = partnerName;
+    
+    document.querySelectorAll("#dmList .chat-list-item").forEach(item => {
+        item.classList.remove("active");
+    });
+    
+    try {
+        await apiCall(`/chat/conversations/${id}/read`, "POST");
+    } catch(e) {}
+    
+    await refreshDMThread(true);
+    await refreshDMList();
+}
+
+async function refreshDMThread(forceScroll = false) {
+    if (!activeConversationId) return;
+    try {
+        const res = await apiCall(`/chat/conversations/${activeConversationId}/messages`);
+        const messagesDiv = document.getElementById("dmMessages");
+        const isAtBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 40;
+        
+        messagesDiv.innerHTML = "";
+        
+        if (res.messages.length === 0) {
+            messagesDiv.innerHTML = `<div style="text-align:center; color:var(--ink-faint); margin-top:20px; font-size:13px;">No messages in this chat yet. Say hello!</div>`;
+        } else {
+            res.messages.forEach(m => {
+                const isMine = m.sender_id === currentUser.id;
+                const bubbleClass = isMine ? 'outgoing' : 'incoming';
+                const senderName = isMine ? 'You' : m.sender_name;
+                const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                
+                messagesDiv.innerHTML += `
+                    <div class="msg-bubble ${bubbleClass}">
+                        <div class="sender">${senderName}</div>
+                        <div>${m.content}</div>
+                        <div class="time">${timeStr}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        if (forceScroll || isAtBottom) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function sendChatMessage(type) {
+    if (type === 'dm') {
+        const input = document.getElementById("dmInput");
+        const val = input.value.trim();
+        if (!val || !activeConversationId) return;
+        input.value = "";
+        try {
+            await apiCall(`/chat/conversations/${activeConversationId}/messages`, "POST", { content: val });
+            await refreshDMThread(true);
+        } catch(e) {}
+    } else {
+        const input = document.getElementById("groupInput");
+        const val = input.value.trim();
+        if (!val || !activeGroupConversationId) return;
+        input.value = "";
+        try {
+            await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`, "POST", { content: val });
+            await refreshGroupThread(true);
+        } catch(e) {}
+    }
+}
+
+function handleChatKey(e, type) {
+    if (e.key === 'Enter') {
+        sendChatMessage(type);
+    }
+}
+
+async function openNewDMModal() {
+    document.getElementById("dmUserSearch").value = "";
+    openModal("newDMModal");
+    await loadDMUsersList();
+}
+
+async function loadDMUsersList() {
+    try {
+        const users = await apiCall("/chat/users");
+        allUsers = users;
+        renderDMUsersList(users);
+    } catch(e) {}
+}
+
+function renderDMUsersList(list) {
+    const container = document.getElementById("dmUsersList");
+    container.innerHTML = "";
+    if (list.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); font-size:13px; padding:10px;">No employees found.</div>`;
+        return;
+    }
+    list.forEach(u => {
+        container.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px 14px; border-radius:10px;">
+                <div>
+                    <div style="font-weight:600; font-size:13.5px; color:#fff;">${u.name}</div>
+                    <div style="font-size:11px; color:var(--ink-soft);">${u.email}</div>
+                </div>
+                <button onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" class="btn-primary" style="padding:6px 12px; font-size:11px;">Chat</button>
+            </div>
+        `;
+    });
+}
+
+function filterDMUsersList() {
+    const q = document.getElementById("dmUserSearch").value.toLowerCase();
+    const filtered = allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    renderDMUsersList(filtered);
+}
+
+async function startDMWithUser(userId, userName) {
+    try {
+        const res = await apiCall("/chat/conversations", "POST", { type: "dm", members: [userId] });
+        closeModal("newDMModal");
+        await refreshDMList();
+        selectDMConversation(res.id, userName);
+    } catch(e) {}
+}
+
+// Groups Panel (DMs)
+async function loadGroupsPanel() {
+    activeGroupConversationId = null;
+    document.getElementById("groupMainArea").style.display = "none";
+    document.getElementById("groupPlaceholder").style.display = "flex";
+    
+    const isTLOrAdmin = currentUser.role === 'admin' || currentUser.is_team_leader;
+    document.getElementById("btnCreateGroupSidebar").style.display = isTLOrAdmin ? "block" : "none";
+    
+    await refreshGroupList();
+    chatPollingInterval = setInterval(pollGroups, 3000);
+}
+
+async function refreshGroupList() {
+    try {
+        const res = await apiCall("/chat/conversations");
+        const list = res.filter(c => c.type === 'group');
+        const container = document.getElementById("groupList");
+        container.innerHTML = "";
+        
+        if (list.length === 0) {
+            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No groups yet.</div>`;
+            return;
+        }
+        
+        list.forEach(c => {
+            const isSelected = activeGroupConversationId === c.id;
+            const badgeHtml = c.unread_count > 0 ? `<span class="badge">${c.unread_count}</span>` : '';
+            const lastMsg = c.last_message ? c.last_message : 'No activity';
+            
+            container.innerHTML += `
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectGroupConversation(${c.id}, '${c.group_name.replace(/'/g, "\\'")}')">
+                    <div>
+                        <div class="title">👥 ${c.group_name}</div>
+                        <div class="subtitle">${lastMsg}</div>
+                    </div>
+                    <div>${badgeHtml}</div>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function pollGroups() {
+    await refreshGroupList();
+    if (activeGroupConversationId) {
+        await refreshGroupThread(false);
+    }
+}
+
+async function selectGroupConversation(id, name) {
+    activeGroupConversationId = id;
+    document.getElementById("groupPlaceholder").style.display = "none";
+    document.getElementById("groupMainArea").style.display = "flex";
+    document.getElementById("groupActiveTitle").textContent = name;
+    
+    try {
+        await apiCall(`/chat/conversations/${id}/read`, "POST");
+    } catch(e) {}
+    
+    const actions = document.getElementById("groupActionsArea");
+    actions.innerHTML = "";
+    if (currentUser.role === 'admin' || currentUser.is_team_leader) {
+        actions.innerHTML = `<button onclick="openAddMemberModal(${id})" class="btn-primary" style="padding: 6px 12px; font-size:12px;">+ Add Employee</button>`;
+    }
+    
+    await refreshGroupThread(true);
+    await refreshGroupList();
+}
+
+async function refreshGroupThread(forceScroll = false) {
+    if (!activeGroupConversationId) return;
+    try {
+        const res = await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`);
+        const messagesDiv = document.getElementById("groupMessages");
+        const isAtBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 40;
+        
+        messagesDiv.innerHTML = "";
+        
+        res.messages.forEach(m => {
+            const isMine = m.sender_id === currentUser.id;
+            const bubbleClass = isMine ? 'outgoing' : 'incoming';
+            const senderName = isMine ? 'You' : m.sender_name;
+            const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            
+            messagesDiv.innerHTML += `
+                <div class="msg-bubble ${bubbleClass}">
+                    <div class="sender">${senderName}</div>
+                    <div>${m.content}</div>
+                    <div class="time">${timeStr}</div>
+                </div>
+            `;
+        });
+        
+        if (forceScroll || isAtBottom) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        const membersList = document.getElementById("groupMembersList");
+        membersList.innerHTML = "";
+        res.members.forEach(m => {
+            const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700;">ADMIN</span>' : '';
+            membersList.innerHTML += `
+                <div style="background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
+                    <div style="font-weight:600; font-size:12px; color:#fff;">${m.name} ${roleBadge}</div>
+                    <div style="font-size:10px; color:var(--ink-soft);">${m.designation || 'Employee'}</div>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function openCreateGroupModal() {
+    document.getElementById("newGroupName").value = "";
+    openModal("createGroupModal");
+    
+    try {
+        const users = await apiCall("/chat/users");
+        const listDiv = document.getElementById("groupSelectMembersList");
+        listDiv.innerHTML = "";
+        users.forEach(u => {
+            listDiv.innerHTML += `
+                <label style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:8px 12px; border-radius:8px; cursor:pointer;">
+                    <input type="checkbox" name="group_select_user" value="${u.id}" style="cursor:pointer;">
+                    <div>
+                        <div style="font-size:12px; font-weight:600; color:#fff;">${u.name}</div>
+                        <div style="font-size:10px; color:var(--ink-soft);">${u.role.toUpperCase()}</div>
+                    </div>
+                </label>
+            `;
+        });
+    } catch(e) {}
+}
+
+async function submitCreateGroup(e) {
+    e.preventDefault();
+    const groupName = document.getElementById("newGroupName").value.trim();
+    if (!groupName) return;
+    
+    const checked = document.querySelectorAll('input[name="group_select_user"]:checked');
+    const selectedIds = [];
+    checked.forEach(chk => {
+        selectedIds.push(parseInt(chk.value));
+    });
+    
+    try {
+        const res = await apiCall("/chat/conversations", "POST", {
+            type: "group",
+            name: groupName,
+            members: selectedIds
+        });
+        closeModal("createGroupModal");
+        await refreshGroupList();
+        selectGroupConversation(res.id, groupName);
+    } catch(e) {}
+}
+
+async function openAddMemberModal(groupId) {
+    openModal("addGroupMemberModal");
+    const container = document.getElementById("addGroupMembersList");
+    container.innerHTML = `<div style="text-align:center; color:var(--ink-soft);">Loading...</div>`;
+    
+    try {
+        const users = await apiCall("/chat/users");
+        const res = await apiCall(`/chat/conversations/${groupId}/messages`);
+        const memberIds = res.members.map(m => m.id);
+        
+        const eligibleUsers = users.filter(u => !memberIds.includes(u.id));
+        container.innerHTML = "";
+        
+        if (eligibleUsers.length === 0) {
+            container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:15px;">All employees are members of this group.</div>`;
+            return;
+        }
+        
+        eligibleUsers.forEach(u => {
+            container.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:8px 12px; border-radius:10px;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px; color:#fff;">${u.name}</div>
+                        <div style="font-size:10px; color:var(--ink-soft);">${u.email}</div>
+                    </div>
+                    <button onclick="addGroupMember(${groupId}, ${u.id})" class="btn-primary" style="padding:6px 12px; font-size:11px;">Add</button>
+                </div>
+            `;
+        });
+    } catch(e) {}
+}
+
+async function addGroupMember(groupId, userId) {
+    try {
+        await apiCall(`/chat/groups/${groupId}/members`, "POST", { user_id: userId });
+        closeModal("addGroupMemberModal");
+        await refreshGroupThread(true);
+    } catch(e) {}
+}
+
+// Oversight Panel (Admin & TL Only)
+async function loadOversightPanel() {
+    activeOversightConversationId = null;
+    document.getElementById("oversightMainArea").style.display = "none";
+    document.getElementById("oversightPlaceholder").style.display = "flex";
+    await refreshOversightList();
+    chatPollingInterval = setInterval(pollOversight, 3000);
+}
+
+async function refreshOversightList() {
+    try {
+        let list = [];
+        if (currentUser.role === 'admin') {
+            list = await apiCall("/chat/admin/all");
+        } else {
+            list = await apiCall("/chat/team-leader/groups");
+        }
+        
+        const container = document.getElementById("oversightList");
+        container.innerHTML = "";
+        
+        if (list.length === 0) {
+            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No conversations active in the system.</div>`;
+            return;
+        }
+        
+        list.forEach(c => {
+            const isSelected = activeOversightConversationId === c.id;
+            let displayTitle = "";
+            let displaySub = c.last_message ? c.last_message : 'No activity';
+            
+            if (c.type === 'dm') {
+                const names = c.dm_members ? c.dm_members.map(m => m.name).join(' & ') : 'Direct Message';
+                displayTitle = `👤 DM: ${names}`;
+            } else {
+                displayTitle = `👥 Group: ${c.group_name}`;
+            }
+            
+            container.innerHTML += `
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectOversightConversation(${c.id}, '${c.type}', '${displayTitle.replace(/'/g, "\\'")}')">
+                    <div>
+                        <div class="title">${displayTitle}</div>
+                        <div class="subtitle">${displaySub}</div>
+                    </div>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function pollOversight() {
+    await refreshOversightList();
+    if (activeOversightConversationId) {
+        await refreshOversightThread();
+    }
+}
+
+async function selectOversightConversation(id, type, title) {
+    activeOversightConversationId = id;
+    activeOversightType = type;
+    document.getElementById("oversightPlaceholder").style.display = "none";
+    document.getElementById("oversightMainArea").style.display = "flex";
+    document.getElementById("oversightActiveTitle").textContent = title;
+    
+    await refreshOversightThread();
+}
+
+async function refreshOversightThread() {
+    if (!activeOversightConversationId) return;
+    try {
+        const res = await apiCall(`/chat/conversations/${activeOversightConversationId}/messages`);
+        const messagesDiv = document.getElementById("oversightMessages");
+        messagesDiv.innerHTML = "";
+        
+        res.messages.forEach(m => {
+            const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            messagesDiv.innerHTML += `
+                <div class="msg-bubble incoming" style="align-self: flex-start; max-width: 80%;">
+                    <div class="sender" style="color: var(--orange);">${m.sender_name}</div>
+                    <div>${m.content}</div>
+                    <div class="time">${timeStr}</div>
+                </div>
+            `;
+        });
+        
+        const membersPane = document.getElementById("oversightMembersPane");
+        if (activeOversightType === 'group' && res.members && res.members.length > 0) {
+            membersPane.style.display = "flex";
+            const membersList = document.getElementById("oversightMembersList");
+            membersList.innerHTML = "";
+            res.members.forEach(m => {
+                const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700;">ADMIN</span>' : '';
+                membersList.innerHTML += `
+                    <div style="background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
+                        <div style="font-weight:600; font-size:12px; color:#fff;">${m.name} ${roleBadge}</div>
+                        <div style="font-size:10px; color:var(--ink-soft);">${m.designation || 'Employee'}</div>
+                    </div>
+                `;
+            });
+        } else {
+            membersPane.style.display = "none";
+        }
+    } catch(e) {
+        console.error(e);
+    }
 }
 </script>
 
