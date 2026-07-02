@@ -69,59 +69,51 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 50px;
-  background: rgba(10,14,30,0.50);
+  padding: 16px 60px;
+  background: rgba(10, 16, 31, 0.95);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.40);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
 }
 
 /* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
-  color: var(--ink);
-  font-size: 18px;
-  font-weight: 700;
 }
 
 .logo img {
-  height: 44px;
-  width: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255,255,255,0.15);
-  box-shadow: 0 0 14px rgba(255,138,61,0.35), 0 0 22px rgba(63,208,255,0.25);
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  height: 48px;
+  width: auto;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .logo img:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 22px rgba(255,138,61,0.55), 0 0 30px rgba(63,208,255,0.40);
+  transform: scale(1.03);
 }
 
 /* Old logo-dot (kept for compatibility) */
 .logo-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--pink), var(--orange), var(--blue));
-  flex-shrink: 0;
+  display: none;
 }
 
 /* Nav links */
 .nav-links {
   display: flex;
-  gap: 32px;
+  gap: 36px;
   list-style: none;
 }
 
 .nav-links a {
-  color: var(--muted);
+  color: #9FB0CC;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 600;
   position: relative;
   transition: color 0.25s;
@@ -130,7 +122,8 @@ nav {
 .nav-links a::after {
   content: '';
   position: absolute;
-  left: 0; bottom: -4px;
+  left: 50%; bottom: -8px;
+  transform: translateX(-50%);
   width: 0; height: 2px;
   background: linear-gradient(90deg, var(--orange), var(--blue));
   transition: width 0.3s ease;
@@ -143,32 +136,33 @@ nav {
 
 .nav-links a:hover::after,
 .nav-links a.active::after {
-  width: 100%;
+  width: 80%;
 }
 
 /* Nav right (auth buttons) */
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .btn-login {
   text-decoration: none;
-  color: var(--ink);
-  font-size: 13.5px;
+  color: #fff;
+  font-size: 14px;
   font-weight: 600;
-  padding: 9px 20px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.06);
-  border: 1.5px solid var(--line);
-  transition: all 0.25s;
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.25s ease;
 }
 
 .btn-login:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: rgba(255,255,255,0.10);
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 15px rgba(255, 138, 61, 0.2);
 }
 
 /* =============================================
@@ -179,22 +173,23 @@ nav {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 26px;
+  padding: 10px 24px;
   border: none;
-  border-radius: 50px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
-  box-shadow: 0 8px 28px rgba(255,138,61,0.40);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--orange);
+  box-shadow: 0 4px 15px rgba(255, 138, 61, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   text-decoration: none;
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 34px rgba(255,138,61,0.55);
+  transform: translateY(-2px);
+  background: var(--orange-dark);
+  box-shadow: 0 6px 20px rgba(255, 138, 61, 0.45);
 }
 
 .btn-ghost {
