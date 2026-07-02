@@ -598,17 +598,17 @@ function renderSidebar() {
     let list = [];
     if (currentUser.role === 'admin') {
         list = [
-            { id: "overview", label: "Overview", icon: "📊" },
-            { id: "employees", label: "Employees", icon: "👥" },
-            { id: "attendance", label: "Attendance Register", icon: "📅" },
-            { id: "leaves", label: "Leave Requests", icon: "✉️" },
-            { id: "recruitment", label: "Recruitment Board", icon: "🎯" },
-            { id: "announcements", label: "Announcements", icon: "📢" },
-            { id: "reports", label: "Reports & Audits", icon: "📈" },
-            { id: "admin_contacts", label: "Contacts", icon: "📬" },
-            { id: "messages", label: "Messages (DMs)", icon: "💬" },
-            { id: "groups", label: "Groups", icon: "👥" },
-            { id: "oversight", label: "Oversight", icon: "🔍" }
+            { id: "overview", label: "Overview", icon: "" },
+            { id: "employees", label: "Employees", icon: "" },
+            { id: "attendance", label: "Attendance Register", icon: "" },
+            { id: "leaves", label: "Leave Requests", icon: "" },
+            { id: "recruitment", label: "Recruitment Board", icon: "" },
+            { id: "announcements", label: "Announcements", icon: "" },
+            { id: "reports", label: "Reports & Audits", icon: "" },
+            { id: "admin_contacts", label: "Contacts", icon: "" },
+            { id: "messages", label: "Workspace", icon: "" },
+            { id: "groups", label: "Groups", icon: "" },
+            { id: "oversight", label: "Oversight", icon: "" }
         ];
     } else if (currentUser.role === 'employee') {
         list = [
@@ -617,7 +617,7 @@ function renderSidebar() {
             { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
             { id: "emp_announcements", label: "Announcements", icon: "📢" },
             { id: "profile", label: "My Profile", icon: "👤" },
-            { id: "messages", label: "Messages (DMs)", icon: "💬" },
+            { id: "messages", label: "Workspace", icon: "💬" },
             { id: "groups", label: "Groups", icon: "👥" }
         ];
         if (currentUser.is_team_leader) {
@@ -633,7 +633,8 @@ function renderSidebar() {
     list.forEach((m, idx) => {
         const a = document.createElement("a");
         a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
-        a.innerHTML = `<span>${m.icon}</span> ${m.label}`;
+        const iconHtml = m.icon ? `<span>${m.icon}</span> ` : "";
+        a.innerHTML = `${iconHtml}${m.label}`;
         a.onclick = () => switchTab(m.id, a);
         sidebar.appendChild(a);
     });
@@ -879,14 +880,14 @@ const layouts = {
     reports: `
         <h2 style="font-size:18px; margin-bottom:20px;">Generate Standard Reports</h2>
         <div style="display:flex; gap:14px; margin-bottom:40px; flex-wrap:wrap;">
-            <button onclick="generateReport('attendance')" class="btn-primary">📊 Attendance Audit Report</button>
-            <button onclick="generateReport('employee')" class="btn-primary">👥 Department Breakdown Report</button>
-            <button onclick="generateReport('recruitment')" class="btn-primary">🎯 Recruitment Funnel Report</button>
+            <button onclick="generateReport('attendance')" class="btn-primary">Attendance Audit Report</button>
+            <button onclick="generateReport('employee')" class="btn-primary">Department Breakdown Report</button>
+            <button onclick="generateReport('recruitment')" class="btn-primary">Recruitment Funnel Report</button>
         </div>
         <div class="glass-card" id="reportOutputCard" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:15px;">
                 <h3 id="reportTitle" style="font-size:18px;">Report View</h3>
-                <button onclick="window.print()" class="btn-edit" style="padding: 6px 14px; border-radius:8px; font-size:12px;">🖨️ Print / Save PDF</button>
+                <button onclick="window.print()" class="btn-edit" style="padding: 6px 14px; border-radius:8px; font-size:12px;">Print / Save PDF</button>
             </div>
             <div id="reportContainer"></div>
         </div>
