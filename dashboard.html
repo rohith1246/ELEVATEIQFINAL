@@ -465,7 +465,7 @@ tr:hover td {
 </div>
 
 <script>
-const API_BASE = "http://localhost:5000";
+const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -583,8 +583,15 @@ async function apiCall(endpoint, method = "GET", body = null) {
     
     try {
         const res = await fetch(`${API_BASE}${endpoint}`, options);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Request failed");
+        let data = null;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            data = await res.json();
+        }
+        if (!res.ok) {
+            const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
+            throw new Error(errMsg);
+        }
         return data;
     } catch (err) {
         alert(err.message);
