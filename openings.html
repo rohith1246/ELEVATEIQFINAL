@@ -88,15 +88,14 @@
 <section class="section" style="padding-top:160px;">
   <div class="section-head">
     <div class="label">Careers</div>
-    <h2>Open positions</h2>
+    <h2>Build your future with ElevateIQ</h2>
     <p>Don't see a perfect fit? <a href="contact.html" style="color:var(--blue);">Send us your resume directly</a>.</p>
   </div>
 
   <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
     <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
-    <div class="filter-chip" id="chip_eng" onclick="filterDepartment('Engineering')">Engineering</div>
-    <div class="filter-chip" id="chip_design" onclick="filterDepartment('Design')">Design</div>
-    <div class="filter-chip" id="chip_sales" onclick="filterDepartment('Sales')">Sales</div>
+    <div class="filter-chip" id="chip_it" onclick="filterDepartment('IT Services')">IT Services</div>
+    <div class="filter-chip" id="chip_nonit" onclick="filterDepartment('Non-IT Services')">Non-IT Services</div>
   </div>
 
   <div id="jobsContainer" style="display:flex; flex-direction:column; gap:14px;">
@@ -126,7 +125,7 @@
 </div>
 
 <footer>
-  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
 <script>
@@ -192,9 +191,8 @@ function filterDepartment(dept) {
     document.getElementById("chip_all").classList.add("active");
     renderJobs(allJobs);
   } else {
-    if (dept === 'Engineering') document.getElementById("chip_eng").classList.add("active");
-    if (dept === 'Design') document.getElementById("chip_design").classList.add("active");
-    if (dept === 'Sales') document.getElementById("chip_sales").classList.add("active");
+    if (dept === 'IT Services') document.getElementById("chip_it").classList.add("active");
+    if (dept === 'Non-IT Services') document.getElementById("chip_nonit").classList.add("active");
     
     const filtered = allJobs.filter(j => j.department.toLowerCase().includes(dept.toLowerCase()));
     renderJobs(filtered);

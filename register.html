@@ -47,25 +47,32 @@
 
 <section class="auth-wrap">
   <div class="auth-card">
-    <h1>Create your account</h1>
+    <h1>Create Account</h1>
     <p class="sub">Apply faster and track your applications</p>
 
     <form id="registerForm">
       <div class="field"><label for="name">Full name</label><input type="text" id="name" required></div>
       <div class="field"><label for="email">Email address</label><input type="email" id="email" required></div>
       <div class="field"><label for="password">Password</label><input type="password" id="password" minlength="6" required></div>
-      <button type="submit" class="btn-primary auth-submit">Create account</button>
+      
+      <!-- Terms & Conditions Checkbox -->
+      <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--ink-soft); text-align: left;">
+        <input type="checkbox" id="terms" required style="margin-top: 3px; cursor: pointer;">
+        <label for="terms" style="cursor: pointer; line-height: 1.4; font-weight: normal; color: inherit; text-transform: none;">I agree to the Terms & Conditions and Privacy Policy</label>
+      </div>
+
+      <button type="submit" class="btn-primary auth-submit">Create Account</button>
     </form>
 
     <div class="msg error" id="errorMsg"></div>
     <div class="msg success" id="successMsg"></div>
 
-    <div class="auth-foot">Already have an account? <a href="login.html">Log in</a></div>
+    <div class="auth-foot">Already have an account? <a href="login.html">Login</a></div>
   </div>
 </section>
 
 <footer>
-  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
 <script>

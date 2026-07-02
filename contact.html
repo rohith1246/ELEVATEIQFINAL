@@ -45,22 +45,60 @@
   </div>
 </nav>
 
-<section class="auth-wrap">
-  <div class="auth-card" style="max-width:500px;">
-    <h1>Get in touch</h1>
-    <p class="sub">Have a question, or want to send your resume directly? Fill this out.</p>
-    <form id="contactForm">
-      <div class="field"><label for="name">Full name</label><input type="text" id="name" required></div>
-      <div class="field"><label for="email">Email address</label><input type="email" id="email" required></div>
-      <div class="field"><label for="message">Message</label><input type="text" id="message" placeholder="Tell us a bit about yourself" required></div>
-      <button type="submit" class="btn-primary auth-submit">Send message</button>
-    </form>
-    <div class="msg success" id="msg">Thanks — we'll get back to you soon.</div>
+<section class="auth-wrap" style="padding-top: 140px; padding-bottom: 80px; min-height: 100vh;">
+  <div class="glass-card" style="max-width: 900px; width: 100%; display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; padding: 40px; margin: auto;">
+    
+    <!-- Contact Info Column -->
+    <div style="display: flex; flex-direction: column; gap: 30px; border-right: 1px solid var(--glass-border); padding-right: 40px;">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px;">Contact Us</h1>
+        <p style="color: var(--ink-soft); font-size: 14px; line-height: 1.5;">We'd love to hear from you. Reach out or visit us.</p>
+      </div>
+
+      <!-- Address -->
+      <div>
+        <h3 style="font-size: 14px; text-transform: uppercase; color: var(--orange); font-weight: 600; letter-spacing: 1px; margin-bottom: 6px;">Address</h3>
+        <p style="font-size: 15px; color: var(--ink-soft); line-height: 1.5;">ElevateIQ Soft Tech Pvt. Ltd., India</p>
+      </div>
+
+      <!-- Phone -->
+      <div>
+        <h3 style="font-size: 14px; text-transform: uppercase; color: var(--blue); font-weight: 600; letter-spacing: 1px; margin-bottom: 6px;">Phone</h3>
+        <p style="font-size: 15px; color: var(--ink-soft);"><a href="tel:+916300855710" style="text-decoration: none;">+91 63008 55710</a></p>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <h3 style="font-size: 14px; text-transform: uppercase; color: var(--pink-light); font-weight: 600; letter-spacing: 1px; margin-bottom: 6px;">Email</h3>
+        <p style="font-size: 15px; color: var(--ink-soft);"><a href="mailto:hr.support@elevateiq-softtech.com" style="text-decoration: none;">hr.support@elevateiq-softtech.com</a></p>
+      </div>
+    </div>
+
+    <!-- Contact Form Column -->
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+      <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 20px;">Send a Message</h2>
+      <form id="contactForm" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field" style="margin: 0;">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" required placeholder="John Doe">
+        </div>
+        <div class="field" style="margin: 0;">
+          <label for="email">Your Email</label>
+          <input type="email" id="email" required placeholder="john@example.com">
+        </div>
+        <div class="field" style="margin: 0;">
+          <label for="message">Your Message</label>
+          <textarea id="message" required placeholder="Write your message here..." style="width: 100%; min-height: 120px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; color: #fff; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.25s;" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--glass-border)'"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="padding: 12px; font-weight: 600; font-size: 15px; border-radius: 8px;">Send Message</button>
+      </form>
+      <div class="msg success" id="msg" style="margin-top: 15px; text-align: center;">Thanks — we'll get back to you soon.</div>
+    </div>
   </div>
 </section>
 
 <footer>
-  © 2026 Elevate IQ. Building the next generation of intelligent tools.
+  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
 <script>
