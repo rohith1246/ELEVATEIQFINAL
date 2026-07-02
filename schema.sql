@@ -119,3 +119,21 @@ CREATE TABLE IF NOT EXISTS message_reads (
     read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (message_id, user_id)
 );
+
+-- 12. EduTech Contact inquiries
+CREATE TABLE IF NOT EXISTS contacts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    track VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. EduTech Newsletter subscribers
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

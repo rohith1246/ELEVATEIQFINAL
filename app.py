@@ -1576,6 +1576,98 @@ def chat_group_add_member(conv_id):
         cursor.close()
         conn.close()
 
+
+# --- EduTech Routes & APIs ---
+@app.route("/edutech")
+def serve_edutech_redirect():
+    from flask import redirect
+    return redirect("/edutech/")
+
+@app.route("/edutech/")
+@app.route("/edutech/<path:path>")
+def serve_edutech(path="index.html"):
+    return send_from_directory("edutech", path)
+
+@app.route('/api/contact', methods=['POST'])
+def save_contact():
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "No data received"}), 400
+        
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    phone = data.get('phone', '').strip()
+    track = data.get('track', '').strip()
+    message = data.get('message', '').strip()
+    
+    if not name or not email or not phone or not track or not message:
+        return jsonify({"success": False, "error": "All fields are required"}), 400
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO contacts (name, email, phone, track, message)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id;
+            """,
+            (name, email, phone, track, message)
+        )
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({
+            "success": True,
+            "message": "Thank you! Your inquiry has been successfully registered.",
+            "id": new_id
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/newsletter', methods=['POST'])
+def save_newsletter():
+    data = request.json
+    if not data or 'email' not in data:
+        return jsonify({"success": False, "error": "Email is required"}), 400
+        
+    email = data.get('email', '').strip()
+    if not email:
+        return jsonify({"success": False, "error": "Email is required"}), 400
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM newsletter_subscribers WHERE email = %s;", (email,))
+        existing = cursor.fetchone()
+        if existing:
+            return jsonify({
+                "success": True,
+                "message": "You are already subscribed to our newsletter!"
+            }), 200
+            
+        cursor.execute(
+            "INSERT INTO newsletter_subscribers (email) VALUES (%s) RETURNING id;",
+            (email,)
+        )
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({
+            "success": True,
+            "message": "Subscribed successfully!",
+            "id": new_id
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     app.run(debug=True, port=port)
