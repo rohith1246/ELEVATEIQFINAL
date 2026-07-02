@@ -124,7 +124,8 @@ nav {
   position: absolute;
   left: 50%; bottom: -8px;
   transform: translateX(-50%);
-  width: 0; height: 2px;
+  width: 0; height: 3px;
+  border-radius: 4px;
   background: linear-gradient(90deg, var(--orange), var(--blue));
   transition: width 0.3s ease;
 }
