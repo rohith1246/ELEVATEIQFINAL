@@ -207,22 +207,22 @@ tr:hover td {
 /* Chat Container Styles */
 .chat-container {
     display: flex;
-    height: 70vh;
-    background: rgba(255, 255, 255, 0.04);
+    height: 72vh;
+    background: rgba(14, 20, 38, 0.4);
     border: 1px solid var(--glass-border);
-    border-radius: 18px;
+    border-radius: 20px;
     overflow: hidden;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(24px);
 }
 .chat-sidebar {
     width: 320px;
     border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(6, 14, 34, 0.3);
 }
 .chat-sidebar-header {
-    padding: 16px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-between;
@@ -231,22 +231,34 @@ tr:hover td {
 .chat-list {
     flex: 1;
     overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 .chat-list-item {
-    padding: 14px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-.chat-list-item:hover, .chat-list-item.active {
-    background: rgba(255, 255, 255, 0.06);
+.chat-list-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.chat-list-item.active {
+    background: var(--orange) !important;
+    border-color: var(--orange) !important;
+    box-shadow: 0 4px 15px rgba(255, 138, 61, 0.25);
 }
 .chat-list-item .title {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 14.5px;
     color: #fff;
     margin-bottom: 4px;
 }
@@ -258,26 +270,34 @@ tr:hover td {
     text-overflow: ellipsis;
     max-width: 200px;
 }
+.chat-list-item.active .subtitle {
+    color: rgba(255, 255, 255, 0.85);
+}
 .badge {
     background: var(--orange);
     color: #fff;
     font-size: 11px;
     font-weight: 700;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 20px;
+}
+.chat-list-item.active .badge {
+    background: #fff;
+    color: var(--orange);
 }
 .chat-main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(6, 14, 34, 0.15);
 }
 .chat-main-header {
-    padding: 16px 24px;
+    padding: 18px 24px;
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(6, 14, 34, 0.2);
 }
 .chat-messages {
     flex: 1;
@@ -289,32 +309,30 @@ tr:hover td {
 }
 .msg-bubble {
     max-width: 65%;
-    padding: 12px 16px;
-    border-radius: 16px;
+    padding: 12px 18px;
+    border-radius: 14px;
     font-size: 14px;
     line-height: 1.5;
     position: relative;
 }
 .msg-bubble.incoming {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.06);
     color: #fff;
     align-self: flex-start;
     border-bottom-left-radius: 4px;
 }
 .msg-bubble.outgoing {
-    background: linear-gradient(135deg, var(--orange), #ff6a00);
+    background: var(--orange);
     color: #fff;
     align-self: flex-end;
     border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(255, 138, 61, 0.2);
 }
 .msg-bubble .sender {
     font-size: 11px;
-    color: var(--ink-soft);
+    color: var(--blue);
     margin-bottom: 4px;
     font-weight: 600;
-}
-.msg-bubble.outgoing .sender {
-    color: rgba(255, 255, 255, 0.75);
 }
 .msg-bubble .time {
     font-size: 10px;
@@ -323,33 +341,116 @@ tr:hover td {
     text-align: right;
 }
 .msg-bubble.outgoing .time {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.65);
 }
 .chat-input-area {
     padding: 16px 24px;
     border-top: 1px solid var(--glass-border);
     display: flex;
     gap: 12px;
+    background: rgba(6, 14, 34, 0.2);
 }
 .chat-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
+    background: #0f1c2e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    padding: 12px 16px;
+    padding: 14px 18px;
     color: #fff;
     font-family: inherit;
     outline: none;
+    font-size: 14px;
 }
 .chat-input:focus {
     border-color: var(--orange);
 }
+.chat-input-area .btn-primary {
+    background: var(--orange) !important;
+    border-color: var(--orange) !important;
+    color: #fff !important;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+.chat-input-area .btn-primary:hover {
+    background: var(--orange-dark) !important;
+    box-shadow: 0 4px 12px rgba(255, 138, 61, 0.3);
+}
 .group-members-pane {
-    width: 240px;
+    width: 250px;
     border-left: 1px solid var(--glass-border);
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(6, 14, 34, 0.25);
     display: flex;
     flex-direction: column;
+}
+.member-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.member-card .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+}
+.member-card .status {
+    font-size: 10.5px;
+    color: #00e676; /* vibrant green */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Modals Override styling */
+.modal-content {
+    background: #0d1928 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    padding: 32px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+}
+.modal-content h2 {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-bottom: 24px !important;
+}
+.modal-content input[type="text"], 
+.modal-content input[type="password"], 
+.modal-content input[type="email"] {
+    width: 100%;
+    background: #182739 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    padding: 14px 18px !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    outline: none !important;
+    margin-bottom: 20px !important;
+}
+.modal-content input:focus {
+    border-color: var(--orange) !important;
+}
+.modal-content .btn-primary {
+    background: var(--orange) !important;
+    border-color: var(--orange) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    border-radius: 10px !important;
+    padding: 14px 20px !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+}
+.modal-content .btn-primary:hover {
+    background: var(--orange-dark) !important;
+    box-shadow: 0 4px 15px rgba(255, 138, 61, 0.3) !important;
 }
 </style>
 </head>
@@ -1682,12 +1783,12 @@ async function refreshDMThread(forceScroll = false) {
             res.messages.forEach(m => {
                 const isMine = m.sender_id === currentUser.id;
                 const bubbleClass = isMine ? 'outgoing' : 'incoming';
-                const senderName = isMine ? 'You' : m.sender_name;
+                const senderHtml = isMine ? '' : `<div class="sender">${m.sender_name}</div>`;
                 const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
                 
                 messagesDiv.innerHTML += `
                     <div class="msg-bubble ${bubbleClass}">
-                        <div class="sender">${senderName}</div>
+                        ${senderHtml}
                         <div>${m.content}</div>
                         <div class="time">${timeStr}</div>
                     </div>
@@ -1856,6 +1957,19 @@ async function refreshGroupThread(forceScroll = false) {
     if (!activeGroupConversationId) return;
     try {
         const res = await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`);
+        
+        // Update Title & Simulated Online count
+        const membersCount = res.members ? res.members.length : 0;
+        const onlineCount = Math.max(1, Math.ceil(membersCount * 0.45));
+        const groupTitleElem = document.getElementById("groupActiveTitle");
+        
+        groupTitleElem.innerHTML = `
+            <div class="title-area">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${res.conversation_name || 'Group Chat'}</h3>
+                <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+            </div>
+        `;
+        
         const messagesDiv = document.getElementById("groupMessages");
         const isAtBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 40;
         
@@ -1864,12 +1978,12 @@ async function refreshGroupThread(forceScroll = false) {
         res.messages.forEach(m => {
             const isMine = m.sender_id === currentUser.id;
             const bubbleClass = isMine ? 'outgoing' : 'incoming';
-            const senderName = isMine ? 'You' : m.sender_name;
+            const senderHtml = isMine ? '' : `<div class="sender">${m.sender_name}</div>`;
             const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
             
             messagesDiv.innerHTML += `
                 <div class="msg-bubble ${bubbleClass}">
-                    <div class="sender">${senderName}</div>
+                    ${senderHtml}
                     <div>${m.content}</div>
                     <div class="time">${timeStr}</div>
                 </div>
@@ -1883,11 +1997,11 @@ async function refreshGroupThread(forceScroll = false) {
         const membersList = document.getElementById("groupMembersList");
         membersList.innerHTML = "";
         res.members.forEach(m => {
-            const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700;">ADMIN</span>' : '';
+            const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">ADMIN</span>' : '';
             membersList.innerHTML += `
-                <div style="background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                    <div style="font-weight:600; font-size:12px; color:#fff;">${m.name} ${roleBadge}</div>
-                    <div style="font-size:10px; color:var(--ink-soft);">${m.designation || 'Employee'}</div>
+                <div class="member-card">
+                    <div class="name">${m.name} ${roleBadge}</div>
+                    <div class="status"><span style="width:6px; height:6px; border-radius:50%; background:#00e676; display:inline-block;"></span> Online</div>
                 </div>
             `;
         });
@@ -2074,11 +2188,11 @@ async function refreshOversightThread() {
             const membersList = document.getElementById("oversightMembersList");
             membersList.innerHTML = "";
             res.members.forEach(m => {
-                const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700;">ADMIN</span>' : '';
+                const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">ADMIN</span>' : '';
                 membersList.innerHTML += `
-                    <div style="background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                        <div style="font-weight:600; font-size:12px; color:#fff;">${m.name} ${roleBadge}</div>
-                        <div style="font-size:10px; color:var(--ink-soft);">${m.designation || 'Employee'}</div>
+                    <div class="member-card">
+                        <div class="name">${m.name} ${roleBadge}</div>
+                        <div class="status"><span style="width:6px; height:6px; border-radius:50%; background:#00e676; display:inline-block;"></span> Online</div>
                     </div>
                 `;
             });
