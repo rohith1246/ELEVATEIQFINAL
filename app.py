@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import bcrypt
 import os
+import queue
+import json
 from datetime import datetime, date, time
 from dotenv import load_dotenv
 from itsdangerous import URLSafeSerializer, BadSignature
@@ -23,6 +25,19 @@ def index():
 SECRET_KEY = os.getenv("SECRET_KEY", "elevate_iq_secret_key")
 serializer = URLSafeSerializer(SECRET_KEY)
 
+# Global dictionary to store SSE subscriber queues
+user_queues = {}
+
+def register_queue(user_id, q):
+    user_queues.setdefault(user_id, set()).add(q)
+
+def unregister_queue(user_id, q):
+    queues = user_queues.get(user_id)
+    if queues:
+        queues.discard(q)
+        if not queues:
+            user_queues.pop(user_id, None)
+
 # Resume Upload Configuration
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'resumes')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -33,10 +48,14 @@ def get_connection():
 
 # --- Helper Functions ---
 def get_current_user():
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    token = request.cookies.get("token")
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            
+    if not token:
         return None
-    token = auth_header.split(" ")[1]
     try:
         data = serializer.loads(token)
         return data  # dict containing id, email, role, name, employee_id
@@ -94,16 +113,17 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-    login_id = data.get("email")  # can be email or Employee ID
+    login_id = data.get("email")  # can be email, Employee ID, or Client ID
     password = data.get("password")
 
     if not login_id or not password:
-        return jsonify({"error": "Email/Employee ID and password are required"}), 400
+        return jsonify({"error": "Email/Employee ID/Client ID and password are required"}), 400
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Check if login_id matches employee_id first
+        user = None
+        # Try finding employee first
         cursor.execute(
             """
             SELECT u.*, e.id as emp_db_id, e.employee_id 
@@ -116,7 +136,20 @@ def login():
         user = cursor.fetchone()
 
         if not user:
-            # Check users table directly (for candidates or admins who don't have employee records)
+            # Try finding client by client_id or email
+            cursor.execute(
+                """
+                SELECT u.*, c.id as client_db_id, c.client_id, c.company_name
+                FROM users u
+                JOIN clients c ON u.id = c.user_id
+                WHERE c.client_id = %s OR u.email = %s
+                """,
+                (login_id, login_id)
+            )
+            user = cursor.fetchone()
+
+        if not user:
+            # Check users table directly (for candidates or admins who don't have employee/client records)
             cursor.execute("SELECT * FROM users WHERE email = %s", (login_id,))
             user = cursor.fetchone()
 
@@ -131,14 +164,26 @@ def login():
                 "email": user["email"],
                 "role": user["role"],
                 "employee_id": user.get("employee_id"),
-                "emp_db_id": user.get("emp_db_id")
+                "emp_db_id": user.get("emp_db_id"),
+                "client_db_id": user.get("client_db_id"),
+                "client_id": user.get("client_id"),
+                "company_name": user.get("company_name")
             }
             token = serializer.dumps(payload)
-            return jsonify({
+            response = jsonify({
                 "message": "Login successful",
                 "token": token,
                 "user": payload
-            }), 200
+            })
+            response.set_cookie(
+                "token",
+                token,
+                httponly=True,
+                secure=os.getenv("FLASK_ENV") == "production",
+                samesite="Lax",
+                max_age=86400
+            )
+            return response, 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
@@ -146,6 +191,13 @@ def login():
     finally:
         cursor.close()
         conn.close()
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    response = jsonify({"message": "Logout successful"})
+    response.delete_cookie("token")
+    return response, 200
 
 
 # --- Announcements Routes ---
@@ -392,6 +444,17 @@ def profile():
                 profile_data = cursor.fetchone()
                 if profile_data and profile_data.get("date_of_joining"):
                     profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
+            elif user["role"] == "client":
+                cursor.execute(
+                    """
+                    SELECT u.name, u.email, c.* 
+                    FROM users u 
+                    JOIN clients c ON c.user_id = u.id 
+                    WHERE u.id = %s
+                    """,
+                    (user["id"],)
+                )
+                profile_data = cursor.fetchone()
             else:
                 cursor.execute("SELECT id, name, email, role FROM users WHERE id = %s", (user["id"],))
                 profile_data = cursor.fetchone()
@@ -420,6 +483,13 @@ def profile():
             if user["role"] == "employee" and phone:
                 cursor.execute(
                     "UPDATE employees SET phone_number = %s WHERE user_id = %s",
+                    (phone, user["id"])
+                )
+
+            # Update Client table
+            if user["role"] == "client" and phone:
+                cursor.execute(
+                    "UPDATE clients SET phone_number = %s WHERE user_id = %s",
                     (phone, user["id"])
                 )
 
@@ -593,8 +663,22 @@ def get_leaves():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        scope = request.args.get("scope")
+        is_approver = False
         if user["role"] == "admin":
-            # Admin sees all leave requests
+            is_approver = True
+        else:
+            # Check designation for employee
+            cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+            res = cursor.fetchone()
+            if res:
+                designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
+                designation = designation.lower()
+                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+                    is_approver = True
+
+        if (scope == "all" and is_approver) or user["role"] == "admin":
+            # Admin/Approver sees all leave requests
             cursor.execute(
                 """
                 SELECT l.*, e.employee_id, u.name, e.department, e.designation,
@@ -683,18 +767,33 @@ def apply_leave():
 @app.route("/leaves/<int:leave_id>", methods=["PUT"])
 def review_leave(leave_id):
     user = get_current_user()
-    if not user or user["role"] != "admin":
-        return jsonify({"error": "Forbidden"}), 403
-
-    data = request.json
-    action = data.get("status")  # Approved or Rejected
-
-    if action not in ["Approved", "Rejected"]:
-        return jsonify({"error": "Status must be Approved or Rejected"}), 400
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        is_approver = False
+        if user["role"] == "admin":
+            is_approver = True
+        else:
+            cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+            res = cursor.fetchone()
+            if res:
+                designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
+                designation = designation.lower()
+                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+                    is_approver = True
+
+        if not is_approver:
+            return jsonify({"error": "Forbidden"}), 403
+
+        data = request.json
+        action = data.get("status")  # Approved or Rejected
+
+        if action not in ["Approved", "Rejected"]:
+            return jsonify({"error": "Status must be Approved or Rejected"}), 400
+
         # Get leave details
         cursor.execute("SELECT * FROM leaves WHERE id = %s", (leave_id,))
         leave = cursor.fetchone()
@@ -778,24 +877,27 @@ def get_jobs():
 @app.route("/jobs", methods=["POST"])
 def create_job():
     user = get_current_user()
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Forbidden"}), 403
-
-    data = request.json
-    title = data.get("title")
-    department = data.get("department")
-    experience = data.get("experience_required")
-    skills = data.get("skills_required")
-    location = data.get("location")
-    salary = data.get("salary_range")
-    description = data.get("description")
-
-    if not title or not department:
-        return jsonify({"error": "Title and Department are required"}), 400
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        if not check_is_recruitment_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+
+        data = request.json
+        title = data.get("title")
+        department = data.get("department")
+        experience = data.get("experience_required")
+        skills = data.get("skills_required")
+        location = data.get("location")
+        salary = data.get("salary_range")
+        description = data.get("description")
+
+        if not title or not department:
+            return jsonify({"error": "Title and Department are required"}), 400
+
         cursor.execute(
             """
             INSERT INTO jobs (title, department, experience_required, skills_required, location, salary_range, description, status) 
@@ -816,18 +918,21 @@ def create_job():
 @app.route("/jobs/<int:job_id>", methods=["PUT"])
 def update_job(job_id):
     user = get_current_user()
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Forbidden"}), 403
-
-    data = request.json
-    status = data.get("status")  # 'Open' or 'Closed'
-
-    if status not in ["Open", "Closed"]:
-        return jsonify({"error": "Status must be Open or Closed"}), 400
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        if not check_is_recruitment_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+
+        data = request.json
+        status = data.get("status")  # 'Open' or 'Closed'
+
+        if status not in ["Open", "Closed"]:
+            return jsonify({"error": "Status must be Open or Closed"}), 400
+
         cursor.execute("UPDATE jobs SET status = %s WHERE id = %s", (status, job_id))
         conn.commit()
         return jsonify({"message": "Job status updated successfully"}), 200
@@ -850,7 +955,7 @@ def get_applications():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        if user["role"] == "admin":
+        if check_is_recruitment_manager(user, cursor):
             cursor.execute(
                 """
                 SELECT a.*, j.title as job_title, j.department as job_department 
@@ -927,18 +1032,18 @@ def submit_application():
 @app.route("/applications/<int:app_id>", methods=["PUT"])
 def update_application_status(app_id):
     user = get_current_user()
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Forbidden"}), 403
-
-    data = request.json
-    status = data.get("status")  # 'Pending', 'Shortlisted', 'Accepted', 'Rejected'
-
-    if status not in ['Pending', 'Shortlisted', 'Accepted', 'Rejected']:
-        return jsonify({"error": "Invalid application status"}), 400
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        if not check_is_recruitment_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        data = request.json or {}
+        status = data.get("status")
+        if status not in ['Pending', 'Shortlisted', 'Accepted', 'Rejected']:
+            return jsonify({"error": "Invalid application status"}), 400
         cursor.execute("UPDATE applications SET status = %s WHERE id = %s", (status, app_id))
         conn.commit()
         return jsonify({"message": f"Application status updated to '{status}'"}), 200
@@ -950,13 +1055,20 @@ def update_application_status(app_id):
         conn.close()
 
 
-# Serve resumes to admin
 @app.route("/uploads/resumes/<filename>")
 def download_resume(filename):
     user = get_current_user()
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Forbidden"}), 403
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if not check_is_recruitment_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # --- Reports & Dashboard Analytics ---
@@ -1102,6 +1214,34 @@ def get_report(report_type):
 
 # --- Chat & Groups System ---
 
+@app.route("/chat/stream")
+def chat_stream():
+    token = request.cookies.get("token") or request.args.get("token")
+    if not token:
+        return "Unauthorized", 401
+    try:
+        user = serializer.loads(token)
+    except Exception:
+        return "Unauthorized", 401
+        
+    user_id = user["id"]
+    q = queue.Queue(maxsize=100)
+    register_queue(user_id, q)
+    
+    def event_stream():
+        try:
+            yield "data: {\"type\": \"connected\"}\n\n"
+            while True:
+                try:
+                    msg_data = q.get(timeout=20)
+                    yield f"data: {msg_data}\n\n"
+                except queue.Empty:
+                    yield "data: {\"type\": \"ping\"}\n\n"
+        finally:
+            unregister_queue(user_id, q)
+            
+    return Response(event_stream(), mimetype="text/event-stream")
+
 def check_is_team_leader(user, cursor):
     if not user:
         return False
@@ -1130,13 +1270,32 @@ def chat_user_details():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         is_tl = check_is_team_leader(user, cursor)
+        
+        can_approve = False
+        is_hr = False
+        if user["role"] == "admin":
+            can_approve = True
+            is_hr = True
+        else:
+            cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+            res = cursor.fetchone()
+            if res:
+                designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
+                designation = designation.lower()
+                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+                    can_approve = True
+                if "hr" in designation or "human resource" in designation:
+                    is_hr = True
+
         return jsonify({
             "id": user["id"],
             "name": user["name"],
             "email": user["email"],
             "role": user["role"],
             "employee_id": user.get("employee_id"),
-            "is_team_leader": is_tl
+            "is_team_leader": is_tl,
+            "can_approve_leaves": can_approve,
+            "is_hr": is_hr
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1223,6 +1382,25 @@ def chat_create_conversation():
             )
             
         conn.commit()
+
+        # Push conversation update via SSE to all conversation members
+        try:
+            event_payload = json.dumps({
+                "type": "conversation_update",
+                "conversation_id": conv_id,
+                "conversation_type": conv_type
+            })
+            for m_id in all_member_ids:
+                queues = user_queues.get(m_id)
+                if queues:
+                    for q in list(queues):
+                        try:
+                            q.put_nowait(event_payload)
+                        except queue.Full:
+                            pass
+        except Exception as push_err:
+            print("SSE conversation update push error:", push_err)
+
         return jsonify({"id": conv_id, "type": conv_type, "name": name, "message": "Conversation created successfully"}), 201
     except Exception as e:
         conn.rollback()
@@ -1398,6 +1576,35 @@ def chat_send_message(conv_id):
         )
         
         conn.commit()
+
+        # Push message update to all conversation members via SSE
+        try:
+            event_payload = json.dumps({
+                "type": "message",
+                "conversation_id": conv_id,
+                "message": {
+                    "id": msg_id,
+                    "conversation_id": conv_id,
+                    "sender_id": user["id"],
+                    "sender_name": user["name"],
+                    "content": content,
+                    "sent_at": sent_at
+                }
+            })
+            cursor.execute("SELECT user_id FROM conversation_members WHERE conversation_id = %s", (conv_id,))
+            members = cursor.fetchall()
+            for m in members:
+                member_id = m.get("user_id") if isinstance(m, dict) else m[0]
+                queues = user_queues.get(member_id)
+                if queues:
+                    for q in list(queues):
+                        try:
+                            q.put_nowait(event_payload)
+                        except queue.Full:
+                            pass
+        except Exception as push_err:
+            print("SSE message push error:", push_err)
+
         return jsonify({
             "id": msg_id,
             "conversation_id": conv_id,
@@ -1745,32 +1952,45 @@ def get_elevate_contacts():
 
 
 @app.route('/dashboard/meetings', methods=['POST'])
-@require_role(["admin"])
 def create_meeting():
-    data = request.json
-    if not data:
-        return jsonify({"error": "No data received"}), 400
-        
-    title = data.get('title', '').strip()
-    platform = data.get('platform', '').strip()
-    meeting_link = data.get('meeting_link', '').strip()
-    scheduled_at = data.get('scheduled_at', '').strip()
-    
-    if not title or not platform or not meeting_link or not scheduled_at:
-        return jsonify({"error": "All fields are required"}), 400
-        
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+            
+        title = data.get('title', '').strip()
+        platform = data.get('platform', '').strip()
+        meeting_link = data.get('meeting_link', '').strip()
+        scheduled_at = data.get('scheduled_at', '').strip()
+        meeting_type = data.get('meeting_type', 'internal').strip()
+        client_id = data.get('client_id')
+
+        if not title or not platform or not meeting_link or not scheduled_at:
+            return jsonify({"error": "All fields are required"}), 400
+            
+        if not client_id or client_id == "":
+            client_id = None
+        else:
+            client_id = int(client_id)
+
         cursor.execute(
             """
-            INSERT INTO meetings (title, platform, meeting_link, scheduled_at)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO meetings (title, platform, meeting_link, scheduled_at, meeting_type, client_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id;
             """,
-            (title, platform, meeting_link, scheduled_at)
+            (title, platform, meeting_link, scheduled_at, meeting_type, client_id)
         )
-        meeting_id = cursor.fetchone()[0]
+        meeting_id = cursor.fetchone()["id"]
         conn.commit()
         return jsonify({"message": "Meeting created and shared successfully!", "id": meeting_id}), 201
     except Exception as e:
@@ -1789,14 +2009,37 @@ def list_meetings():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cursor.execute(
-            """
-            SELECT id, title, platform, meeting_link, scheduled_at, created_at
-            FROM meetings
-            WHERE scheduled_at >= NOW() - INTERVAL '2 hours'
-            ORDER BY scheduled_at ASC;
-            """
-        )
+        if user["role"] == "client":
+            cursor.execute(
+                """
+                SELECT m.id, m.title, m.platform, m.meeting_link, m.scheduled_at, m.created_at, m.meeting_type, m.client_id, c.company_name
+                FROM meetings m
+                JOIN clients c ON m.client_id = c.id
+                WHERE m.meeting_type = 'client' AND c.user_id = %s AND m.scheduled_at >= NOW() - INTERVAL '2 hours'
+                ORDER BY m.scheduled_at ASC;
+                """,
+                (user["id"],)
+            )
+        elif check_is_crm_manager(user, cursor):
+            cursor.execute(
+                """
+                SELECT m.id, m.title, m.platform, m.meeting_link, m.scheduled_at, m.created_at, m.meeting_type, m.client_id, c.company_name
+                FROM meetings m
+                LEFT JOIN clients c ON m.client_id = c.id
+                WHERE m.scheduled_at >= NOW() - INTERVAL '2 hours'
+                ORDER BY m.scheduled_at ASC;
+                """
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT m.id, m.title, m.platform, m.meeting_link, m.scheduled_at, m.created_at, m.meeting_type, m.client_id
+                FROM meetings m
+                WHERE m.meeting_type = 'internal' AND m.scheduled_at >= NOW() - INTERVAL '2 hours'
+                ORDER BY m.scheduled_at ASC;
+                """
+            )
+
         meetings = cursor.fetchall()
         for m in meetings:
             if m.get("scheduled_at"):
@@ -1811,6 +2054,282 @@ def list_meetings():
         conn.close()
 
 
+def check_is_crm_manager(user, cursor):
+    if not user:
+        return False
+    if user.get("role") == "admin":
+        return True
+    cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+    res = cursor.fetchone()
+    if res:
+        designation = ""
+        if isinstance(res, dict):
+            designation = res.get("designation") or ""
+        elif isinstance(res, tuple) or isinstance(res, list):
+            designation = res[0] or ""
+        designation = designation.lower()
+        if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+            return True
+    return False
+
+def check_is_recruitment_manager(user, cursor):
+    if not user:
+        return False
+    if user.get("role") == "admin":
+        return True
+    cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+    res = cursor.fetchone()
+    if res:
+        designation = ""
+        if isinstance(res, dict):
+            designation = res.get("designation") or ""
+        elif isinstance(res, tuple) or isinstance(res, list):
+            designation = res[0] or ""
+        designation = designation.lower()
+        if "hr" in designation or "human resource" in designation:
+            return True
+    return False
+
+@app.route("/crm/clients", methods=["GET"])
+def get_crm_clients():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        cursor.execute("SELECT * FROM clients ORDER BY created_at DESC")
+        clients = cursor.fetchall()
+        for c in clients:
+            if c.get("created_at"):
+                c["created_at"] = c["created_at"].isoformat()
+        return jsonify(clients), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/crm/clients", methods=["POST"])
+def create_crm_client():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        data = request.json
+        company_name = data.get("company_name")
+        contact_name = data.get("contact_name")
+        email = data.get("email")
+        phone_number = data.get("phone_number")
+        deal_size = data.get("deal_size", 0.00)
+        status = data.get("status", "Lead")
+        notes = data.get("notes")
+
+        if not company_name:
+            return jsonify({"error": "Company Name is required"}), 400
+
+        cursor.execute(
+            """
+            INSERT INTO clients (company_name, contact_name, email, phone_number, deal_size, status, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """,
+            (company_name, contact_name, email, phone_number, deal_size, status, notes)
+        )
+        client_id = cursor.fetchone()["id"]
+        conn.commit()
+        return jsonify({"message": "Lead/Client created successfully", "id": client_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/crm/clients/<int:client_id>", methods=["PUT"])
+def update_crm_client(client_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        data = request.json
+        company_name = data.get("company_name")
+        contact_name = data.get("contact_name")
+        email = data.get("email")
+        phone_number = data.get("phone_number")
+        deal_size = data.get("deal_size")
+        status = data.get("status")
+        notes = data.get("notes")
+
+        cursor.execute("SELECT * FROM clients WHERE id = %s", (client_id,))
+        client = cursor.fetchone()
+        if not client:
+            return jsonify({"error": "Lead/Client not found"}), 404
+
+        update_fields = []
+        params = []
+        
+        if company_name is not None:
+            update_fields.append("company_name = %s")
+            params.append(company_name)
+        if contact_name is not None:
+            update_fields.append("contact_name = %s")
+            params.append(contact_name)
+        if email is not None:
+            update_fields.append("email = %s")
+            params.append(email)
+        if phone_number is not None:
+            update_fields.append("phone_number = %s")
+            params.append(phone_number)
+        if deal_size is not None:
+            update_fields.append("deal_size = %s")
+            params.append(deal_size)
+        if status is not None:
+            update_fields.append("status = %s")
+            params.append(status)
+        if notes is not None:
+            update_fields.append("notes = %s")
+            params.append(notes)
+
+        if update_fields:
+            params.append(client_id)
+            query = f"UPDATE clients SET {', '.join(update_fields)} WHERE id = %s"
+            cursor.execute(query, tuple(params))
+            conn.commit()
+
+        return jsonify({"message": "Lead/Client updated successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/crm/clients/<int:client_id>/provision", methods=["POST"])
+def provision_crm_client(client_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+
+        cursor.execute("SELECT * FROM clients WHERE id = %s", (client_id,))
+        client = cursor.fetchone()
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
+
+        if client["user_id"]:
+            return jsonify({"error": "Client has already been provisioned"}), 400
+
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"error": "Email is already taken"}), 400
+
+        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        cursor.execute(
+            "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, 'client') RETURNING id",
+            (client["contact_name"] or client["company_name"], email, hashed_pw)
+        )
+        new_user_id = cursor.fetchone()["id"]
+
+        cli_str = f"CLI-{1000 + client_id}"
+
+        cursor.execute(
+            "UPDATE clients SET user_id = %s, client_id = %s, status = 'Active Client' WHERE id = %s",
+            (new_user_id, cli_str, client_id)
+        )
+        conn.commit()
+        return jsonify({"message": "Client access provisioned successfully", "client_id": cli_str}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/crm/clients/<int:client_id>/interactions", methods=["GET"])
+def get_crm_interactions(client_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        cursor.execute("SELECT * FROM client_interactions WHERE client_id = %s ORDER BY created_at DESC", (client_id,))
+        interactions = cursor.fetchall()
+        for i in interactions:
+            if i.get("created_at"):
+                i["created_at"] = i["created_at"].isoformat()
+        return jsonify(interactions), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/crm/interactions", methods=["POST"])
+def create_crm_interaction():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if not check_is_crm_manager(user, cursor):
+            return jsonify({"error": "Forbidden"}), 403
+        
+        data = request.json
+        client_id = data.get("client_id")
+        interaction_type = data.get("interaction_type")
+        notes = data.get("notes")
+
+        if not client_id or not interaction_type:
+            return jsonify({"error": "Client ID and Interaction Type are required"}), 400
+
+        cursor.execute(
+            """
+            INSERT INTO client_interactions (client_id, interaction_type, notes)
+            VALUES (%s, %s, %s) RETURNING id
+            """,
+            (client_id, interaction_type, notes)
+        )
+        interaction_id = cursor.fetchone()["id"]
+        conn.commit()
+        return jsonify({"message": "Interaction logged successfully", "id": interaction_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    app.run(debug=True, port=port)
+    is_debug = os.getenv("FLASK_ENV") != "production"
+    app.run(debug=is_debug, port=port)

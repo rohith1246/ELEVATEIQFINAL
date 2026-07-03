@@ -156,3 +156,31 @@ CREATE TABLE IF NOT EXISTS meetings (
     scheduled_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 16. Clients Table (CRM and Portals)
+CREATE TABLE IF NOT EXISTS clients (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE REFERENCES users(id) ON DELETE SET NULL,
+    client_id VARCHAR(50) UNIQUE,
+    company_name VARCHAR(150) NOT NULL,
+    contact_name VARCHAR(150),
+    email VARCHAR(150),
+    phone_number VARCHAR(20),
+    deal_size DECIMAL(12,2) DEFAULT 0.00,
+    status VARCHAR(30) DEFAULT 'Lead', -- 'Lead', 'Contacted', 'Proposal', 'Active Client', 'Lost'
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 17. Client Interactions Table
+CREATE TABLE IF NOT EXISTS client_interactions (
+    id SERIAL PRIMARY KEY,
+    client_id INT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    interaction_type VARCHAR(50) NOT NULL, -- 'Call', 'Email', 'Meeting', 'Note'
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Alter meetings table for B2B Client integration
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS client_id INT REFERENCES clients(id) ON DELETE SET NULL;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS meeting_type VARCHAR(20) DEFAULT 'internal';

@@ -515,8 +515,141 @@ tr:hover td {
                         <option value="Inactive">Inactive</option>
                     </select>
                 </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('editEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
             </div>
-            <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal" id="addLeadModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('addLeadModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Add New CRM Lead</h2>
+        <form id="addLeadForm">
+            <div class="form-grid">
+                <div class="field"><label>Company Name</label><input type="text" id="addLeadCompany" placeholder="e.g. Acme Corp" required></div>
+                <div class="field"><label>Contact Person</label><input type="text" id="addLeadContact" placeholder="e.g. John Doe"></div>
+                <div class="field"><label>Email</label><input type="email" id="addLeadEmail" placeholder="e.g. contact@acme.com"></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="addLeadPhone" placeholder="e.g. +1 555-0199"></div>
+                <div class="field"><label>Deal Size (₹)</label><input type="number" step="0.01" id="addLeadDealSize" value="0.00"></div>
+                <div class="field">
+                    <label>Pipeline Status</label>
+                    <select id="addLeadStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                        <option value="Lead">Lead</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal">Proposal</option>
+                        <option value="Active Client">Active Client</option>
+                        <option value="Lost">Lost</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Notes</label>
+                <textarea id="addLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('addLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Lead</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Lead Modal -->
+<div class="modal" id="editLeadModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('editLeadModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Edit CRM Lead</h2>
+        <form id="editLeadForm">
+            <input type="hidden" id="editLeadId">
+            <div class="form-grid">
+                <div class="field"><label>Company Name</label><input type="text" id="editLeadCompany" required></div>
+                <div class="field"><label>Contact Person</label><input type="text" id="editLeadContact"></div>
+                <div class="field"><label>Email</label><input type="email" id="editLeadEmail"></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="editLeadPhone"></div>
+                <div class="field"><label>Deal Size (₹)</label><input type="number" step="0.01" id="editLeadDealSize"></div>
+                <div class="field">
+                    <label>Pipeline Status</label>
+                    <select id="editLeadStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                        <option value="Lead">Lead</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal">Proposal</option>
+                        <option value="Active Client">Active Client</option>
+                        <option value="Lost">Lost</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Notes</label>
+                <textarea id="editLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('editLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Interactions Log Modal -->
+<div class="modal" id="interactionsModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="close-modal" onclick="closeModal('interactionsModal')">&times;</button>
+        <h2 style="margin-bottom: 10px;" id="interactionsTitle">Client Interaction Logs</h2>
+        <div style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px;" id="interactionsSub">Company: -</div>
+        
+        <form id="logInteractionForm" style="margin-bottom:20px; padding:15px; background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); border-radius:10px;">
+            <input type="hidden" id="logInteractionClientId">
+            <h3 style="font-size:14px; margin-top:0; margin-bottom:12px; font-weight:600;">Log New Interaction</h3>
+            <div style="display:flex; gap:12px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; color:var(--ink-faint); display:block; margin-bottom:4px;">Type</label>
+                    <select id="logInteractionType" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none; font-size:12px;">
+                        <option value="Call">Call</option>
+                        <option value="Email">Email</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Note">Note</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="font-size:11px; color:var(--ink-faint); display:block; margin-bottom:4px;">Details</label>
+                <textarea id="logInteractionNotes" style="width:100%; height:60px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:8px; outline:none; resize:none; font-size:12px;" placeholder="e.g. Left a voicemail / sent product deck" required></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 8px 16px; font-size: 12px; align-self: flex-end; width:auto;">Log Interaction</button>
+        </form>
+        
+        <h3 style="font-size:14px; font-weight:600; margin-bottom:10px;">Interaction History</h3>
+        <div id="interactionsList" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            <!-- Loaded dynamically -->
+        </div>
+        <button type="button" onclick="closeModal('interactionsModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:100%;">Back</button>
+    </div>
+</div>
+
+<!-- Provision Portal Access Modal -->
+<div class="modal" id="provisionModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="close-modal" onclick="closeModal('provisionModal')">&times;</button>
+        <h2 style="margin-bottom: 10px;">Provision Portal Access</h2>
+        <p style="color:var(--ink-soft); font-size:13px; margin-bottom:20px; line-height:1.5;">This will create login credentials and grant access to the B2B Client Portal for this active client.</p>
+        <form id="provisionForm">
+            <input type="hidden" id="provisionClientId">
+            <div class="field">
+                <label>Login Email</label>
+                <input type="email" id="provisionEmail" required>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Temporary Password</label>
+                <input type="password" id="provisionPassword" minlength="6" required>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('provisionModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Login Account</button>
+            </div>
         </form>
     </div>
 </div>
@@ -578,6 +711,37 @@ document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${us
 
 // --- Sidebar Menu Defs ---
 let currentUser = user;
+let chatEventSource = null;
+
+function initChatSSE() {
+    if (chatEventSource) {
+        chatEventSource.close();
+    }
+    chatEventSource = new EventSource(`${API_BASE}/chat/stream`, { withCredentials: true });
+    chatEventSource.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'message') {
+                if (activeConversationId === data.conversation_id) {
+                    refreshDMThread(false);
+                }
+                if (activeGroupConversationId === data.conversation_id) {
+                    refreshGroupThread(false);
+                }
+                refreshDMList();
+                refreshGroupList();
+            } else if (data.type === 'conversation_update') {
+                refreshDMList();
+                refreshGroupList();
+            }
+        } catch (e) {
+            console.error("SSE parsing error", e);
+        }
+    };
+    chatEventSource.onerror = function(err) {
+        console.error("SSE connection dropped, auto-reconnecting...", err);
+    };
+}
 
 async function initDashboard() {
     try {
@@ -589,6 +753,7 @@ async function initDashboard() {
         console.error("Could not fetch fresh user details", e);
     }
     renderSidebar();
+    initChatSSE();
 }
 
 function renderSidebar() {
@@ -602,6 +767,7 @@ function renderSidebar() {
             { id: "employees", label: "Employees", icon: "" },
             { id: "attendance", label: "Attendance Register", icon: "" },
             { id: "leaves", label: "Leave Requests", icon: "" },
+            { id: "crm", label: "Client CRM", icon: "" },
             { id: "recruitment", label: "Recruitment Board", icon: "" },
             { id: "announcements", label: "Announcements", icon: "" },
             { id: "reports", label: "Reports & Audits", icon: "" },
@@ -620,9 +786,23 @@ function renderSidebar() {
             { id: "messages", label: "Workspace", icon: "💬" },
             { id: "groups", label: "Groups", icon: "👥" }
         ];
+        if (currentUser.can_approve_leaves) {
+            list.push({ id: "leaves", label: "Leave Requests", icon: "📋" });
+            list.push({ id: "crm", label: "Client CRM", icon: "💼" });
+        }
+        if (currentUser.is_hr) {
+            list.push({ id: "recruitment", label: "Recruitment Board", icon: "💼" });
+        }
         if (currentUser.is_team_leader) {
             list.push({ id: "oversight", label: "Group Oversight", icon: "👁️" });
         }
+    } else if (currentUser.role === 'client') {
+        list = [
+            { id: "client_overview", label: "Overview", icon: "📊" },
+            { id: "client_meetings", label: "My Meetings", icon: "📅" },
+            { id: "profile", label: "My Profile", icon: "👤" },
+            { id: "messages", label: "Workspace", icon: "💬" }
+        ];
     } else {
         list = [
             { id: "cand_overview", label: "My Applications", icon: "💼" },
@@ -802,7 +982,10 @@ const layouts = {
                         <div class="field"><label>Designation</label><input type="text" id="addDesg" placeholder="e.g. Backend Lead" required></div>
                         <div class="field"><label>Date of Joining</label><input type="date" id="addJoinDate"></div>
                     </div>
-                    <button type="submit" class="btn-primary" style="margin-top: 20px; width:100%;">Create Employee Profile</button>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="closeModal('addEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Employee Profile</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -901,7 +1084,10 @@ const layouts = {
                         <div class="field"><label>Skills Required (Comma separated)</label><input type="text" id="jobSkills"></div>
                     </div>
                     <div class="field" style="margin-top:10px;"><label>Job Description</label><textarea id="jobDesc" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
-                    <button type="submit" class="btn-primary" style="margin-top: 20px; width:100%;">Publish Job Posting</button>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="closeModal('addJobModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Publish Job Posting</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1209,6 +1395,149 @@ const layouts = {
                 Select a conversation from the oversight list to inspect its history.
             </div>
         </div>
+    `,
+    crm: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <h2 style="font-size:18px; margin:0;">Client Relationship Management (CRM)</h2>
+            <button onclick="openAddLeadModal()" class="btn-primary">+ Add Client Lead</button>
+        </div>
+        
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:22px; gap:16px;">
+            <div class="stat-card"><h3>Total Leads & Clients</h3><div class="val" id="crm_stat_total">-</div></div>
+            <div class="stat-card"><h3>Active Clients</h3><div class="val" id="crm_stat_active">-</div></div>
+            <div class="stat-card"><h3>Total Deals Value</h3><div class="val" id="crm_stat_value">₹0.00</div></div>
+            <div class="stat-card"><h3>Conversion Rate</h3><div class="val" id="crm_stat_conversion">0%</div></div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Contact Person</th>
+                        <th>Email & Phone</th>
+                        <th>Deal Size</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="crmTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Meeting section moved from overview to crm -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:22px; margin-top:30px; border-top: 1px solid var(--glass-border); padding-top: 30px;">
+            <!-- Create Meeting Form -->
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Schedule Meeting Link</h2>
+                <form id="createMeetingForm" onsubmit="submitCreateMeeting(event)" style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="field">
+                        <label>Meeting Title</label>
+                        <input type="text" id="meetTitle" placeholder="e.g. Sync & Sprint Review" required>
+                    </div>
+                    <div class="field">
+                        <label>Meeting Type</label>
+                        <select id="meetType" onchange="toggleMeetType()" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                            <option value="internal">Internal Meeting (Employees)</option>
+                            <option value="client">Client Meeting</option>
+                        </select>
+                    </div>
+                    <div class="field" id="meetClientField" style="display:none;">
+                        <label>Client Partner</label>
+                        <select id="meetClient" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                            <option value="">-- Select Client --</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Platform</label>
+                        <select id="meetPlatform" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                            <option value="Zoom">Zoom</option>
+                            <option value="Google Meet">Google Meet</option>
+                            <option value="Microsoft Teams">Microsoft Teams</option>
+                            <option value="Slack">Slack Huddle</option>
+                            <option value="Webex">Cisco Webex</option>
+                            <option value="Custom / Other">Custom / Other</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Meeting Link</label>
+                        <input type="url" id="meetLink" placeholder="e.g. https://zoom.us/j/..." required>
+                    </div>
+                    <div class="field">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="meetTime" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top:10px; width:100%;">Create & Share Meeting</button>
+                </form>
+            </div>
+
+            <!-- Scheduled Meetings List -->
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Scheduled Meetings</h2>
+                <div id="adminMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto;">
+                    <!-- Meetings loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    `,
+    client_overview: `
+        <div class="glass-card" style="margin-bottom:22px; padding:25px; border-radius:15px; background:linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));">
+            <h2 style="font-size:22px; font-weight:700; margin-bottom:10px;" id="clientWelcomeCompany">Welcome Client Portal</h2>
+            <p style="color:var(--ink-soft); font-size:14px; margin-bottom:20px; line-height:1.6;">Access your scheduled conference calls, contact representative, and company workspace chat.</p>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Client ID</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalId">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Contact Person</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalContact">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Email</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalEmail">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Phone Number</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalPhone">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:22px; margin-top:20px;">
+            <div class="glass-card" style="display:flex; flex-direction:column; gap:16px;">
+                <h3 style="font-size:16px; font-weight:600; margin:0;">Contract Summary</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                    <div>
+                        <div style="font-size:11px; color:var(--ink-faint);">Portal Status</div>
+                        <div style="font-size:14px; font-weight:600; color:#00e676; margin-top:3px;">Active Client</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:var(--ink-faint);">Contract Size</div>
+                        <div style="font-size:16px; font-weight:700; color:#fff; margin-top:3px;" id="clientPortalDealSize">$0.00</div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.01); border:1px solid var(--glass-border); padding:15px; border-radius:10px; font-size:13px; color:var(--ink-soft); line-height:1.6;">
+                    <strong>Need Support?</strong> Use the 💬 <strong>Workspace</strong> section in the sidebar to chat directly with our client success team and administrators.
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="font-size:16px; font-weight:600; margin-bottom:15px;">Upcoming Meetings</h3>
+                <div id="clientOverviewMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:220px; overflow-y:auto;">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    `,
+    client_meetings: `
+        <h2 style="font-size:18px; margin-bottom:15px;">My Scheduled Meetings & Screen Shares</h2>
+        <div class="glass-card" style="max-width:700px;">
+            <div id="clientMeetingsList" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
     `
 };
 
@@ -1231,6 +1560,7 @@ function loadPanelData(panelId) {
     else if (panelId === "employees") loadAdminEmployees();
     else if (panelId === "attendance") loadAdminAttendance();
     else if (panelId === "leaves") loadAdminLeaves();
+    else if (panelId === "crm") loadCRM();
     else if (panelId === "recruitment") loadAdminRecruitment();
     else if (panelId === "announcements") loadAdminAnnouncements();
     else if (panelId === "reports") { /* triggered by buttons */ }
@@ -1241,6 +1571,8 @@ function loadPanelData(panelId) {
     else if (panelId === "emp_announcements") loadEmpAnnouncements();
     else if (panelId === "profile") loadProfile();
     else if (panelId === "cand_overview") loadCandidateOverview();
+    else if (panelId === "client_overview") loadClientOverview();
+    else if (panelId === "client_meetings") loadClientMeetings();
     else if (panelId === "messages") loadMessagesPanel();
     else if (panelId === "groups") loadGroupsPanel();
     else if (panelId === "oversight") loadOversightPanel();
@@ -1390,7 +1722,7 @@ async function loadAdminAttendance() {
 
 // 4. Admin Leaves Requests Review
 async function loadAdminLeaves() {
-    const leaves = await apiCall("/leaves");
+    const leaves = await apiCall("/leaves?scope=all");
     const tbody = document.getElementById("leavesTableBody");
     tbody.innerHTML = "";
     if (leaves.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No leave applications found.</td></tr>`;
@@ -1740,6 +2072,11 @@ async function loadProfile() {
     document.getElementById("profEmail").value = prof.email;
     document.getElementById("profPassword").value = "";
 
+    document.getElementById("profEmpIdField").style.display = "none";
+    document.getElementById("profDeptField").style.display = "none";
+    document.getElementById("profDesgField").style.display = "none";
+    document.getElementById("profPhoneField").style.display = "none";
+
     if (user.role === "employee") {
         document.getElementById("profEmpIdField").style.display = "block";
         document.getElementById("profDeptField").style.display = "block";
@@ -1749,6 +2086,9 @@ async function loadProfile() {
         document.getElementById("profEmpId").value = prof.employee_id;
         document.getElementById("profDept").value = prof.department;
         document.getElementById("profDesg").value = prof.designation;
+        document.getElementById("profPhone").value = prof.phone_number || "";
+    } else if (user.role === "client") {
+        document.getElementById("profPhoneField").style.display = "block";
         document.getElementById("profPhone").value = prof.phone_number || "";
     }
 }
@@ -1795,6 +2135,343 @@ async function loadCandidateOverview() {
     });
 }
 
+// === CRM CONTROLLER HANDLERS ===
+async function loadCRM() {
+    try {
+        const clients = await apiCall("/crm/clients");
+        const tbody = document.getElementById("crmTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        
+        let totalLeads = clients.length;
+        let activeClients = 0;
+        let totalValue = 0;
+        
+        if (totalLeads === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No leads or clients found in CRM.</td></tr>`;
+        }
+        
+        clients.forEach(c => {
+            if (c.status === "Active Client") {
+                activeClients++;
+            }
+            const val = parseFloat(c.deal_size) || 0;
+            totalValue += val;
+            
+            const timeStr = new Date(c.created_at).toLocaleDateString();
+            
+            let actions = `
+                <button onclick="openEditLeadModal(${c.id})" class="btn-action btn-edit" style="margin-right:4px;">Edit</button>
+                <button onclick="openInteractionsModal(${c.id}, '${escapeHTML(c.company_name)}')" class="btn-action btn-approve" style="background:rgba(0,230,118,0.15); color:#00e676; border-color:rgba(0,230,118,0.3); margin-right:4px;">Log</button>
+            `;
+            
+            if (!c.user_id && c.status === "Active Client") {
+                actions += `<button onclick="openProvisionModal(${c.id}, '${escapeHTML(c.email || '')}')" class="btn-action btn-approve">Access</button>`;
+            } else if (c.user_id) {
+                actions += `<span style="font-size:11px; color:var(--ink-faint); margin-left:4px;">Access Set</span>`;
+            }
+            
+            const badgeClass = c.status.toLowerCase().replace(" ", "-");
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:600;">${escapeHTML(c.company_name)}</td>
+                    <td>${escapeHTML(c.contact_name || '-')}</td>
+                    <td>
+                        <div style="font-size:12px; font-weight:500;">${escapeHTML(c.email || '-')}</div>
+                        <div style="font-size:11px; color:var(--ink-faint);">${escapeHTML(c.phone_number || '-')}</div>
+                    </td>
+                    <td style="font-weight:600; color:#fff;">₹${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td><span class="badge ${badgeClass}">${escapeHTML(c.status)}</span></td>
+                    <td style="font-size:11px; color:var(--ink-faint);">${timeStr}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        });
+        
+        document.getElementById("crm_stat_total").textContent = totalLeads;
+        document.getElementById("crm_stat_active").textContent = activeClients;
+        document.getElementById("crm_stat_value").textContent = "₹" + totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        const conversion = totalLeads > 0 ? Math.round((activeClients / totalLeads) * 100) : 0;
+        document.getElementById("crm_stat_conversion").textContent = conversion + "%";
+        loadCRMMeetings();
+        
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function openAddLeadModal() {
+    document.getElementById("addLeadForm").reset();
+    openModal("addLeadModal");
+}
+
+document.getElementById("addLeadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+        company_name: document.getElementById("addLeadCompany").value,
+        contact_name: document.getElementById("addLeadContact").value,
+        email: document.getElementById("addLeadEmail").value,
+        phone_number: document.getElementById("addLeadPhone").value,
+        deal_size: parseFloat(document.getElementById("addLeadDealSize").value) || 0,
+        status: document.getElementById("addLeadStatus").value,
+        notes: document.getElementById("addLeadNotes").value
+    };
+    
+    try {
+        await apiCall("/crm/clients", "POST", payload);
+        alert("Lead created successfully!");
+        closeModal("addLeadModal");
+        loadCRM();
+        loadCRMDropdowns();
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+async function openEditLeadModal(id) {
+    try {
+        const clients = await apiCall("/crm/clients");
+        const c = clients.find(item => item.id === id);
+        if (!c) return;
+        
+        document.getElementById("editLeadId").value = c.id;
+        document.getElementById("editLeadCompany").value = c.company_name;
+        document.getElementById("editLeadContact").value = c.contact_name || '';
+        document.getElementById("editLeadEmail").value = c.email || '';
+        document.getElementById("editLeadPhone").value = c.phone_number || '';
+        document.getElementById("editLeadDealSize").value = c.deal_size;
+        document.getElementById("editLeadStatus").value = c.status;
+        document.getElementById("editLeadNotes").value = c.notes || '';
+        
+        openModal("editLeadModal");
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+document.getElementById("editLeadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const id = document.getElementById("editLeadId").value;
+    const payload = {
+        company_name: document.getElementById("editLeadCompany").value,
+        contact_name: document.getElementById("editLeadContact").value,
+        email: document.getElementById("editLeadEmail").value,
+        phone_number: document.getElementById("editLeadPhone").value,
+        deal_size: parseFloat(document.getElementById("editLeadDealSize").value) || 0,
+        status: document.getElementById("editLeadStatus").value,
+        notes: document.getElementById("editLeadNotes").value
+    };
+    
+    try {
+        await apiCall(`/crm/clients/${id}`, "PUT", payload);
+        alert("Lead updated successfully!");
+        closeModal("editLeadModal");
+        loadCRM();
+        loadCRMDropdowns();
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+async function openInteractionsModal(id, companyName) {
+    try {
+        document.getElementById("logInteractionClientId").value = id;
+        document.getElementById("interactionsSub").textContent = `Company: ${companyName}`;
+        document.getElementById("logInteractionForm").reset();
+        
+        await loadInteractions(id);
+        openModal("interactionsModal");
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadInteractions(clientId) {
+    const list = document.getElementById("interactionsList");
+    if (!list) return;
+    list.innerHTML = `<div style="color:var(--ink-soft); font-size:11px;">Loading history...</div>`;
+    
+    const data = await apiCall(`/crm/clients/${clientId}/interactions`);
+    list.innerHTML = "";
+    
+    if (data.length === 0) {
+        list.innerHTML = `<div style="color:var(--ink-faint); font-size:11px; padding:10px 0;">No logged interactions.</div>`;
+        return;
+    }
+    
+    data.forEach(i => {
+        const timeStr = new Date(i.created_at).toLocaleString();
+        let icon = "📝";
+        if (i.interaction_type === "Call") icon = "📞";
+        else if (i.interaction_type === "Email") icon = "✉️";
+        else if (i.interaction_type === "Meeting") icon = "👥";
+        
+        list.innerHTML += `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:10px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:12px; font-weight:600; color:#fff;">${icon} ${escapeHTML(i.interaction_type)}</span>
+                    <span style="font-size:10px; color:var(--ink-faint);">${timeStr}</span>
+                </div>
+                <div style="font-size:11.5px; color:var(--ink-soft); line-height:1.4;">${escapeHTML(i.notes)}</div>
+            </div>
+        `;
+    });
+}
+
+document.getElementById("logInteractionForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const clientId = document.getElementById("logInteractionClientId").value;
+    const payload = {
+        client_id: parseInt(clientId),
+        interaction_type: document.getElementById("logInteractionType").value,
+        notes: document.getElementById("logInteractionNotes").value
+    };
+    
+    try {
+        await apiCall("/crm/interactions", "POST", payload);
+        document.getElementById("logInteractionForm").reset();
+        await loadInteractions(clientId);
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+function openProvisionModal(id, email) {
+    document.getElementById("provisionClientId").value = id;
+    document.getElementById("provisionEmail").value = email || '';
+    document.getElementById("provisionPassword").value = "";
+    openModal("provisionModal");
+}
+
+document.getElementById("provisionForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const id = document.getElementById("provisionClientId").value;
+    const payload = {
+        email: document.getElementById("provisionEmail").value,
+        password: document.getElementById("provisionPassword").value
+    };
+    
+    try {
+        const res = await apiCall(`/crm/clients/${id}/provision`, "POST", payload);
+        alert(`Access provisioned successfully! Client ID: ${res.client_id}`);
+        closeModal("provisionModal");
+        loadCRM();
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+
+// === CLIENT PORTAL HANDLERS ===
+async function loadClientOverview() {
+    try {
+        const prof = await apiCall("/profile");
+        document.getElementById("clientWelcomeCompany").textContent = `Welcome to your portal, ${escapeHTML(prof.company_name)}`;
+        document.getElementById("clientPortalId").textContent = escapeHTML(prof.client_id || '-');
+        document.getElementById("clientPortalContact").textContent = escapeHTML(prof.contact_name || prof.name || '-');
+        document.getElementById("clientPortalEmail").textContent = escapeHTML(prof.email || '-');
+        document.getElementById("clientPortalPhone").textContent = escapeHTML(prof.phone_number || '-');
+        
+        const dealVal = parseFloat(prof.deal_size) || 0;
+        document.getElementById("clientPortalDealSize").textContent = "₹" + dealVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        const meetingsList = document.getElementById("clientOverviewMeetingsList");
+        if (!meetingsList) return;
+        meetingsList.innerHTML = `<div style="color:var(--ink-soft); font-size:11px;">Loading meetings...</div>`;
+        
+        const meetings = await apiCall("/dashboard/meetings");
+        meetingsList.innerHTML = "";
+        
+        if (meetings.length === 0) {
+            meetingsList.innerHTML = `<div style="color:var(--ink-faint); font-size:12px; padding:10px 0;">No upcoming meetings scheduled.</div>`;
+            return;
+        }
+        
+        meetings.slice(0, 3).forEach(m => {
+            const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            meetingsList.innerHTML += `
+                <div style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+                        <div style="flex-shrink:0;">${getPlatformIcon(m.platform)}</div>
+                        <div style="min-width:0; flex:1;">
+                            <div style="font-size:12.5px; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(m.title)}</div>
+                            <div style="font-size:11px; color:var(--ink-faint); margin-top:2px;">${timeStr}</div>
+                        </div>
+                    </div>
+                    <a href="${m.meeting_link}" target="_blank" class="btn-primary" style="padding:4px 8px; font-size:10px; text-decoration:none; flex-shrink:0;">Join</a>
+                </div>
+            `;
+        });
+        
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function loadClientMeetings() {
+    try {
+        const container = document.getElementById("clientMeetingsList");
+        if (!container) return;
+        container.innerHTML = `<div style="color:var(--ink-soft); font-size:11px;">Loading meetings...</div>`;
+        const res = await apiCall("/dashboard/meetings");
+        container.innerHTML = "";
+        if (res.length === 0) {
+            container.innerHTML = `<div style="color:var(--ink-faint); font-size:11px;">No scheduled meetings.</div>`;
+            return;
+        }
+        res.forEach(m => {
+            const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            container.innerHTML += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        <div style="width:34px; height:34px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);">
+                            ${getPlatformIcon(m.platform)}
+                        </div>
+                        <div style="min-width:0; flex:1;">
+                            <h5 style="font-size:12px; font-weight:600; margin:0; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${escapeHTML(m.title)}">${escapeHTML(m.title)}</h5>
+                            <div style="display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
+                                <span style="font-size:8px; padding:1px 4px; border-radius:100px; background:${getPlatformBg(m.platform)}; color:${getPlatformColor(m.platform)}; font-weight:600; display:inline-block;">${m.platform}</span>
+                                <div style="font-size:10px; color:var(--ink-faint);">${timeStr}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="${m.meeting_link}" target="_blank" class="btn-primary" style="padding:5px 10px; font-size:10px; text-decoration:none; flex-shrink:0;">Join</a>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function toggleMeetType() {
+    const type = document.getElementById("meetType").value;
+    const field = document.getElementById("meetClientField");
+    if (type === "client") {
+        field.style.display = "block";
+        loadCRMDropdowns();
+    } else {
+        field.style.display = "none";
+    }
+}
+
+async function loadCRMDropdowns() {
+    try {
+        const select = document.getElementById("meetClient");
+        if (!select) return;
+        
+        const clients = await apiCall("/crm/clients");
+        select.innerHTML = '<option value="">-- Select Client --</option>';
+        clients.forEach(c => {
+            select.innerHTML += `<option value="${c.id}">${escapeHTML(c.company_name)} (${escapeHTML(c.contact_name || '')})</option>`;
+        });
+    } catch (e) {
+        console.error("Could not load CRM dropdowns", e);
+    }
+}
+
 // === CHAT & GROUPS SYSTEM CONTROLLERS ===
 
 let chatPollingInterval = null;
@@ -1804,19 +2481,32 @@ let activeOversightConversationId = null;
 let activeOversightType = null;
 let allUsers = [];
 
+let lastDMMessagesJson = "";
+let lastDMListJson = "";
+let lastGroupMessagesJson = "";
+let lastGroupListJson = "";
+
 // Messages Panel (DMs)
 async function loadMessagesPanel() {
     activeConversationId = null;
+    lastDMMessagesJson = "";
+    lastDMListJson = "";
     document.getElementById("dmMainArea").style.display = "none";
     document.getElementById("dmPlaceholder").style.display = "flex";
     await refreshDMList();
-    chatPollingInterval = setInterval(pollMessages, 3000);
 }
 
 async function refreshDMList() {
     try {
         const res = await apiCall("/chat/conversations");
         const list = res.filter(c => c.type === 'dm');
+        
+        const listJson = JSON.stringify(list) + "||" + activeConversationId;
+        if (listJson === lastDMListJson) {
+            return;
+        }
+        lastDMListJson = listJson;
+
         const container = document.getElementById("dmList");
         container.innerHTML = "";
         
@@ -1855,6 +2545,7 @@ async function pollMessages() {
 
 async function selectDMConversation(id, partnerName) {
     activeConversationId = id;
+    lastDMMessagesJson = "";
     document.getElementById("dmPlaceholder").style.display = "none";
     document.getElementById("dmMainArea").style.display = "flex";
     document.getElementById("dmActiveTitle").textContent = partnerName;
@@ -1875,6 +2566,13 @@ async function refreshDMThread(forceScroll = false) {
     if (!activeConversationId) return;
     try {
         const res = await apiCall(`/chat/conversations/${activeConversationId}/messages`);
+        
+        const messagesJson = JSON.stringify(res.messages);
+        if (messagesJson === lastDMMessagesJson && !forceScroll) {
+            return;
+        }
+        lastDMMessagesJson = messagesJson;
+
         const messagesDiv = document.getElementById("dmMessages");
         const isAtBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 40;
         
@@ -1912,20 +2610,62 @@ async function sendChatMessage(type) {
         const input = document.getElementById("dmInput");
         const val = input.value.trim();
         if (!val || !activeConversationId) return;
+        
+        const messagesDiv = document.getElementById("dmMessages");
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const tempId = "temp_" + Date.now();
+        messagesDiv.innerHTML += `
+            <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
+                <div>${escapeHTML(val)}</div>
+                <div class="time">${timeStr} (sending...)</div>
+            </div>
+        `;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
         input.value = "";
         try {
             await apiCall(`/chat/conversations/${activeConversationId}/messages`, "POST", { content: val });
+            const tempElem = document.getElementById(tempId);
+            if (tempElem) tempElem.remove();
             await refreshDMThread(true);
-        } catch(e) {}
+        } catch(e) {
+            const tempElem = document.getElementById(tempId);
+            if (tempElem) {
+                tempElem.style.opacity = "1";
+                tempElem.style.background = "rgba(230, 75, 75, 0.2)";
+                tempElem.querySelector(".time").textContent = "failed to send";
+            }
+        }
     } else {
         const input = document.getElementById("groupInput");
         const val = input.value.trim();
         if (!val || !activeGroupConversationId) return;
+        
+        const messagesDiv = document.getElementById("groupMessages");
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const tempId = "temp_" + Date.now();
+        messagesDiv.innerHTML += `
+            <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
+                <div>${escapeHTML(val)}</div>
+                <div class="time">${timeStr} (sending...)</div>
+            </div>
+        `;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
         input.value = "";
         try {
             await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`, "POST", { content: val });
+            const tempElem = document.getElementById(tempId);
+            if (tempElem) tempElem.remove();
             await refreshGroupThread(true);
-        } catch(e) {}
+        } catch(e) {
+            const tempElem = document.getElementById(tempId);
+            if (tempElem) {
+                tempElem.style.opacity = "1";
+                tempElem.style.background = "rgba(230, 75, 75, 0.2)";
+                tempElem.querySelector(".time").textContent = "failed to send";
+            }
+        }
     }
 }
 
@@ -1987,6 +2727,8 @@ async function startDMWithUser(userId, userName) {
 // Groups Panel (DMs)
 async function loadGroupsPanel() {
     activeGroupConversationId = null;
+    lastGroupMessagesJson = "";
+    lastGroupListJson = "";
     document.getElementById("groupMainArea").style.display = "none";
     document.getElementById("groupPlaceholder").style.display = "flex";
     
@@ -1994,13 +2736,19 @@ async function loadGroupsPanel() {
     document.getElementById("btnCreateGroupSidebar").style.display = isTLOrAdmin ? "block" : "none";
     
     await refreshGroupList();
-    chatPollingInterval = setInterval(pollGroups, 3000);
 }
 
 async function refreshGroupList() {
     try {
         const res = await apiCall("/chat/conversations");
         const list = res.filter(c => c.type === 'group');
+        
+        const listJson = JSON.stringify(list) + "||" + activeGroupConversationId;
+        if (listJson === lastGroupListJson) {
+            return;
+        }
+        lastGroupListJson = listJson;
+
         const container = document.getElementById("groupList");
         container.innerHTML = "";
         
@@ -2038,6 +2786,7 @@ async function pollGroups() {
 
 async function selectGroupConversation(id, name) {
     activeGroupConversationId = id;
+    lastGroupMessagesJson = "";
     document.getElementById("groupPlaceholder").style.display = "none";
     document.getElementById("groupMainArea").style.display = "flex";
     document.getElementById("groupActiveTitle").textContent = name;
@@ -2061,6 +2810,14 @@ async function refreshGroupThread(forceScroll = false) {
     try {
         const res = await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`);
         
+        const messagesJson = JSON.stringify(res.messages);
+        const membersJson = JSON.stringify(res.members);
+        const cacheKey = messagesJson + "||" + membersJson;
+        if (cacheKey === lastGroupMessagesJson && !forceScroll) {
+            return;
+        }
+        lastGroupMessagesJson = cacheKey;
+
         // Update Title & Simulated Online count
         const membersCount = res.members ? res.members.length : 0;
         const onlineCount = Math.max(1, Math.ceil(membersCount * 0.45));
@@ -2493,11 +3250,14 @@ async function loadAdminMeetings() {
         container.innerHTML = `<div style="color:var(--ink-soft); font-size:12px;">Loading meetings...</div>`;
         const res = await apiCall("/dashboard/meetings");
         container.innerHTML = "";
-        if (res.length === 0) {
-            container.innerHTML = `<div style="color:var(--ink-faint); font-size:12px;">No scheduled meetings.</div>`;
+        
+        const internalMeetings = res.filter(m => m.meeting_type === 'internal' || !m.meeting_type);
+        
+        if (internalMeetings.length === 0) {
+            container.innerHTML = `<div style="color:var(--ink-faint); font-size:12px;">No scheduled employee meetings.</div>`;
             return;
         }
-        res.forEach(m => {
+        internalMeetings.forEach(m => {
             const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             container.innerHTML += `
                 <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
@@ -2571,10 +3331,77 @@ async function submitCreateMeeting(event) {
     btn.textContent = "Creating...";
 
     try {
-        await apiCall("/dashboard/meetings", "POST", { title, platform, meeting_link, scheduled_at });
-        alert("Meeting created and shared with employees!");
+        await apiCall("/dashboard/meetings", "POST", { title, platform, meeting_link, scheduled_at, meeting_type: 'internal' });
+        alert("Employee meeting created and shared successfully!");
         event.target.reset();
         loadAdminMeetings();
+    } catch(e) {
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+    }
+}
+
+async function loadCRMMeetings() {
+    try {
+        const container = document.getElementById("crmMeetingsList");
+        if (!container) return;
+        container.innerHTML = `<div style="color:var(--ink-soft); font-size:12px;">Loading meetings...</div>`;
+        const res = await apiCall("/dashboard/meetings");
+        container.innerHTML = "";
+        
+        const clientMeetings = res.filter(m => m.meeting_type === 'client');
+        
+        if (clientMeetings.length === 0) {
+            container.innerHTML = `<div style="color:var(--ink-faint); font-size:12px;">No scheduled client meetings.</div>`;
+            return;
+        }
+        clientMeetings.forEach(m => {
+            const timeStr = new Date(m.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            container.innerHTML += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                        <div style="width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);">
+                            ${getPlatformIcon(m.platform)}
+                        </div>
+                        <div style="min-width:0; flex:1;">
+                            <h4 style="font-size:13px; font-weight:600; margin:0; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${escapeHTML(m.title)}">${escapeHTML(m.title)}</h4>
+                            <div style="display:flex; align-items:center; gap:6px; margin-top:3px; flex-wrap:wrap;">
+                                <span style="font-size:9px; padding:1px 5px; border-radius:100px; background:${getPlatformBg(m.platform)}; color:${getPlatformColor(m.platform)}; font-weight:600; display:inline-block;">${m.platform}</span>
+                                <span style="font-size:9px; padding:1px 5px; border-radius:100px; background:rgba(0,230,118,0.1); color:#00e676; font-weight:600; display:inline-block;">${escapeHTML(m.company_name || 'Client')}</span>
+                                <div style="font-size:11px; color:var(--ink-faint);">${timeStr}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="${m.meeting_link}" target="_blank" class="btn-primary" style="padding:6px 12px; font-size:11px; text-decoration:none; flex-shrink:0;">Join</a>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function submitCreateClientMeeting(event) {
+    event.preventDefault();
+    const title = document.getElementById("clientMeetTitle").value;
+    const platform = document.getElementById("clientMeetPlatform").value;
+    const meeting_link = document.getElementById("clientMeetLink").value;
+    const scheduled_at = document.getElementById("clientMeetTime").value;
+    const meeting_type = "client";
+    const client_id = document.getElementById("clientMeetClient").value;
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Creating...";
+
+    try {
+        await apiCall("/dashboard/meetings", "POST", { title, platform, meeting_link, scheduled_at, meeting_type, client_id });
+        alert("Client meeting scheduled successfully!");
+        event.target.reset();
+        loadCRMMeetings();
     } catch(e) {
         console.error(e);
     } finally {
