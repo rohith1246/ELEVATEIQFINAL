@@ -233,6 +233,11 @@ def create_crm_interaction():
         if not client_id or not interaction_type:
             return jsonify({"error": "Client ID and Interaction Type are required"}), 400
 
+        # Verify client exists
+        cursor.execute("SELECT id FROM clients WHERE id = %s", (client_id,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Client not found"}), 404
+
         cursor.execute(
             """
             INSERT INTO client_interactions (client_id, interaction_type, notes)
@@ -281,6 +286,10 @@ def create_meeting():
             client_id = None
         else:
             client_id = int(client_id)
+            # Verify client exists
+            cursor.execute("SELECT id FROM clients WHERE id = %s", (client_id,))
+            if not cursor.fetchone():
+                return jsonify({"error": "Client not found"}), 404
 
         cursor.execute(
             """

@@ -323,6 +323,11 @@ def update_employee(emp_id):
             return jsonify({"error": "Employee not found"}), 404
         user_id = record[0]
 
+        if email:
+            cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id))
+            if cursor.fetchone():
+                return jsonify({"error": "Email is already taken by another user"}), 400
+
         if name or email:
             cursor.execute(
                 "UPDATE users SET name = COALESCE(%s, name), email = COALESCE(%s, email) WHERE id = %s",
