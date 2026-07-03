@@ -1,9 +1,9 @@
 from flask import request, jsonify
 from functools import wraps
-from itsdangerous import URLSafeSerializer, BadSignature
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from .config import Config
 
-serializer = URLSafeSerializer(Config.SECRET_KEY)
+serializer = URLSafeTimedSerializer(Config.SECRET_KEY)
 
 def get_current_user():
     token = request.cookies.get("token")
@@ -15,9 +15,9 @@ def get_current_user():
     if not token:
         return None
     try:
-        data = serializer.loads(token)
+        data = serializer.loads(token, max_age=604800)  # Token valid for max 7 days
         return data  # dict containing id, email, role, name, employee_id
-    except BadSignature:
+    except (SignatureExpired, BadSignature):
         return None
 
 def require_role(roles):

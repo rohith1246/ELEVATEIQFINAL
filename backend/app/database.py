@@ -9,8 +9,14 @@ def init_db(app=None):
     global db_pool
     if db_pool is None:
         dsn = app.config.get("DATABASE_URL") if app else Config.DATABASE_URL
-        # Initialize thread-safe connection pool
-        db_pool = ThreadedConnectionPool(1, 20, dsn=dsn)
+        if not dsn:
+            raise ValueError("CRITICAL: DATABASE_URL environment variable is missing or empty. Please check your config.")
+        
+        try:
+            # Initialize thread-safe connection pool
+            db_pool = ThreadedConnectionPool(1, 20, dsn=dsn)
+        except Exception as e:
+            raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
         # Ensure designations table is created and seeded on startup
         conn = db_pool.getconn()

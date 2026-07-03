@@ -8,6 +8,11 @@ from ..auth import get_current_user, check_is_recruitment_manager
 
 recruitment_bp = Blueprint("recruitment", __name__)
 
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @recruitment_bp.route("/jobs", methods=["GET"])
 def get_jobs():
     conn = get_connection()
@@ -155,6 +160,9 @@ def submit_application():
 
     if not job_id or not name or not email or not file:
         return jsonify({"error": "Missing required application parameters"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Unsupported file format. Only PDF, DOC, and DOCX files are allowed."}), 400
 
     # Clean file and save
     filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
