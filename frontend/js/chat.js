@@ -16,7 +16,8 @@ function initChatSSE() {
     if (chatEventSource) {
         chatEventSource.close();
     }
-    chatEventSource = new EventSource(`${API_BASE}/chat/stream`, { withCredentials: true });
+    const sseUrl = token ? `${API_BASE}/chat/stream?token=${encodeURIComponent(token)}` : `${API_BASE}/chat/stream`;
+    chatEventSource = new EventSource(sseUrl, { withCredentials: true });
     chatEventSource.onmessage = function(event) {
         try {
             const data = JSON.parse(event.data);

@@ -64,9 +64,16 @@
                 <div class="field"><label>Department</label><input type="text" id="editDept" required></div>
                 <div class="field">
                     <label>Designation</label>
-                    <div style="display:flex; gap:8px;">
+                    <!-- Dropdown state -->
+                    <div id="editDesgSelectArea" style="display:flex; gap:8px;">
                         <select id="editDesg" style="flex:1;" required></select>
-                        <button type="button" onclick="promptCreateDesignation()" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                        <button type="button" onclick="toggleDesgInput('edit', true)" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                    </div>
+                    <!-- Input state -->
+                    <div id="editDesgInputArea" style="display:none; gap:8px;">
+                        <input type="text" id="editDesgCustom" placeholder="New designation name..." style="flex:1; margin-bottom:0 !important;">
+                        <button type="button" onclick="submitCustomDesignation('edit')" class="btn-action btn-approve" style="margin-top:0; font-size:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">✓</button>
+                        <button type="button" onclick="toggleDesgInput('edit', false)" class="btn-action btn-reject" style="margin-top:0; font-size:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0; margin-left:0;">✗</button>
                     </div>
                 </div>
                 <div class="field">
@@ -78,7 +85,7 @@
                 </div>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button type="button" onclick="closeModal('editEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="button" onclick="closeModal('editEmployeeModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                 <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
             </div>
         </form>
@@ -113,7 +120,7 @@
                 <textarea id="addLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button type="button" onclick="closeModal('addLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="button" onclick="closeModal('addLeadModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                 <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Lead</button>
             </div>
         </form>
@@ -149,7 +156,7 @@
                 <textarea id="editLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button type="button" onclick="closeModal('editLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="button" onclick="closeModal('editLeadModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                 <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
             </div>
         </form>
@@ -188,7 +195,7 @@
         <div id="interactionsList" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
             <!-- Loaded dynamically -->
         </div>
-        <button type="button" onclick="closeModal('interactionsModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:100%;">Back</button>
+        <button type="button" onclick="closeModal('interactionsModal')" class="btn-action btn-edit" style="width:100% !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
     </div>
 </div>
 
@@ -209,7 +216,7 @@
                 <input type="password" id="provisionPassword" minlength="6" required>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button type="button" onclick="closeModal('provisionModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="button" onclick="closeModal('provisionModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                 <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Login Account</button>
             </div>
         </form>
@@ -358,15 +365,22 @@ const layouts = {
                         <div class="field"><label>Department</label><input type="text" id="addDept" placeholder="e.g. Engineering" required></div>
                         <div class="field">
                             <label>Designation</label>
-                            <div style="display:flex; gap:8px;">
+                            <!-- Dropdown state -->
+                            <div id="addDesgSelectArea" style="display:flex; gap:8px;">
                                 <select id="addDesg" style="flex:1;" required></select>
-                                <button type="button" onclick="promptCreateDesignation()" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                                <button type="button" onclick="toggleDesgInput('add', true)" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                            </div>
+                            <!-- Input state -->
+                            <div id="addDesgInputArea" style="display:none; gap:8px;">
+                                <input type="text" id="addDesgCustom" placeholder="New designation name..." style="flex:1; margin-bottom:0 !important;">
+                                <button type="button" onclick="submitCustomDesignation('add')" class="btn-action btn-approve" style="margin-top:0; font-size:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">✓</button>
+                                <button type="button" onclick="toggleDesgInput('add', false)" class="btn-action btn-reject" style="margin-top:0; font-size:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0; margin-left:0;">✗</button>
                             </div>
                         </div>
                         <div class="field"><label>Date of Joining</label><input type="date" id="addJoinDate"></div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:20px;">
-                        <button type="button" onclick="closeModal('addEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="button" onclick="closeModal('addEmployeeModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                         <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Employee Profile</button>
                     </div>
                 </form>
@@ -468,7 +482,7 @@ const layouts = {
                     </div>
                     <div class="field" style="margin-top:10px;"><label>Job Description</label><textarea id="jobDesc" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
                     <div style="display:flex; gap:12px; margin-top:20px;">
-                        <button type="button" onclick="closeModal('addJobModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="button" onclick="closeModal('addJobModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
                         <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Publish Job Posting</button>
                     </div>
                 </form>

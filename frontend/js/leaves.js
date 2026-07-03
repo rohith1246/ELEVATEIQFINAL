@@ -55,14 +55,38 @@ async function loadDesignations(selectedVal = null) {
     }
 }
 
-async function promptCreateDesignation() {
-    const name = prompt("Enter the new employee designation:");
-    if (!name || name.trim() === "") return;
+function toggleDesgInput(mode, showInput) {
+    const selectArea = document.getElementById(`${mode}DesgSelectArea`);
+    const inputArea = document.getElementById(`${mode}DesgInputArea`);
+    const customInput = document.getElementById(`${mode}DesgCustom`);
+    
+    if (showInput) {
+        if (selectArea) selectArea.style.display = "none";
+        if (inputArea) inputArea.style.display = "flex";
+        if (customInput) {
+            customInput.value = "";
+            customInput.focus();
+        }
+    } else {
+        if (selectArea) selectArea.style.display = "flex";
+        if (inputArea) inputArea.style.display = "none";
+    }
+}
+
+async function submitCustomDesignation(mode) {
+    const customInput = document.getElementById(`${mode}DesgCustom`);
+    if (!customInput) return;
+    const name = customInput.value.trim();
+    if (!name) return;
+    
     try {
-        const res = await apiCall("/designations", "POST", { name: name.trim() });
+        const res = await apiCall("/designations", "POST", { name });
         alert(`Designation "${res.name}" created successfully!`);
         await loadDesignations(res.name);
-    } catch(e) {}
+        toggleDesgInput(mode, false);
+    } catch(e) {
+        console.error(e);
+    }
 }
 
 async function loadAdminEmployees() {
