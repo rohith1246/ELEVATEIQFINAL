@@ -91,6 +91,8 @@ def apply_leave():
         # Check leave balance
         cursor.execute("SELECT * FROM employees WHERE id = %s", (user["emp_db_id"],))
         emp = cursor.fetchone()
+        if not emp:
+            return jsonify({"error": "Employee profile not found. Please contact the administrator."}), 404
 
         leave_days = (end_date - start_date).days + 1
         balance_col = f"{leave_type.lower()}_leave"
@@ -163,7 +165,10 @@ def review_leave(leave_id):
             # Deduct balance
             balance_col = f"{leave_type.lower()}_leave"
             cursor.execute(f"SELECT {balance_col} FROM employees WHERE id = %s", (emp_id,))
-            balance = cursor.fetchone()[balance_col]
+            emp_row = cursor.fetchone()
+            if not emp_row:
+                return jsonify({"error": "Employee record not found."}), 404
+            balance = emp_row[balance_col]
 
             if balance < leave_days:
                 return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400

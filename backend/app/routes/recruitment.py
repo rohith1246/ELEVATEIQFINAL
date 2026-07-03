@@ -161,19 +161,29 @@ def submit_application():
     if not job_id or not name or not email or not file:
         return jsonify({"error": "Missing required application parameters"}), 400
 
+    try:
+        job_id = int(job_id)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid job_id"}), 400
+
     if not allowed_file(file.filename):
         return jsonify({"error": "Unsupported file format. Only PDF, DOC, and DOCX files are allowed."}), 400
-
-    # Clean file and save
-    filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
-    upload_folder = current_app.config["UPLOAD_FOLDER"]
-    os.makedirs(upload_folder, exist_ok=True)
-    file_path = os.path.join(upload_folder, filename)
-    file.save(file_path)
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Verify job exists
+        cursor.execute("SELECT id FROM jobs WHERE id = %s", (job_id,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Job posting not found"}), 404
+
+        # Clean file and save
+        filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
+        upload_folder = current_app.config["UPLOAD_FOLDER"]
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, filename)
+        file.save(file_path)
+
         cursor.execute(
             """
             INSERT INTO applications (job_id, candidate_name, email, phone, resume_filename, status) 

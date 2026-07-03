@@ -27,7 +27,7 @@ def chat_stream():
     if not token:
         return "Unauthorized", 401
     try:
-        user = serializer.loads(token)
+        user = serializer.loads(token, max_age=604800)
     except Exception:
         return "Unauthorized", 401
         
