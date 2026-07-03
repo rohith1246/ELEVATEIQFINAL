@@ -200,3 +200,19 @@
     align-items: center;
     gap: 4px;
 }
+
+@media (max-width: 768px) {
+    .chat-container {
+        flex-direction: column;
+        height: auto;
+    }
+    .chat-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        max-height: 240px;
+    }
+    .chat-main {
+        height: 480px;
+    }
+}
