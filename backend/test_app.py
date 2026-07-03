@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import bcrypt
-from app import create_app
+from elevateiq_app import create_app
 
 class ElevateIQTestCase(unittest.TestCase):
     def setUp(self):
@@ -9,7 +9,7 @@ class ElevateIQTestCase(unittest.TestCase):
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
 
-    @patch('app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
     def test_register_success(self, mock_get_conn):
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
@@ -28,7 +28,7 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'Registration successful', response.data)
 
-    @patch('app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
     def test_register_duplicate(self, mock_get_conn):
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
@@ -47,7 +47,7 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b'Email already registered', response.data)
 
-    @patch('app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
     def test_login_success(self, mock_get_conn):
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
@@ -76,7 +76,7 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Login successful', response.data)
         
-    @patch('app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
     def test_login_invalid(self, mock_get_conn):
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
@@ -94,15 +94,15 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertIn(b'Invalid credentials', response.data)
 
-    @patch('app.routes.auth_routes.get_connection')
-    @patch('app.routes.auth_routes.get_current_user')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_current_user')
     def test_get_profile_unauthorized(self, mock_get_user, mock_get_conn):
         mock_get_user.return_value = None
         response = self.client.get('/profile')
         self.assertEqual(response.status_code, 401)
 
-    @patch('app.routes.auth_routes.get_connection')
-    @patch('app.routes.auth_routes.get_current_user')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.get_current_user')
     def test_get_profile_success(self, mock_get_user, mock_get_conn):
         mock_get_user.return_value = {
             'id': 1,
@@ -127,8 +127,8 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'candidate@example.com', response.data)
 
-    @patch('app.routes.crm_routes.get_connection')
-    @patch('app.routes.crm_routes.get_current_user')
+    @patch('elevateiq_app.routes.crm_routes.get_connection')
+    @patch('elevateiq_app.routes.crm_routes.get_current_user')
     def test_get_crm_clients_success(self, mock_get_user, mock_get_conn):
         # Admin gets CRM clients
         mock_get_user.return_value = {
@@ -160,8 +160,8 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Acme Corp', response.data)
 
-    @patch('app.routes.leaves.get_connection')
-    @patch('app.routes.leaves.get_current_user')
+    @patch('elevateiq_app.routes.leaves.get_connection')
+    @patch('elevateiq_app.routes.leaves.get_current_user')
     def test_apply_leave_success(self, mock_get_user, mock_get_conn):
         mock_get_user.return_value = {
             'id': 2,
@@ -193,8 +193,8 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'Leave application submitted successfully', response.data)
 
-    @patch('app.routes.auth_routes.get_connection')
-    @patch('app.auth.get_current_user')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.auth.get_current_user')
     def test_get_designations(self, mock_get_user, mock_get_conn):
         mock_get_user.return_value = {
             'id': 1,
@@ -216,8 +216,8 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'HR Manager', response.data)
 
-    @patch('app.routes.auth_routes.get_connection')
-    @patch('app.auth.get_current_user')
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.auth.get_current_user')
     def test_create_designation_success(self, mock_get_user, mock_get_conn):
         mock_get_user.return_value = {
             'id': 1,
