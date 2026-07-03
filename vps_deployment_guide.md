@@ -53,13 +53,13 @@ sudo apt install python3-pip python3-venv postgresql postgresql-contrib nginx gi
    cd elevateiq
    ```
 
-2. Create a virtual environment and install the required dependencies:
+2. Create a virtual environment and install the required dependencies (including `gevent` for high-concurrency SSE):
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    pip install --upgrade pip
    pip install -r requirements.txt
-   pip install gunicorn
+   pip install gunicorn gevent
    ```
 
 ---
@@ -104,7 +104,7 @@ To ensure your Flask backend runs in the background and starts automatically whe
    Environment="PATH=/var/www/elevateiq/venv/bin"
    Environment="PYTHONPATH=/var/www/elevateiq/backend"
    EnvironmentFile=/var/www/elevateiq/.env
-   ExecStart=/var/www/elevateiq/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 run:app
+   ExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gevent --workers 2 --worker-connections 1000 --bind 127.0.0.1:5000 run:app
 
    [Install]
    WantedBy=multi-user.target
@@ -166,7 +166,14 @@ Nginx will handle static files (`.html`, `.css`, `.png`, etc.) directly for maxi
        location /applications { proxy_pass http://127.0.0.1:5000; }
        location /dashboard { proxy_pass http://127.0.0.1:5000; }
        location /reports { proxy_pass http://127.0.0.1:5000; }
-       location /chat { proxy_pass http://127.0.0.1:5000; }
+        location /chat { 
+            proxy_pass http://127.0.0.1:5000; 
+            proxy_set_header Connection '';
+            proxy_http_version 1.1;
+            chunked_transfer_encoding off;
+            proxy_buffering off;
+            proxy_cache off;
+        }
        location /uploads { proxy_pass http://127.0.0.1:5000; }
 
        # General reverse proxy settings
