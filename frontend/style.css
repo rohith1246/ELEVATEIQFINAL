@@ -535,6 +535,22 @@ footer a {
   .section { padding: 110px 5vw 80px; }
 }
 
+@media (max-width: 860px) {
+  .nav-right {
+    gap: 8px;
+  }
+  .btn-login, .nav-right .btn-primary {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-right .btn-primary {
+    display: none; /* Hide Sign up button on extra small screens to save space */
+  }
+}
+
 /* =============================================
    PAGE INTRO PRELOADER
    =============================================*/

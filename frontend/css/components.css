@@ -147,9 +147,48 @@ tr:hover td {
 }
 @media(max-width:760px) {
     .dash-container { flex-direction: column; }
-    .sidebar { width: 100%; position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--glass-border); }
+    .sidebar { 
+        width: 100%; 
+        position: relative; 
+        height: auto; 
+        border-right: none; 
+        border-bottom: 1px solid var(--glass-border); 
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 16px;
+        gap: 8px;
+        justify-content: center;
+    }
+    .sidebar-link {
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        border-left: none;
+        border-bottom: 2px solid var(--orange);
+        padding-left: 14px;
+    }
     .dash-content { margin-left: 0; padding: 20px; }
     .form-grid { grid-template-columns: 1fr; }
+}
+
+@media(max-width:480px) {
+    .modal-content {
+        padding: 20px 16px !important;
+    }
+    .modal-content h2 {
+        font-size: 18px !important;
+        margin-bottom: 16px !important;
+    }
+    .modal-content input[type="text"], 
+    .modal-content input[type="password"], 
+    .modal-content input[type="email"],
+    .modal-content input[type="date"],
+    .modal-content select {
+        padding: 12px 14px !important;
+        margin-bottom: 14px !important;
+    }
 }
 
 /* Actions & Buttons */
