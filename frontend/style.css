@@ -527,3 +527,13 @@ footer a {
   opacity: 0.12;
   pointer-events: none;
 }
+
+/* Preloader Mobile Responsiveness */
+@media (max-width: 768px) {
+  .preloader-video {
+    object-fit: contain;
+  }
+  .preloader-overlay {
+    background-color: #000000; /* Blends letterbox space seamlessly with the video background */
+  }
+}
