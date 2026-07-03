@@ -580,3 +580,36 @@ footer a {
   opacity: 0.12;
   pointer-events: none;
 }
+
+/* Contact Page Layout & Responsiveness */
+.contact-grid {
+  max-width: 900px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  padding: 40px;
+  margin: auto;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding-right: 40px;
+}
+
+@media (max-width: 768px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 30px 20px;
+  }
+  .contact-info {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 0;
+    padding-bottom: 30px;
+  }
+}
