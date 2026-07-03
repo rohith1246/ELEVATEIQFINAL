@@ -184,3 +184,11 @@ CREATE TABLE IF NOT EXISTS client_interactions (
 -- Alter meetings table for B2B Client integration
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS client_id INT REFERENCES clients(id) ON DELETE SET NULL;
 ALTER TABLE meetings ADD COLUMN IF NOT EXISTS meeting_type VARCHAR(20) DEFAULT 'internal';
+
+-- 18. Designations Table
+CREATE TABLE IF NOT EXISTS designations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Elevate IQ</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+
+<!-- Ambient Background Video -->
+<video autoplay muted loop playsinline class="video-bg">
+  <source src="logo_animated.mp4" type="video/mp4">
+</video>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="images/logo.png" alt="Elevate IQ Logo">
+  </a>
+  <div class="nav-right">
+    <span id="userGreeting" style="font-size:14px; color:var(--ink-soft); margin-right:15px;"></span>
+    <button onclick="logout()" class="btn-ghost" style="padding: 8px 20px; font-size:13px;">Log out</button>
+  </div>
+</nav>
+
+<div class="dash-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebarMenu">
+        <!-- Rendered Dynamically based on role -->
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="dash-content">
+        <h1 id="dashTitle" style="font-size:28px; margin-bottom:6px;">Dashboard</h1>
+        <p id="dashSub" style="color:var(--ink-soft); font-size:14px; margin-bottom:30px;"></p>
+
+        <!-- Dynamic Content Panels -->
+        <div id="panelContainer">
+            <!-- Panels injected by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal" id="editEmployeeModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('editEmployeeModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Edit Employee Details</h2>
+        <form id="editEmployeeForm">
+            <input type="hidden" id="editEmpId">
+            <div class="form-grid">
+                <div class="field"><label>Full Name</label><input type="text" id="editName" required></div>
+                <div class="field"><label>Email</label><input type="email" id="editEmail" required></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="editPhone"></div>
+                <div class="field"><label>Department</label><input type="text" id="editDept" required></div>
+                <div class="field">
+                    <label>Designation</label>
+                    <div style="display:flex; gap:8px;">
+                        <select id="editDesg" style="flex:1;" required></select>
+                        <button type="button" onclick="promptCreateDesignation()" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Status</label>
+                    <select id="editStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('editEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal" id="addLeadModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('addLeadModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Add New CRM Lead</h2>
+        <form id="addLeadForm">
+            <div class="form-grid">
+                <div class="field"><label>Company Name</label><input type="text" id="addLeadCompany" placeholder="e.g. Acme Corp" required></div>
+                <div class="field"><label>Contact Person</label><input type="text" id="addLeadContact" placeholder="e.g. John Doe"></div>
+                <div class="field"><label>Email</label><input type="email" id="addLeadEmail" placeholder="e.g. contact@acme.com"></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="addLeadPhone" placeholder="e.g. +1 555-0199"></div>
+                <div class="field"><label>Deal Size (₹)</label><input type="number" step="0.01" id="addLeadDealSize" value="0.00"></div>
+                <div class="field">
+                    <label>Pipeline Status</label>
+                    <select id="addLeadStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                        <option value="Lead">Lead</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal">Proposal</option>
+                        <option value="Active Client">Active Client</option>
+                        <option value="Lost">Lost</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Notes</label>
+                <textarea id="addLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('addLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Lead</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Lead Modal -->
+<div class="modal" id="editLeadModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('editLeadModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Edit CRM Lead</h2>
+        <form id="editLeadForm">
+            <input type="hidden" id="editLeadId">
+            <div class="form-grid">
+                <div class="field"><label>Company Name</label><input type="text" id="editLeadCompany" required></div>
+                <div class="field"><label>Contact Person</label><input type="text" id="editLeadContact"></div>
+                <div class="field"><label>Email</label><input type="email" id="editLeadEmail"></div>
+                <div class="field"><label>Phone Number</label><input type="text" id="editLeadPhone"></div>
+                <div class="field"><label>Deal Size (₹)</label><input type="number" step="0.01" id="editLeadDealSize"></div>
+                <div class="field">
+                    <label>Pipeline Status</label>
+                    <select id="editLeadStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                        <option value="Lead">Lead</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Proposal">Proposal</option>
+                        <option value="Active Client">Active Client</option>
+                        <option value="Lost">Lost</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Notes</label>
+                <textarea id="editLeadNotes" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('editLeadModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Interactions Log Modal -->
+<div class="modal" id="interactionsModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="close-modal" onclick="closeModal('interactionsModal')">&times;</button>
+        <h2 style="margin-bottom: 10px;" id="interactionsTitle">Client Interaction Logs</h2>
+        <div style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px;" id="interactionsSub">Company: -</div>
+        
+        <form id="logInteractionForm" style="margin-bottom:20px; padding:15px; background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); border-radius:10px;">
+            <input type="hidden" id="logInteractionClientId">
+            <h3 style="font-size:14px; margin-top:0; margin-bottom:12px; font-weight:600;">Log New Interaction</h3>
+            <div style="display:flex; gap:12px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; color:var(--ink-faint); display:block; margin-bottom:4px;">Type</label>
+                    <select id="logInteractionType" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none; font-size:12px;">
+                        <option value="Call">Call</option>
+                        <option value="Email">Email</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Note">Note</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="font-size:11px; color:var(--ink-faint); display:block; margin-bottom:4px;">Details</label>
+                <textarea id="logInteractionNotes" style="width:100%; height:60px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:8px; outline:none; resize:none; font-size:12px;" placeholder="e.g. Left a voicemail / sent product deck" required></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 8px 16px; font-size: 12px; align-self: flex-end; width:auto;">Log Interaction</button>
+        </form>
+        
+        <h3 style="font-size:14px; font-weight:600; margin-bottom:10px;">Interaction History</h3>
+        <div id="interactionsList" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            <!-- Loaded dynamically -->
+        </div>
+        <button type="button" onclick="closeModal('interactionsModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:100%;">Back</button>
+    </div>
+</div>
+
+<!-- Provision Portal Access Modal -->
+<div class="modal" id="provisionModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="close-modal" onclick="closeModal('provisionModal')">&times;</button>
+        <h2 style="margin-bottom: 10px;">Provision Portal Access</h2>
+        <p style="color:var(--ink-soft); font-size:13px; margin-bottom:20px; line-height:1.5;">This will create login credentials and grant access to the B2B Client Portal for this active client.</p>
+        <form id="provisionForm">
+            <input type="hidden" id="provisionClientId">
+            <div class="field">
+                <label>Login Email</label>
+                <input type="email" id="provisionEmail" required>
+            </div>
+            <div class="field" style="margin-top:12px;">
+                <label>Temporary Password</label>
+                <input type="password" id="provisionPassword" minlength="6" required>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button type="button" onclick="closeModal('provisionModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Login Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Start New DM Modal -->
+<div class="modal" id="newDMModal">
+    <div class="modal-content" style="max-width: 480px;">
+        <button class="close-modal" onclick="closeModal('newDMModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Start 1-on-1 Chat</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="dmUserSearch" placeholder="Search employees..." onkeyup="filterDMUsersList()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none;">
+        </div>
+        <div id="dmUsersList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal" id="createGroupModal">
+    <div class="modal-content" style="max-width: 480px;">
+        <button class="close-modal" onclick="closeModal('createGroupModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Create Group Chat</h2>
+        <form id="createGroupForm" onsubmit="submitCreateGroup(event)">
+            <div class="field">
+                <label>Group Name</label>
+                <input type="text" id="newGroupName" required placeholder="e.g. Project Apollo Taskforce">
+            </div>
+            <div style="margin-top: 15px; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--orange);">SELECT INITIAL MEMBERS</div>
+            <div id="groupSelectMembersList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <!-- User checkboxes loaded dynamically -->
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create Group</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Group Member Modal -->
+<div class="modal" id="addGroupMemberModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="close-modal" onclick="closeModal('addGroupMemberModal')">&times;</button>
+        <h2 style="margin-bottom: 20px;">Add Member to Group</h2>
+        <div id="addGroupMembersList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Users list loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+// Define layouts
+const layouts = {
+    // === ADMIN PANELS ===
+    overview: `
+        <div class="stats-grid" id="adminStatsGrid">
+            <div class="stat-card"><h3>Total Employees</h3><div class="val" id="stat_total_emp">-</div></div>
+            <div class="stat-card"><h3>Present Today</h3><div class="val" id="stat_present">-</div></div>
+            <div class="stat-card"><h3>Absent Today</h3><div class="val" id="stat_absent">-</div></div>
+            <div class="stat-card"><h3>Pending Leaves</h3><div class="val" id="stat_pending_leaves">-</div></div>
+            <div class="stat-card"><h3>Open Careers</h3><div class="val" id="stat_open_jobs">-</div></div>
+            <div class="stat-card"><h3>Total Applications</h3><div class="val" id="stat_total_apps">-</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:22px; margin-top:20px;">
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Live Company Notice Board</h2>
+                <div id="adminNoticeList" style="display:flex; flex-direction:column; gap:12px;"></div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:22px;">
+                <!-- Create Meeting Form -->
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Schedule Meeting Link</h2>
+                    <form id="createMeetingForm" onsubmit="submitCreateMeeting(event)" style="display:flex; flex-direction:column; gap:12px;">
+                        <div class="field">
+                            <label>Meeting Title</label>
+                            <input type="text" id="meetTitle" placeholder="e.g. Sync & Sprint Review" required>
+                        </div>
+                        <div class="field">
+                            <label>Platform</label>
+                            <select id="meetPlatform" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                                <option value="Zoom">Zoom</option>
+                                <option value="Google Meet">Google Meet</option>
+                                <option value="Microsoft Teams">Microsoft Teams</option>
+                                <option value="Slack">Slack Huddle</option>
+                                <option value="Webex">Cisco Webex</option>
+                                <option value="Custom / Other">Custom / Other</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Meeting Link</label>
+                            <input type="url" id="meetLink" placeholder="e.g. https://zoom.us/j/..." required>
+                        </div>
+                        <div class="field">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="meetTime" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top:10px; width:100%;">Create & Share Meeting</button>
+                    </form>
+                </div>
+
+                <!-- Scheduled Meetings List -->
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Scheduled Meetings</h2>
+                    <div id="adminMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:220px; overflow-y:auto;">
+                        <!-- Meetings loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+    employees: `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <input type="text" id="empSearchInput" placeholder="Search employee name or ID..." onkeyup="filterEmployees()" style="padding:10px 16px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; width:300px; outline:none;">
+            <button onclick="openModal('addEmployeeModal')" class="btn-primary">+ Add New Employee</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Add Employee Modal -->
+        <div class="modal" id="addEmployeeModal">
+            <div class="modal-content" style="max-width: 650px;">
+                <button class="close-modal" onclick="closeModal('addEmployeeModal')">&times;</button>
+                <h2 style="margin-bottom: 20px;">Register New Employee</h2>
+                <form id="addEmployeeForm">
+                    <div class="form-grid">
+                        <div class="field"><label>Employee ID (e.g. EMP001)</label><input type="text" id="addEmpId" required></div>
+                        <div class="field"><label>Full Name</label><input type="text" id="addName" required></div>
+                        <div class="field"><label>Email Address</label><input type="email" id="addEmail" required></div>
+                        <div class="field"><label>Password (Leave empty to auto-generate)</label><input type="password" id="addPassword" placeholder="Auto-generated"></div>
+                        <div class="field"><label>Phone Number</label><input type="text" id="addPhone"></div>
+                        <div class="field"><label>Department</label><input type="text" id="addDept" placeholder="e.g. Engineering" required></div>
+                        <div class="field">
+                            <label>Designation</label>
+                            <div style="display:flex; gap:8px;">
+                                <select id="addDesg" style="flex:1;" required></select>
+                                <button type="button" onclick="promptCreateDesignation()" class="btn-action btn-edit" style="margin-top:0; font-size:20px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; flex-shrink:0;">+</button>
+                            </div>
+                        </div>
+                        <div class="field"><label>Date of Joining</label><input type="date" id="addJoinDate"></div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="closeModal('addEmployeeModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Employee Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `,
+    attendance: `
+        <h2 style="font-size:18px;">Daily Attendance Registry</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Hours Worked</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    leaves: `
+        <h2 style="font-size:18px;">Pending & Processed Leave Applications</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Balances</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="leavesTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    recruitment: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-size:18px;">Active Job Postings</h2>
+            <button onclick="openModal('addJobModal')" class="btn-primary">+ Create Job Posting</button>
+        </div>
+        <div class="table-wrap" style="margin-bottom:40px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Location</th>
+                        <th>Salary Range</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="jobsTableBody"></tbody>
+            </table>
+        </div>
+
+        <h2 style="font-size:18px;">Candidate Applications Received</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Email</th>
+                        <th>Applied Role</th>
+                        <th>Resume</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Add Job Modal -->
+        <div class="modal" id="addJobModal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeModal('addJobModal')">&times;</button>
+                <h2 style="margin-bottom: 20px;">Create Job Opening</h2>
+                <form id="addJobForm">
+                    <div class="form-grid">
+                        <div class="field"><label>Job Title</label><input type="text" id="jobTitle" required></div>
+                        <div class="field"><label>Department</label><input type="text" id="jobDept" required></div>
+                        <div class="field"><label>Location</label><input type="text" id="jobLoc" placeholder="e.g. Remote / New York" required></div>
+                        <div class="field"><label>Experience Needed</label><input type="text" id="jobExp" placeholder="e.g. 3+ Years"></div>
+                        <div class="field"><label>Salary Range</label><input type="text" id="jobSalary" placeholder="e.g. $80k - $110k"></div>
+                        <div class="field"><label>Skills Required (Comma separated)</label><input type="text" id="jobSkills"></div>
+                    </div>
+                    <div class="field" style="margin-top:10px;"><label>Job Description</label><textarea id="jobDesc" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="closeModal('addJobModal')" class="btn-primary" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); width:auto; padding:13px 25px;">Back</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Publish Job Posting</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `,
+    announcements: `
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto 30px;">
+            <h2 style="font-size:18px; margin-bottom:15px;">Create Announcement</h2>
+            <form id="announcementForm">
+                <div class="field"><label>Announcement Title</label><input type="text" id="annTitle" required></div>
+                <div class="field"><label>Content Details</label><textarea id="annContent" style="width:100%; height:100px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Publish Board Notification</button>
+            </form>
+        </div>
+        <div class="glass-card">
+            <h2 style="font-size:18px; margin-bottom:15px;">Announcement History Log</h2>
+            <div id="announcementLog" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+    `,
+    reports: `
+        <h2 style="font-size:18px; margin-bottom:20px;">Generate Standard Reports</h2>
+        <div style="display:flex; gap:14px; margin-bottom:40px; flex-wrap:wrap;">
+            <button onclick="generateReport('attendance')" class="btn-primary">Attendance Audit Report</button>
+            <button onclick="generateReport('employee')" class="btn-primary">Department Breakdown Report</button>
+            <button onclick="generateReport('recruitment')" class="btn-primary">Recruitment Funnel Report</button>
+        </div>
+        <div class="glass-card" id="reportOutputCard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:15px;">
+                <h3 id="reportTitle" style="font-size:18px;">Report View</h3>
+                <button onclick="window.print()" class="btn-edit" style="padding: 6px 14px; border-radius:8px; font-size:12px;">Print / Save PDF</button>
+            </div>
+            <div id="reportContainer"></div>
+        </div>
+    `,
+    admin_contacts: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+            <h2 style="font-size:18px; margin:0;">Contact Messages Registry</h2>
+            <div style="display:flex; gap:10px; background:rgba(255,255,255,0.05); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                <button id="btnEduTechContacts" onclick="switchContactTab('edutech')" class="btn-primary" style="padding:6px 16px; font-size:13px; border-radius:8px;">EduTech Portal</button>
+                <button id="btnElevateContacts" onclick="switchContactTab('elevate')" class="btn-login" style="padding:6px 16px; font-size:13px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft);">ElevateIQ Site</button>
+            </div>
+        </div>
+
+        <!-- EduTech Contacts Table -->
+        <div id="edutechContactsSection" class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Interested Course</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="edutechContactsTableBody">
+                    <tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">Loading submissions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ElevateIQ Contacts Table -->
+        <div id="elevateContactsSection" class="table-wrap" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="elevateContactsTableBody">
+                    <tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">Loading messages...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    `,
+
+    // === EMPLOYEE PANELS ===
+    emp_overview: `
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Casual Leaves Left</h3><div class="val" id="bal_casual">-</div></div>
+            <div class="stat-card"><h3>Sick Leaves Left</h3><div class="val" id="bal_sick">-</div></div>
+            <div class="stat-card"><h3>Earned Leaves Left</h3><div class="val" id="bal_earned">-</div></div>
+            <div class="stat-card"><h3>Emergency Leaves Left</h3><div class="val" id="bal_emergency">-</div></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-top:20px;">
+            <div style="display:flex; flex-direction:column; gap:22px;">
+                <div class="glass-card" style="text-align:center;">
+                    <h2 style="font-size:18px; margin-bottom:20px;">Mark Daily Attendance</h2>
+                    <div style="display:flex; gap:14px; justify-content:center; margin-bottom:20px;">
+                        <button onclick="markCheckIn()" class="btn-primary" style="background: linear-gradient(135deg,#00a86b,#3ea6ff);">Check In</button>
+                        <button onclick="markCheckOut()" class="btn-primary" style="background: linear-gradient(135deg,#ff4b4b,#ff8c32);">Check Out</button>
+                    </div>
+                    <p id="attendanceTimerStatus" style="color:var(--ink-soft); font-size:13px;"></p>
+                </div>
+                
+                <div class="glass-card">
+                    <h2 style="font-size:18px; margin-bottom:15px;">Upcoming Meetings</h2>
+                    <div id="empMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:200px; overflow-y:auto;">
+                        <!-- Meetings loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="display:flex; flex-direction:column;">
+                <h2 style="font-size:18px; margin-bottom:15px;">Recent Board Announcements</h2>
+                <div id="empNoticeList" style="display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto;"></div>
+            </div>
+        </div>
+    `,
+    emp_attendance: `
+        <h2 style="font-size:18px;">My Attendance History</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In Time</th>
+                        <th>Check Out Time</th>
+                        <th>Working Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="empAttendanceTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    emp_leaves: `
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:22px;">
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Apply for Leave</h2>
+                <form id="applyLeaveForm">
+                    <div class="field">
+                        <label>Leave Type</label>
+                        <select id="leaveType" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;" required>
+                            <option value="Casual">Casual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Earned">Earned Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Start Date</label><input type="date" id="leaveStart" required></div>
+                    <div class="field"><label>End Date</label><input type="date" id="leaveEnd" required></div>
+                    <div class="field"><label>Reason</label><textarea id="leaveReason" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none;" required></textarea></div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Submit Leave Application</button>
+                </form>
+            </div>
+            <div>
+                <h2 style="font-size:18px; margin-bottom:15px;">Leave History</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Duration</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empLeavesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `,
+    emp_announcements: `
+        <h2 style="font-size:18px; margin-bottom:20px;">Notice Board announcements</h2>
+        <div id="empAnnouncementBoard" style="display:flex; flex-direction:column; gap:16px;"></div>
+    `,
+    profile: `
+        <div class="glass-card" style="max-width:600px; margin:0 auto;">
+            <h2 style="font-size:18px; margin-bottom:20px;">Personal Profile Settings</h2>
+            <form id="profileForm">
+                <div class="field"><label>Full Name</label><input type="text" id="profName" required></div>
+                <div class="field"><label>Email Address</label><input type="email" id="profEmail" required></div>
+                <div class="field" id="profEmpIdField" style="display:none;"><label>Employee ID</label><input type="text" id="profEmpId" disabled></div>
+                <div class="field" id="profDeptField" style="display:none;"><label>Department</label><input type="text" id="profDept" disabled></div>
+                <div class="field" id="profDesgField" style="display:none;"><label>Designation</label><input type="text" id="profDesg" disabled></div>
+                <div class="field" id="profPhoneField" style="display:none;"><label>Phone Number</label><input type="text" id="profPhone"></div>
+                <div class="field"><label>New Password (Leave blank to keep current)</label><input type="password" id="profPassword"></div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top:10px;">Save Profile Information</button>
+            </form>
+        </div>
+    `,
+
+    // === CANDIDATE PANELS ===
+    cand_overview: `
+        <h2 style="font-size:18px; margin-bottom:15px;">Job Applications Status Tracker</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Applied On</th>
+                        <th>Application Status</th>
+                    </tr>
+                </thead>
+                <tbody id="candApplicationsTableBody"></tbody>
+            </table>
+        </div>
+    `,
+    messages: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Workspace Chats</h3>
+                    <button onclick="openNewDMModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">+ New Chat</button>
+                </div>
+                <div class="chat-list" id="dmList">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="dmMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="dmActiveTitle">Chat</h3>
+                </div>
+                <div class="chat-messages" id="dmMessages">
+                    <!-- Messages loaded dynamically -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="dmInput" placeholder="Type a message..." onkeydown="handleChatKey(event, 'dm')">
+                    <button onclick="sendChatMessage('dm')" class="btn-primary" style="padding: 10px 20px;">Send</button>
+                </div>
+            </div>
+            <div class="chat-main" id="dmPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a conversation to start chatting.
+            </div>
+        </div>
+    `,
+    groups: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Groups</h3>
+                    <button id="btnCreateGroupSidebar" onclick="openCreateGroupModal()" class="btn-primary" style="padding: 6px 12px; font-size: 12px; display: none;">+ Create Group</button>
+                </div>
+                <div class="chat-list" id="groupList">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="groupMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="groupActiveTitle">Group Name</h3>
+                    </div>
+                    <div id="groupActionsArea" style="display: flex; gap: 10px; align-items: center;">
+                        <!-- Add Member shown dynamically -->
+                    </div>
+                </div>
+                <div style="display: flex; flex: 1; overflow: hidden;">
+                    <div class="chat-messages" id="groupMessages" style="flex: 1;">
+                        <!-- Messages loaded dynamically -->
+                    </div>
+                    <div class="group-members-pane">
+                        <div style="padding: 14px; font-weight: 600; border-bottom: 1px solid var(--glass-border); font-size: 13px; color: var(--orange); text-align: center;">MEMBERS</div>
+                        <div id="groupMembersList" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Members loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="groupInput" placeholder="Type to group..." onkeydown="handleChatKey(event, 'group')">
+                    <button onclick="sendChatMessage('group')" class="btn-primary" style="padding: 10px 20px;">Send</button>
+                </div>
+            </div>
+            <div class="chat-main" id="groupPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a group conversation to participate.
+            </div>
+        </div>
+    `,
+    oversight: `
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Oversight Feed</h3>
+                </div>
+                <div class="chat-list" id="oversightList">
+                    <!-- All conversations loaded dynamically -->
+                </div>
+            </div>
+            <div class="chat-main" id="oversightMainArea" style="display: none;">
+                <div class="chat-main-header">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="oversightActiveTitle">Viewing Mode</h3>
+                        <div style="font-size: 12px; color: var(--orange);" id="oversightMeta">Read-Only Monitoring Mode</div>
+                    </div>
+                </div>
+                <div style="display: flex; flex: 1; overflow: hidden;">
+                    <div class="chat-messages" id="oversightMessages" style="flex: 1;">
+                        <!-- Messages loaded dynamically -->
+                    </div>
+                    <div class="group-members-pane" id="oversightMembersPane" style="display: none;">
+                        <div style="padding: 14px; font-weight: 600; border-bottom: 1px solid var(--glass-border); font-size: 13px; color: var(--orange); text-align: center;">MEMBERS</div>
+                        <div id="oversightMembersList" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Members loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-main" id="oversightPlaceholder" style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--ink-soft);">
+                Select a conversation from the oversight list to inspect its history.
+            </div>
+        </div>
+    `,
+    crm: `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <h2 style="font-size:18px; margin:0;">Client Relationship Management (CRM)</h2>
+            <button onclick="openAddLeadModal()" class="btn-primary">+ Add Client Lead</button>
+        </div>
+        
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:22px; gap:16px;">
+            <div class="stat-card"><h3>Total Leads & Clients</h3><div class="val" id="crm_stat_total">-</div></div>
+            <div class="stat-card"><h3>Active Clients</h3><div class="val" id="crm_stat_active">-</div></div>
+            <div class="stat-card"><h3>Total Deals Value</h3><div class="val" id="crm_stat_value">₹0.00</div></div>
+            <div class="stat-card"><h3>Conversion Rate</h3><div class="val" id="crm_stat_conversion">0%</div></div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Contact Person</th>
+                        <th>Email & Phone</th>
+                        <th>Deal Size</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="crmTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Meeting section moved from overview to crm -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:22px; margin-top:30px; border-top: 1px solid var(--glass-border); padding-top: 30px;">
+            <!-- Create Meeting Form -->
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Schedule Meeting Link</h2>
+                <form id="createMeetingForm" onsubmit="submitCreateMeeting(event)" style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="field">
+                        <label>Meeting Title</label>
+                        <input type="text" id="meetTitle" placeholder="e.g. Sync & Sprint Review" required>
+                    </div>
+                    <div class="field">
+                        <label>Meeting Type</label>
+                        <select id="meetType" onchange="toggleMeetType()" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                            <option value="internal">Internal Meeting (Employees)</option>
+                            <option value="client">Client Meeting</option>
+                        </select>
+                    </div>
+                    <div class="field" id="meetClientField" style="display:none;">
+                        <label>Client Partner</label>
+                        <select id="meetClient" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                            <option value="">-- Select Client --</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Platform</label>
+                        <select id="meetPlatform" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                            <option value="Zoom">Zoom</option>
+                            <option value="Google Meet">Google Meet</option>
+                            <option value="Microsoft Teams">Microsoft Teams</option>
+                            <option value="Slack">Slack Huddle</option>
+                            <option value="Webex">Cisco Webex</option>
+                            <option value="Custom / Other">Custom / Other</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Meeting Link</label>
+                        <input type="url" id="meetLink" placeholder="e.g. https://zoom.us/j/..." required>
+                    </div>
+                    <div class="field">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="meetTime" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top:10px; width:100%;">Create & Share Meeting</button>
+                </form>
+            </div>
+
+            <!-- Scheduled Meetings List -->
+            <div class="glass-card">
+                <h2 style="font-size:18px; margin-bottom:15px;">Scheduled Meetings</h2>
+                <div id="crmMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto;">
+                    <!-- Meetings loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    `,
+    client_overview: `
+        <div class="glass-card" style="margin-bottom:22px; padding:25px; border-radius:15px; background:linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));">
+            <h2 style="font-size:22px; font-weight:700; margin-bottom:10px;" id="clientWelcomeCompany">Welcome Client Portal</h2>
+            <p style="color:var(--ink-soft); font-size:14px; margin-bottom:20px; line-height:1.6;">Access your scheduled conference calls, contact representative, and company workspace chat.</p>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Client ID</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalId">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Contact Person</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalContact">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Email</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalEmail">-</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; color:var(--ink-faint); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Phone Number</div>
+                    <div style="font-size:14px; font-weight:600; color:#fff; margin-top:4px;" id="clientPortalPhone">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:22px; margin-top:20px;">
+            <div class="glass-card" style="display:flex; flex-direction:column; gap:16px;">
+                <h3 style="font-size:16px; font-weight:600; margin:0;">Contract Summary</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                    <div>
+                        <div style="font-size:11px; color:var(--ink-faint);">Portal Status</div>
+                        <div style="font-size:14px; font-weight:600; color:#00e676; margin-top:3px;">Active Client</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:var(--ink-faint);">Contract Size</div>
+                        <div style="font-size:16px; font-weight:700; color:#fff; margin-top:3px;" id="clientPortalDealSize">$0.00</div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.01); border:1px solid var(--glass-border); padding:15px; border-radius:10px; font-size:13px; color:var(--ink-soft); line-height:1.6;">
+                    <strong>Need Support?</strong> Use the 💬 <strong>Workspace</strong> section in the sidebar to chat directly with our client success team and administrators.
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="font-size:16px; font-weight:600; margin-bottom:15px;">Upcoming Meetings</h3>
+                <div id="clientOverviewMeetingsList" style="display:flex; flex-direction:column; gap:12px; max-height:220px; overflow-y:auto;">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    `,
+    client_meetings: `
+        <h2 style="font-size:18px; margin-bottom:15px;">My Scheduled Meetings & Screen Shares</h2>
+        <div class="glass-card" style="max-width:700px;">
+            <div id="clientMeetingsList" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    `
+};
+
+// Inject HTML panels into container
+const container = document.getElementById("panelContainer");
+Object.keys(layouts).forEach(panelId => {
+    const div = document.createElement("div");
+    div.id = `panel_${panelId}`;
+    div.className = "section-panel";
+    div.innerHTML = layouts[panelId];
+    container.appendChild(div);
+});
+</script>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/crm.js"></script>
+<script src="js/recruitment.js"></script>
+<script src="js/leaves.js"></script>
+
+<script>
+// Load dynamic dashboard
+initDashboard();
+
+// Sub-Controller Loading Logic
+function loadPanelData(panelId) {
+    if (panelId === "overview") loadAdminOverview();
+    else if (panelId === "employees") loadAdminEmployees();
+    else if (panelId === "attendance") loadAdminAttendance();
+    else if (panelId === "leaves") loadAdminLeaves();
+    else if (panelId === "crm") loadCRM();
+    else if (panelId === "recruitment") loadAdminRecruitment();
+    else if (panelId === "announcements") loadAdminAnnouncements();
+    else if (panelId === "reports") { /* triggered by buttons */ }
+    else if (panelId === "admin_contacts") loadAdminContacts();
+    else if (panelId === "emp_overview") loadEmpOverview();
+    else if (panelId === "emp_attendance") loadEmpAttendance();
+    else if (panelId === "emp_leaves") loadEmpLeaves();
+    else if (panelId === "emp_announcements") loadEmpAnnouncements();
+    else if (panelId === "profile") loadProfile();
+    else if (panelId === "cand_overview") loadCandidateOverview();
+    else if (panelId === "client_overview") loadClientOverview();
+    else if (panelId === "client_meetings") loadClientMeetings();
+    else if (panelId === "messages") loadMessagesPanel();
+    else if (panelId === "groups") loadGroupsPanel();
+    else if (panelId === "oversight") loadOversightPanel();
+}
+
+function switchTab(panelId, element) {
+    document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+    if (element) element.classList.add("active");
+
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+
+    document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
+    const targetPanel = document.getElementById(`panel_${panelId}`);
+    if (targetPanel) {
+        targetPanel.classList.add("active");
+        loadPanelData(panelId);
+    }
+}
+
+function renderSidebar() {
+    const sidebar = document.getElementById("sidebarMenu");
+    sidebar.innerHTML = "";
+    
+    let list = [];
+    if (currentUser.role === 'admin') {
+        list = [
+            { id: "overview", label: "Overview", icon: "" },
+            { id: "employees", label: "Employees", icon: "" },
+            { id: "attendance", label: "Attendance Register", icon: "" },
+            { id: "leaves", label: "Leave Requests", icon: "" },
+            { id: "crm", label: "Client CRM", icon: "" },
+            { id: "recruitment", label: "Recruitment Board", icon: "" },
+            { id: "announcements", label: "Announcements", icon: "" },
+            { id: "reports", label: "Reports & Audits", icon: "" },
+            { id: "admin_contacts", label: "Contacts", icon: "" },
+            { id: "messages", label: "Workspace", icon: "" },
+            { id: "groups", label: "Groups", icon: "" },
+            { id: "oversight", label: "Oversight", icon: "" }
+        ];
+    } else if (currentUser.role === 'employee') {
+        list = [
+            { id: "emp_overview", label: "Overview", icon: "📊" },
+            { id: "emp_attendance", label: "My Attendance", icon: "📅" },
+            { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
+            { id: "emp_announcements", label: "Announcements", icon: "📢" },
+            { id: "profile", label: "My Profile", icon: "👤" },
+            { id: "messages", label: "Workspace", icon: "💬" },
+            { id: "groups", label: "Groups", icon: "👥" }
+        ];
+        if (currentUser.can_approve_leaves) {
+            list.push({ id: "leaves", label: "Leave Requests", icon: "📋" });
+            list.push({ id: "crm", label: "Client CRM", icon: "💼" });
+        }
+        if (currentUser.is_hr) {
+            list.push({ id: "recruitment", label: "Recruitment Board", icon: "💼" });
+        }
+        if (currentUser.is_team_leader) {
+            list.push({ id: "oversight", label: "Group Oversight", icon: "👁️" });
+        }
+    } else if (currentUser.role === 'client') {
+        list = [
+            { id: "client_overview", label: "Overview", icon: "📊" },
+            { id: "client_meetings", label: "My Meetings", icon: "📅" },
+            { id: "profile", label: "My Profile", icon: "👤" },
+            { id: "messages", label: "Workspace", icon: "💬" }
+        ];
+    } else {
+        list = [
+            { id: "cand_overview", label: "My Applications", icon: "💼" },
+            { id: "profile", label: "My Profile", icon: "👤" }
+        ];
+    }
+    
+    list.forEach((m, idx) => {
+        const a = document.createElement("a");
+        a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
+        const iconHtml = m.icon ? `<span>${m.icon}</span> ` : "";
+        a.innerHTML = `${iconHtml}${m.label}`;
+        a.onclick = () => switchTab(m.id, a);
+        sidebar.appendChild(a);
+    });
+
+    if (list.length > 0) {
+        switchTab(list[0].id, sidebar.firstChild);
+    }
+}
+
+async function initDashboard() {
+    try {
+        const details = await apiCall("/chat/user-details");
+        currentUser = details;
+        localStorage.setItem("user", JSON.stringify(details));
+        const greeting = document.getElementById("userGreeting");
+        if (greeting) {
+            greeting.textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
+        }
+    } catch (e) {
+        console.error("Could not fetch fresh user details", e);
+    }
+    renderSidebar();
+    initChatSSE();
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+</script>
+
+</body>
+</html>

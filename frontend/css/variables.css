@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --orange: #FF8A3D;
+  --orange-dark: #F2701C;
+  --blue: #3FD0FF;
+  --blue-dark: #16A6E0;
+  --pink: #EC2F7B;
+  --pink-light: #F86BA5;
+  --ink: #EAF2FF;
+  --muted: #9FB0CC;
+  --line: rgba(255,255,255,0.12);
+  --card-bg: rgba(14,20,38,0.60);
+  --glass-bg: rgba(14,20,38,0.60);
+  --glass-border: rgba(255,255,255,0.12);
+  --ink-soft: #9FB0CC;
+  --ink-faint: #7E8CA8;
+}
