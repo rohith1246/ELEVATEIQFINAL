@@ -310,7 +310,9 @@
    * Renders the leadership/mentor grid flip cards.
    */
   function renderTeam(){
-    document.getElementById("teamGrid").innerHTML = TEAM.map(t => `
+    const grid = document.getElementById("teamGrid");
+    if (!grid) return;
+    grid.innerHTML = TEAM.map(t => `
       <div class="flip-card reveal">
         <div class="flip-inner">
           <div class="flip-front">
