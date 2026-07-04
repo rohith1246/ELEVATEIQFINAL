@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 from ..database import get_connection
 from ..auth import (
     get_current_user, require_role, serializer, 
-    check_is_recruitment_manager, check_is_crm_manager
+    check_is_recruitment_manager, check_is_crm_manager, rate_limit
 )
 from ..config import Config
 
@@ -16,6 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 EDUTECH_DIR = os.path.join(BASE_DIR, "edutech")
 
 @auth_bp.route("/register", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def register():
     data = request.json
     name = data.get("name")
@@ -49,6 +50,7 @@ def register():
 
 
 @auth_bp.route("/login", methods=["POST"])
+@rate_limit(limit=10, period=60)
 def login():
     data = request.json
     login_id = data.get("email")  # can be email, Employee ID, or Client ID

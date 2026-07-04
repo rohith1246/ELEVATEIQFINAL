@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
-from ..auth import get_current_user, require_role, check_is_crm_manager
+from ..auth import get_current_user, require_role, check_is_crm_manager, rate_limit
 
 crm_bp = Blueprint("crm", __name__)
 
@@ -365,6 +365,7 @@ def list_meetings():
 
 
 @crm_bp.route("/api/contact", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def save_contact():
     data = request.json
     if not data:
@@ -406,6 +407,7 @@ def save_contact():
 
 
 @crm_bp.route("/api/newsletter", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def save_newsletter():
     data = request.json
     if not data or "email" not in data:
@@ -446,6 +448,7 @@ def save_newsletter():
 
 
 @crm_bp.route("/api/elevate-contact", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def save_elevate_contact():
     data = request.json
     if not data:

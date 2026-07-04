@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, send_from_directory, current_app
 from psycopg2.extras import RealDictCursor
 from werkzeug.utils import secure_filename
 from ..database import get_connection
-from ..auth import get_current_user, check_is_recruitment_manager
+from ..auth import get_current_user, check_is_recruitment_manager, rate_limit
 
 recruitment_bp = Blueprint("recruitment", __name__)
 
@@ -151,6 +151,7 @@ def get_applications():
 
 
 @recruitment_bp.route("/applications", methods=["POST"])
+@rate_limit(limit=3, period=60)
 def submit_application():
     job_id = request.form.get("job_id")
     name = request.form.get("name")
