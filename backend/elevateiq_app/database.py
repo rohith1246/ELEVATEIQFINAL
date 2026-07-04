@@ -1,12 +1,37 @@
+"""
+Database Connectivity and Pool Management Module.
+
+This module initializes and manages a thread-safe PostgreSQL connection pool using 
+psycopg2's `ThreadedConnectionPool`. It ensures connection safety across concurrent execution 
+threads and gevent greenlets by tracking checkouts with unique UUID-based keys. It also 
+provides self-healing checkouts by verifying connection health with a lightweight query 
+('SELECT 1') before handing them off to callers.
+"""
+
 import os
 import uuid
 from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import RealDictCursor
 from .config import Config
 
+# Global database connection pool instance
 db_pool = None
 
 def init_db(app=None):
+    """
+    Initializes the global PostgreSQL connection pool and seeds default schema tables.
+
+    Checks the 'DATABASE_URL' config parameter. Instantiates a ThreadedConnectionPool with a 
+    minimum of 1 and maximum of 40 connections. Automatically initializes the 'designations' 
+    table and seeds default designation roles if they do not already exist.
+
+    Args:
+        app (Flask, optional): The Flask application instance to read configuration from.
+
+    Raises:
+        ValueError: If the database connection string is missing.
+        RuntimeError: If connection to the database cannot be established.
+    """
     global db_pool
     if db_pool is None:
         dsn = app.config.get("DATABASE_URL") if app else Config.DATABASE_URL
@@ -14,16 +39,18 @@ def init_db(app=None):
             raise ValueError("CRITICAL: DATABASE_URL environment variable is missing or empty. Please check your config.")
         
         try:
-            # Initialize thread-safe connection pool
+            # Initialize thread-safe connection pool with minimum 1 and maximum 40 connections
             db_pool = ThreadedConnectionPool(1, 40, dsn=dsn)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
         # Ensure designations table is created and seeded on startup
+        # We generate a unique UUID key for this checkout to prevent conflicts with concurrent requests
         key = str(uuid.uuid4())
         conn = db_pool.getconn(key=key)
         try:
             cursor = conn.cursor()
+            # Create designations table if it doesn't already exist in the database schema
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS designations (
                     id SERIAL PRIMARY KEY,
@@ -57,48 +84,90 @@ def init_db(app=None):
             print("Failed to initialize designations table:", e)
             conn.rollback()
         finally:
+            # Return connection to the pool using the same checkout key
             db_pool.putconn(conn, key=key)
 
 class PooledConnection:
     """
-    A connection wrapper that intercepts connection close
-    to return it to the ThreadedConnectionPool using a unique key
-    to ensure safety across async greenlets.
+    A wrapper class for database connections retrieved from the pool.
+
+    Intercepts the connection close call to return the connection to the 
+    ThreadedConnectionPool using a unique key instead of physically terminating 
+    the socket connection. This prevents connection leaks and ensures thread-safe/
+    greenlet-safe operation under asynchronous frameworks.
     """
     def __init__(self, pool, conn, key):
+        """
+        Initializes the PooledConnection wrapper.
+
+        Args:
+            pool (ThreadedConnectionPool): The database connection pool instance.
+            conn (psycopg2.extensions.connection): The actual database connection object.
+            key (str): Unique UUID string assigned to this connection checkout instance.
+        """
         self._pool = pool
         self._conn = conn
         self._key = key
 
     def __getattr__(self, name):
+        """
+        Delegates attribute access to the underlying connection object.
+        """
         return getattr(self._conn, name)
 
     def cursor(self, *args, **kwargs):
+        """
+        Creates a cursor object using the underlying connection.
+        """
         return self._conn.cursor(*args, **kwargs)
 
     def commit(self):
+        """
+        Commits any pending transactions.
+        """
         self._conn.commit()
 
     def rollback(self):
+        """
+        Rolls back any pending transactions.
+        """
         self._conn.rollback()
 
     def close(self):
+        """
+        Returns the connection back to the connection pool rather than closing it.
+        """
         if self._conn and self._pool:
+            # Safely return the connection to the pool using the unique checkout key
             self._pool.putconn(self._conn, key=self._key)
             self._conn = None
             self._pool = None
 
 def get_connection():
+    """
+    Checks out a database connection from the global pool.
+
+    Generates a unique UUID key for tracking the checkout, handles self-healing by 
+    validating the connection with 'SELECT 1', and discards/recreates connections that 
+    have dropped due to socket timeout or backend closure.
+
+    Returns:
+        PooledConnection: A wrapped connection safe for thread/greenlet usage.
+
+    Raises:
+        Exception: If no healthy connections can be retrieved after max retries.
+    """
     global db_pool
     if db_pool is None:
         init_db()
         
     retries = 3
     for _ in range(retries):
+        # Generate a unique key for tracking checkout and returning to the pool
         key = str(uuid.uuid4())
         conn = db_pool.getconn(key=key)
         
-        # Test if the connection is alive and healthy
+        # Test if the connection is alive and healthy (preventing gevent broken pipe errors)
         try:
             with conn.cursor() as test_cur:
                 test_cur.execute("SELECT 1")
@@ -115,3 +184,4 @@ def get_connection():
     key = str(uuid.uuid4())
     conn = db_pool.getconn(key=key)
     return PooledConnection(db_pool, conn, key)
+

@@ -1,3 +1,12 @@
+"""
+Recruitment and Careers blueprint routes.
+
+Manages job openings and career applications. Handles uploading and downloading candidate 
+resumes, verifying file extension limits, parsing multipart form-data, cleaning storage 
+on database connection failures, and managing workflow states (Pending, Shortlisted, 
+Accepted, Rejected).
+"""
+
 import os
 from datetime import datetime
 from flask import Blueprint, request, jsonify, send_from_directory, current_app
@@ -8,13 +17,34 @@ from ..auth import get_current_user, check_is_recruitment_manager, rate_limit
 
 recruitment_bp = Blueprint("recruitment", __name__)
 
+# Permitted file formats for candidate resume uploads
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}
 
 def allowed_file(filename):
+    """
+    Checks if the uploaded file has a valid and permitted extension format.
+
+    Args:
+        filename (str): The uploaded file's original name.
+
+    Returns:
+        bool: True if extension is permitted, False otherwise.
+    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @recruitment_bp.route("/jobs", methods=["GET"])
 def get_jobs():
+    """
+    Fetches job listings from the database.
+
+    Administrators and recruitment managers retrieve all jobs (including Closed positions).
+    Standard guests or candidates retrieve only 'Open' job openings.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of job objects with serialized timestamps.
+            - 500: Database select exception.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -38,6 +68,26 @@ def get_jobs():
 
 @recruitment_bp.route("/jobs", methods=["POST"])
 def create_job():
+    """
+    Creates a new job opening position.
+    Restricted to recruitment managers and admins.
+
+    JSON Parameters:
+        title (str): Title name of the opening.
+        department (str): Corporate department.
+        experience_required (str, optional): Target experience years description.
+        skills_required (str, optional): Key skills description.
+        location (str, optional): Work location (e.g. Remote, City).
+        salary_range (str, optional): Compensation description.
+        description (str, optional): Job responsibility details.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success message.
+            - 400: Missing title or department parameters.
+            - 401/403: Security errors.
+            - 500: Database insertion exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -79,6 +129,23 @@ def create_job():
 
 @recruitment_bp.route("/jobs/<int:job_id>", methods=["PUT"])
 def update_job(job_id):
+    """
+    Updates the availability status of a job posting.
+    Restricted to recruitment managers and admins.
+
+    Args:
+        job_id (int): Primary key ID of the job posting to update.
+
+    JSON Parameters:
+        status (str): The target job status ('Open' or 'Closed').
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success status update.
+            - 400: Invalid status value.
+            - 401/403: Security errors.
+            - 500: Database update exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -108,6 +175,18 @@ def update_job(job_id):
 
 @recruitment_bp.route("/applications", methods=["GET"])
 def get_applications():
+    """
+    Lists job applications.
+
+    - Recruitment managers: Fetch all applications.
+    - Candidates: Fetch applications associated with their email address.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of job applications with serialized dates.
+            - 401: Unauthorized.
+            - 500: Database lookup query exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -126,7 +205,7 @@ def get_applications():
             )
             apps = cursor.fetchall()
         else:
-            # Candidate views their applications matched by email
+            # Candidates query their application logs matching their verified email
             cursor.execute(
                 """
                 SELECT a.*, j.title as job_title, j.department as job_department 
@@ -153,6 +232,24 @@ def get_applications():
 @recruitment_bp.route("/applications", methods=["POST"])
 @rate_limit(limit=3, period=60)
 def submit_application():
+    """
+    Submits a career application. Handles resume uploads.
+    Rate limited to 3 applications per minute.
+
+    Multipart Form-Data Parameters:
+        job_id (str/int): The ID of the target job posting.
+        name (str): Candidate's full name.
+        email (str): Candidate's contact email.
+        phone (str, optional): Candidate's contact phone number.
+        resume (File): PDF/DOC/DOCX resume file stream.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success creation message.
+            - 400: Missing/invalid parameters or unsupported file format.
+            - 404: Job posting not found.
+            - 500: Database insertion exceptions.
+    """
     job_id = request.form.get("job_id")
     name = request.form.get("name")
     email = request.form.get("email")
@@ -167,6 +264,7 @@ def submit_application():
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid job_id"}), 400
 
+    # Enforce safe format limits prior to processing
     if not allowed_file(file.filename):
         return jsonify({"error": "Unsupported file format. Only PDF, DOC, and DOCX files are allowed."}), 400
 
@@ -178,7 +276,7 @@ def submit_application():
         if not cursor.fetchone():
             return jsonify({"error": "Job posting not found"}), 404
 
-        # Clean file and save
+        # Generate unique secure filename prefixing current epoch timestamp
         filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
         upload_folder = current_app.config["UPLOAD_FOLDER"]
         os.makedirs(upload_folder, exist_ok=True)
@@ -196,7 +294,7 @@ def submit_application():
         return jsonify({"message": "Application submitted successfully."}), 201
     except Exception as e:
         conn.rollback()
-        # Clean file on DB failure
+        # Delete uploaded file to prevent orphan files if DB transaction fails
         if os.path.exists(file_path):
             os.remove(file_path)
         return jsonify({"error": str(e)}), 500
@@ -207,6 +305,23 @@ def submit_application():
 
 @recruitment_bp.route("/applications/<int:app_id>", methods=["PUT"])
 def update_application_status(app_id):
+    """
+    Updates status details of a job application.
+    Restricted to recruitment managers and admins.
+
+    Args:
+        app_id (int): Primary key ID of the application to review.
+
+    JSON Parameters:
+        status (str): Workflow status ('Pending', 'Shortlisted', 'Accepted', 'Rejected').
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success status change message.
+            - 400: Invalid application status value.
+            - 401/403: Security errors.
+            - 500: Database update exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -233,6 +348,16 @@ def update_application_status(app_id):
 
 @recruitment_bp.route("/uploads/resumes/<filename>")
 def download_resume(filename):
+    """
+    Serves resume files from the uploads directory.
+    Restricted to recruitment managers and admins.
+
+    Args:
+        filename (str): The secure name of the target resume file.
+
+    Returns:
+        Response: Resume file stream.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -245,3 +370,4 @@ def download_resume(filename):
     finally:
         cursor.close()
         conn.close()
+

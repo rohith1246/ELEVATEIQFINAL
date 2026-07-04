@@ -1,4 +1,7 @@
-/* Dashboard Specific & Component Layout Styles */
+/* ==========================================================================
+   DASHBOARD CONTAINER & SIDEBAR LAYOUT
+   ========================================================================== */
+
 .dash-container {
     display: flex;
     min-height: 100vh;
@@ -44,6 +47,12 @@
     padding: 40px;
     overflow-y: auto;
 }
+
+
+/* ==========================================================================
+   STATS CARDS & OVERVIEW GRID
+   ========================================================================== */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -90,7 +99,11 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Table Design */
+
+/* ==========================================================================
+   DATA TABLES DESIGN
+   ========================================================================== */
+
 .table-wrap {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--glass-border);
@@ -122,7 +135,11 @@ tr:hover td {
     color: #fff;
 }
 
-/* Badges */
+
+/* ==========================================================================
+   SYSTEM STATUS BADGES
+   ========================================================================== */
+
 .badge {
     padding: 4px 10px;
     border-radius: 100px;
@@ -139,12 +156,22 @@ tr:hover td {
 .badge.shortlisted { background: rgba(230, 230, 75, 0.15); color: #ffffaa; border: 1px solid rgba(230, 230, 75, 0.3); }
 .badge.accepted { background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3); }
 
-/* Forms Grid & Inputs */
+
+/* ==========================================================================
+   FORM GRID & LAYOUTS
+   ========================================================================== */
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 18px;
 }
+
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT MEDIA QUERIES (SIDEBARS & MODALS)
+   ========================================================================== */
+
 @media(max-width:760px) {
     .dash-container { flex-direction: column; }
     .sidebar { 
@@ -191,7 +218,11 @@ tr:hover td {
     }
 }
 
-/* Actions & Buttons */
+
+/* ==========================================================================
+   ACTION BUTTONS STYLE
+   ========================================================================== */
+
 .btn-action {
     padding: 6px 14px;
     border-radius: 8px;
@@ -210,7 +241,11 @@ tr:hover td {
 .btn-edit { background: rgba(255, 255, 255, 0.08); color: var(--ink-soft); border: 1px solid var(--glass-border); }
 .btn-edit:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 
-/* Modals Overlay & Frame */
+
+/* ==========================================================================
+   MODALS POPUP LAYOUT AND FRAME
+   ========================================================================== */
+
 .modal {
     display: none;
     position: fixed;
@@ -243,7 +278,11 @@ tr:hover td {
 }
 .close-modal:hover { color: #fff; }
 
-/* Modals Input Styling Override */
+
+/* ==========================================================================
+   MODALS OVERRIDE INPUT ELEMENTS
+   ========================================================================== */
+
 .modal-content h2 {
     font-size: 22px !important;
     font-weight: 700 !important;
@@ -284,3 +323,4 @@ tr:hover td {
     background: var(--orange-dark) !important;
     box-shadow: 0 4px 15px rgba(255, 138, 61, 0.3) !important;
 }
+

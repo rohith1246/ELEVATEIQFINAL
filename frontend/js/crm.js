@@ -1,3 +1,14 @@
+/**
+ * @file crm.js
+ * @description Controls the Client Relationship Management (CRM) workflows and client portals.
+ * Renders pipeline metrics, interaction log histories, B2B access provisioning, and client/internal meetings schedules.
+ */
+
+/**
+ * Loads the active CRM pipeline table registry and computes key performance stats.
+ * 
+ * @async
+ */
 async function loadCRM() {
     try {
         const clients = await apiCall("/crm/clients");
@@ -64,12 +75,21 @@ async function loadCRM() {
     }
 }
 
+/**
+ * Opens add client lead modal popup.
+ */
 function openAddLeadModal() {
     const form = document.getElementById("addLeadForm");
     if (form) form.reset();
     openModal("addLeadModal");
 }
 
+/**
+ * Fetches specific lead data and populates edit form controls.
+ * 
+ * @async
+ * @param {number} id - Target client lead ID.
+ */
 async function openEditLeadModal(id) {
     try {
         const clients = await apiCall("/crm/clients");
@@ -91,6 +111,13 @@ async function openEditLeadModal(id) {
     }
 }
 
+/**
+ * Opens interactions log modal pop-up dialogue.
+ * 
+ * @async
+ * @param {number} id - Client ID.
+ * @param {string} companyName - Company name.
+ */
 async function openInteractionsModal(id, companyName) {
     try {
         document.getElementById("logInteractionClientId").value = id;
@@ -106,6 +133,12 @@ async function openInteractionsModal(id, companyName) {
     }
 }
 
+/**
+ * Pulls client interaction logs and renders list entries.
+ * 
+ * @async
+ * @param {number} clientId - Client ID.
+ */
 async function loadInteractions(clientId) {
     const list = document.getElementById("interactionsList");
     if (!list) return;
@@ -138,6 +171,12 @@ async function loadInteractions(clientId) {
     });
 }
 
+/**
+ * Prepares portal access provisioning modal values.
+ * 
+ * @param {number} id - Client ID.
+ * @param {string} email - Auto fill login email address.
+ */
 function openProvisionModal(id, email) {
     document.getElementById("provisionClientId").value = id;
     document.getElementById("provisionEmail").value = email || '';
@@ -145,6 +184,11 @@ function openProvisionModal(id, email) {
     openModal("provisionModal");
 }
 
+/**
+ * Loads client landing page statistics, welcome descriptions, and upcoming schedules.
+ * 
+ * @async
+ */
 async function loadClientOverview() {
     try {
         const prof = await apiCall("/profile");
@@ -190,6 +234,11 @@ async function loadClientOverview() {
     }
 }
 
+/**
+ * Loads meetings registry list and formats custom badges and platforms.
+ * 
+ * @async
+ */
 async function loadClientMeetings() {
     try {
         const container = document.getElementById("clientMeetingsList");
@@ -226,6 +275,9 @@ async function loadClientMeetings() {
     }
 }
 
+/**
+ * Handles dropdown visibility changes depending on meeting type.
+ */
 function toggleMeetType() {
     const type = document.getElementById("meetType").value;
     const field = document.getElementById("meetClientField");
@@ -238,6 +290,11 @@ function toggleMeetType() {
     }
 }
 
+/**
+ * Populates Client dropdown selection menu for scheduling client meetings.
+ * 
+ * @async
+ */
 async function loadCRMDropdowns() {
     try {
         const select = document.getElementById("meetClient");
@@ -253,6 +310,11 @@ async function loadCRMDropdowns() {
     }
 }
 
+/**
+ * Renders list of scheduled internal employee meetings.
+ * 
+ * @async
+ */
 async function loadAdminMeetings() {
     try {
         const container = document.getElementById("adminMeetingsList");
@@ -292,6 +354,11 @@ async function loadAdminMeetings() {
     }
 }
 
+/**
+ * Renders list of scheduled meetings on the employee workspace dashboard.
+ * 
+ * @async
+ */
 async function loadEmployeeMeetings() {
     try {
         const container = document.getElementById("empMeetingsList");
@@ -328,6 +395,12 @@ async function loadEmployeeMeetings() {
     }
 }
 
+/**
+ * Handles creation of an internal employee meeting link.
+ * 
+ * @async
+ * @param {Event} event - Form submit event.
+ */
 async function submitCreateMeeting(event) {
     event.preventDefault();
     const title = document.getElementById("meetTitle").value;
@@ -353,6 +426,11 @@ async function submitCreateMeeting(event) {
     }
 }
 
+/**
+ * Loads meetings scheduled for B2B client partners.
+ * 
+ * @async
+ */
 async function loadCRMMeetings() {
     try {
         const container = document.getElementById("crmMeetingsList");
@@ -393,6 +471,12 @@ async function loadCRMMeetings() {
     }
 }
 
+/**
+ * Submits dynamic post to create client-focused conference calls.
+ * 
+ * @async
+ * @param {Event} event - Submit event context.
+ */
 async function submitCreateClientMeeting(event) {
     event.preventDefault();
     const title = document.getElementById("clientMeetTitle").value;
@@ -420,7 +504,12 @@ async function submitCreateClientMeeting(event) {
     }
 }
 
-// Add CRM Event Listeners on Load
+
+/* ==========================================================================
+   CRM INTERFACE FORM HANDLERS AND LISTENERS
+   ========================================================================== */
+
+// Handle Lead submission form POST
 const addLeadForm = document.getElementById("addLeadForm");
 if (addLeadForm) {
     addLeadForm.addEventListener("submit", async function(e) {
@@ -447,6 +536,7 @@ if (addLeadForm) {
     });
 }
 
+// Handle edit client details form submit updates
 const editLeadForm = document.getElementById("editLeadForm");
 if (editLeadForm) {
     editLeadForm.addEventListener("submit", async function(e) {
@@ -474,6 +564,7 @@ if (editLeadForm) {
     });
 }
 
+// Handle CRM interaction logs submissions
 const logInteractionForm = document.getElementById("logInteractionForm");
 if (logInteractionForm) {
     logInteractionForm.addEventListener("submit", async function(e) {
@@ -495,6 +586,7 @@ if (logInteractionForm) {
     });
 }
 
+// Handle portal credentials generation provisioning
 const provisionForm = document.getElementById("provisionForm");
 if (provisionForm) {
     provisionForm.addEventListener("submit", async function(e) {
@@ -515,3 +607,4 @@ if (provisionForm) {
         }
     });
 }
+

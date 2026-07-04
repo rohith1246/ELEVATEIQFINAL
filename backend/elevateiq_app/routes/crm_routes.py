@@ -1,3 +1,11 @@
+"""
+Customer Relationship Management (CRM) and Client portal blueprint routes.
+
+Handles operations relating to lead/client lifecycle management, client account 
+provisioning, client interactions tracking, scheduling meetings (internal or client-facing), 
+and storing customer support messages from contact forms and newsletter signups.
+"""
+
 import bcrypt
 from datetime import datetime
 from flask import Blueprint, request, jsonify
@@ -9,6 +17,17 @@ crm_bp = Blueprint("crm", __name__)
 
 @crm_bp.route("/crm/clients", methods=["GET"])
 def get_crm_clients():
+    """
+    Retrieves all records in the clients table.
+    Restricted to users with CRM Manager privileges.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: List of clients.
+            - 401: Unauthorized.
+            - 403: Forbidden access.
+            - 500: Database select query error.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -33,6 +52,27 @@ def get_crm_clients():
 
 @crm_bp.route("/crm/clients", methods=["POST"])
 def create_crm_client():
+    """
+    Creates a new client/lead entry.
+    Restricted to users with CRM Manager privileges.
+
+    JSON Parameters:
+        company_name (str): Name of the client company.
+        contact_name (str, optional): Name of primary contact person.
+        email (str, optional): Email address.
+        phone_number (str, optional): Phone number.
+        deal_size (float, optional): Estimated deal size. Defaults to 0.00.
+        status (str, optional): CRM pipeline status. Defaults to 'Lead'.
+        notes (str, optional): Internal notes.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success message and new client database ID.
+            - 400: Missing company_name.
+            - 401: Unauthorized.
+            - 403: Forbidden access.
+            - 500: Database insert errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -74,6 +114,21 @@ def create_crm_client():
 
 @crm_bp.route("/crm/clients/<int:client_id>", methods=["PUT"])
 def update_crm_client(client_id):
+    """
+    Updates client details dynamically based on input parameters.
+    Restricted to users with CRM Manager privileges.
+
+    Args:
+        client_id (int): Primary key ID of the client to update.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success update message.
+            - 401: Unauthorized.
+            - 403: Forbidden access.
+            - 404: Client record not found.
+            - 500: SQL query assembly or update error.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -97,6 +152,7 @@ def update_crm_client(client_id):
         if not client:
             return jsonify({"error": "Lead/Client not found"}), 404
 
+        # Dynamically build UPDATE query parameters to avoid resetting untouched attributes
         update_fields = []
         params = []
         
@@ -139,6 +195,28 @@ def update_crm_client(client_id):
 
 @crm_bp.route("/crm/clients/<int:client_id>/provision", methods=["POST"])
 def provision_crm_client(client_id):
+    """
+    Creates login credentials for a CRM client to access their sub-portal dashboard.
+
+    Inserts a user record with role 'client', maps user_id to the client row,
+    assigns a public client ID (e.g. 'CLI-1005'), and marks their status as 'Active Client'.
+    Restricted to CRM Managers.
+
+    Args:
+        client_id (int): Primary key ID of the client.
+
+    JSON Parameters:
+        email (str): Client login email.
+        password (str): Client login password.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success message and client code.
+            - 400: Email already exists or client already provisioned.
+            - 401/403: Security errors.
+            - 404: Client record not found.
+            - 500: Database transaction exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -168,14 +246,17 @@ def provision_crm_client(client_id):
             return jsonify({"error": "Email is already taken"}), 400
 
         hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        # Insert client login details into users table
         cursor.execute(
             "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, 'client') RETURNING id",
             (client["contact_name"] or client["company_name"], email, hashed_pw)
         )
         new_user_id = cursor.fetchone()["id"]
 
+        # Formulate formatted client string code (CLI-xxxx)
         cli_str = f"CLI-{1000 + client_id}"
 
+        # Update client profile linking user ID and designation code
         cursor.execute(
             "UPDATE clients SET user_id = %s, client_id = %s, status = 'Active Client' WHERE id = %s",
             (new_user_id, cli_str, client_id)
@@ -192,6 +273,19 @@ def provision_crm_client(client_id):
 
 @crm_bp.route("/crm/clients/<int:client_id>/interactions", methods=["GET"])
 def get_crm_interactions(client_id):
+    """
+    Fetches logged historical interactions (calls, meetings, emails) for a client.
+    Restricted to CRM Managers.
+
+    Args:
+        client_id (int): Database key of the client.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of interaction logs.
+            - 401/403: Security errors.
+            - 500: Database query exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -216,6 +310,22 @@ def get_crm_interactions(client_id):
 
 @crm_bp.route("/crm/interactions", methods=["POST"])
 def create_crm_interaction():
+    """
+    Logs a new communication event under client profile history.
+    Restricted to CRM Managers.
+
+    JSON Parameters:
+        client_id (int): Primary key of target client.
+        interaction_type (str): Type label (e.g. 'Email', 'Call', 'Meeting').
+        notes (str, optional): Summary comments.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success creation message.
+            - 400: Missing client_id or interaction_type.
+            - 404: Client record not found.
+            - 500: DB transaction failure.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -258,6 +368,25 @@ def create_crm_interaction():
 
 @crm_bp.route("/dashboard/meetings", methods=["POST"])
 def create_meeting():
+    """
+    Schedules a meeting and logs it.
+    Restricted to CRM Managers.
+
+    JSON Parameters:
+        title (str): Subject title of meeting.
+        platform (str): Streaming app (e.g. Zoom, Google Meet, Teams).
+        meeting_link (str): Join URL address.
+        scheduled_at (str): ISO date time string.
+        meeting_type (str, optional): 'internal' or 'client'. Defaults to 'internal'.
+        client_id (int, optional): Mapped client DB key.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success creation message.
+            - 400: Missing title, platform, link, or schedule date.
+            - 404: Mapped client record not found.
+            - 500: Database insert errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -312,6 +441,19 @@ def create_meeting():
 
 @crm_bp.route("/dashboard/meetings", methods=["GET"])
 def list_meetings():
+    """
+    Lists upcoming meetings occurring from 2 hours in the past onwards.
+
+    - Clients: Retrieves client meetings mapped to their account ID.
+    - CRM Managers: Retrieves all internal and client-facing meetings.
+    - Employees/Guests: Retrieves only internal company meetings.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Sorted listing of meeting schedules.
+            - 401: Unauthorized access.
+            - 500: Database aggregate query issues.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -319,6 +461,7 @@ def list_meetings():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # Client role filters meetings specifically mapped to their client ID
         if user["role"] == "client":
             cursor.execute(
                 """
@@ -331,6 +474,7 @@ def list_meetings():
                 (user["id"],)
             )
         elif check_is_crm_manager(user, cursor):
+            # CRM Managers audit all corporate scheduled slots
             cursor.execute(
                 """
                 SELECT m.id, m.title, m.platform, m.meeting_link, m.scheduled_at, m.created_at, m.meeting_type, m.client_id, c.company_name
@@ -341,6 +485,7 @@ def list_meetings():
                 """
             )
         else:
+            # Standard employees view internal-only meetings
             cursor.execute(
                 """
                 SELECT m.id, m.title, m.platform, m.meeting_link, m.scheduled_at, m.created_at, m.meeting_type, m.client_id
@@ -367,6 +512,23 @@ def list_meetings():
 @crm_bp.route("/api/contact", methods=["POST"])
 @rate_limit(limit=5, period=60)
 def save_contact():
+    """
+    Saves message inquiries posted on the EduTech sub-portal landing site.
+    Rate limited to 5 submissions per minute.
+
+    JSON Parameters:
+        name (str): User name.
+        email (str): User email.
+        phone (str): User phone number.
+        track (str): Selected technology syllabus track.
+        message (str): Question/message string.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success message and form record ID.
+            - 400: Missing payload values.
+            - 500: Database insertion exceptions.
+    """
     data = request.json
     if not data:
         return jsonify({"success": False, "error": "No data received"}), 400
@@ -409,6 +571,20 @@ def save_contact():
 @crm_bp.route("/api/newsletter", methods=["POST"])
 @rate_limit(limit=5, period=60)
 def save_newsletter():
+    """
+    Registers client/candidate email subscriptions to newsletter.
+    Rate limited to 5 registrations per minute.
+
+    JSON Parameters:
+        email (str): Subscriber email.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: If email was already subscribed.
+            - 201: Success subscription status code.
+            - 400: Missing email.
+            - 500: Database query issues.
+    """
     data = request.json
     if not data or "email" not in data:
         return jsonify({"success": False, "error": "Email is required"}), 400
@@ -420,6 +596,7 @@ def save_newsletter():
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Check if already subscribed to avoid duplicate rows
         cursor.execute("SELECT id FROM newsletter_subscribers WHERE email = %s;", (email,))
         existing = cursor.fetchone()
         if existing:
@@ -450,6 +627,21 @@ def save_newsletter():
 @crm_bp.route("/api/elevate-contact", methods=["POST"])
 @rate_limit(limit=5, period=60)
 def save_elevate_contact():
+    """
+    Stores contact messages submitted through the primary ElevateIQ portal contact page.
+    Rate limited to 5 submissions per minute.
+
+    JSON Parameters:
+        name (str): Contact name.
+        email (str): Contact email.
+        message (str): Contact message content.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success receipt message with entry ID.
+            - 400: Missing values.
+            - 500: Database operation errors.
+    """
     data = request.json
     if not data:
         return jsonify({"success": False, "error": "No data received"}), 400
@@ -490,6 +682,15 @@ def save_elevate_contact():
 @crm_bp.route("/admin/contacts/edutech", methods=["GET"])
 @require_role(["admin"])
 def get_edutech_contacts():
+    """
+    Lists all stored inquiry messages sent from the EduTech contact form.
+    Restricted to admin users.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of contact objects.
+            - 500: SQL query issues.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -509,6 +710,15 @@ def get_edutech_contacts():
 @crm_bp.route("/admin/contacts/elevate", methods=["GET"])
 @require_role(["admin"])
 def get_elevate_contacts():
+    """
+    Lists all messages stored from the primary ElevateIQ contact form.
+    Restricted to admin users.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of contact objects.
+            - 500: SQL query issues.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -523,3 +733,4 @@ def get_elevate_contacts():
     finally:
         cursor.close()
         conn.close()
+

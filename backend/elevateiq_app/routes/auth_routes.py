@@ -1,3 +1,11 @@
+"""
+Authentication and Core Management Blueprint Routes.
+
+Handles user signup/login sessions, user profiles, employee management (CRUD operations 
+restricted to admins), dashboard statistics generation, system announcements, report data, 
+designations lookup/creation, and serving the EduTech static portal.
+"""
+
 import os
 import bcrypt
 from datetime import datetime, date
@@ -12,12 +20,31 @@ from ..config import Config
 
 auth_bp = Blueprint("auth", __name__)
 
+# Absolute paths for serving EduTech portal static content
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 EDUTECH_DIR = os.path.join(BASE_DIR, "edutech")
 
 @auth_bp.route("/register", methods=["POST"])
 @rate_limit(limit=5, period=60)
 def register():
+    """
+    Registers a new candidate user in the system.
+
+    Accepts registration details from JSON body, hashes the password using bcrypt,
+    and inserts a record into the 'users' table with a default 'candidate' role.
+    Rate limited to 5 registrations per minute per IP.
+
+    JSON Parameters:
+        name (str): The full name of the user.
+        email (str): The email address (used as unique login credential).
+        password (str): The plaintext password.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success message.
+            - 400: If fields are missing or email is already registered.
+            - 500: Database insertion or bcrypt hashing failure message.
+    """
     data = request.json
     name = data.get("name")
     email = data.get("email")
@@ -30,10 +57,12 @@ def register():
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Check if email is already in use
         cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         if cursor.fetchone():
             return jsonify({"error": "Email already registered"}), 400
 
+        # Hash password using bcrypt salt generation
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         cursor.execute(
             "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s) RETURNING id",
@@ -52,6 +81,25 @@ def register():
 @auth_bp.route("/login", methods=["POST"])
 @rate_limit(limit=10, period=60)
 def login():
+    """
+    Authenticates users based on email, employee ID, or client ID.
+
+    Queries the 'employees', 'clients', or default 'users' tables to find a match.
+    Validates password using bcrypt. If successful, constructs a payload, generates 
+    a timed signed token, and returns it as a cookie and JSON.
+    Rate limited to 10 logins per minute per IP.
+
+    JSON Parameters:
+        email (str): The identifier (email, employee_id, or client_id).
+        password (str): The plaintext password.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Login successful along with user data and auth token.
+            - 400: Missing input fields.
+            - 401: Invalid credentials.
+            - 500: Server runtime exceptions.
+    """
     data = request.json
     login_id = data.get("email")  # can be email, Employee ID, or Client ID
     password = data.get("password")
@@ -63,7 +111,7 @@ def login():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         user_record = None
-        # Try finding employee first
+        # Step 1: Try finding employee profile first by matching employee_id or email
         cursor.execute(
             """
             SELECT u.*, e.id as emp_db_id, e.employee_id 
@@ -76,7 +124,7 @@ def login():
         user_record = cursor.fetchone()
 
         if not user_record:
-            # Try finding client by client_id or email
+            # Step 2: Try finding client profile by matching client_id or email
             cursor.execute(
                 """
                 SELECT u.*, c.id as client_db_id, c.client_id, c.company_name
@@ -89,15 +137,16 @@ def login():
             user_record = cursor.fetchone()
 
         if not user_record:
-            # Check users table directly (for candidates or admins who don't have employee/client records)
+            # Step 3: Check users table directly (for candidates/admins without specialized employee/client records)
             cursor.execute("SELECT * FROM users WHERE email = %s", (login_id,))
             user_record = cursor.fetchone()
 
         if not user_record:
             return jsonify({"error": "Invalid credentials"}), 401
 
+        # Verify hashed password with input password
         if bcrypt.checkpw(password.encode("utf-8"), user_record["password"].encode("utf-8")):
-            # Build payload
+            # Build user data payload for security token
             payload = {
                 "id": user_record["id"],
                 "name": user_record["name"],
@@ -109,19 +158,21 @@ def login():
                 "client_id": user_record.get("client_id"),
                 "company_name": user_record.get("company_name")
             }
+            # Sign token using the timed serializer
             token = serializer.dumps(payload)
             response = jsonify({
                 "message": "Login successful",
                 "token": token,
                 "user": payload
             })
+            # Set cookie with HttpOnly flag to prevent Cross-Site Scripting (XSS) access
             response.set_cookie(
                 "token",
                 token,
                 httponly=True,
                 secure=os.getenv("FLASK_ENV") == "production",
                 samesite="Lax",
-                max_age=86400
+                max_age=86400  # cookie lifetime in seconds (1 day)
             )
             return response, 200
         else:
@@ -135,6 +186,13 @@ def login():
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
+    """
+    Logs out the current user by deleting the security cookie.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Logout successful message.
+    """
     response = jsonify({"message": "Logout successful"})
     response.delete_cookie("token")
     return response, 200
@@ -142,6 +200,18 @@ def logout():
 
 @auth_bp.route("/profile", methods=["GET", "PUT"])
 def profile():
+    """
+    Retrieves or updates the currently logged-in user's profile details.
+
+    GET: Returns specific details depending on the user's role (employee, client, admin/candidate).
+    PUT: Updates editable user fields (name, email, password, phone_number).
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Profile details or profile update success message.
+            - 401: Unauthorized if token is missing or invalid.
+            - 500: Database operation errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -161,6 +231,7 @@ def profile():
                     (user["id"],)
                 )
                 profile_data = cursor.fetchone()
+                # Serialize Python date objects to ISO string representation
                 if profile_data and profile_data.get("date_of_joining"):
                     profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
             elif user["role"] == "client":
@@ -187,25 +258,26 @@ def profile():
             phone = data.get("phone_number")
             password = data.get("password")
 
-            # Update User table
+            # Update fields in the primary 'users' table
             if name or email:
                 cursor.execute(
                     "UPDATE users SET name = COALESCE(%s, name), email = COALESCE(%s, email) WHERE id = %s",
                     (name, email, user["id"])
                 )
 
+            # Hash and update password if provided
             if password:
                 hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
                 cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed, user["id"]))
 
-            # Update Employee table
+            # Update employee-specific fields
             if user["role"] == "employee" and phone:
                 cursor.execute(
                     "UPDATE employees SET phone_number = %s WHERE user_id = %s",
                     (phone, user["id"])
                 )
 
-            # Update Client table
+            # Update client-specific fields
             if user["role"] == "client" and phone:
                 cursor.execute(
                     "UPDATE clients SET phone_number = %s WHERE user_id = %s",
@@ -226,6 +298,16 @@ def profile():
 @auth_bp.route("/employees", methods=["GET"])
 @require_role(["admin"])
 def list_employees():
+    """
+    Lists all employees registered in the system.
+    Restricted to admin users.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: List of employees with details (dates formatted as ISO format).
+            - 401/403: Security errors.
+            - 500: SQL query issues.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -252,6 +334,27 @@ def list_employees():
 @auth_bp.route("/employees", methods=["POST"])
 @require_role(["admin"])
 def add_employee():
+    """
+    Registers a new employee. Creates both a 'users' record and an 'employees' profile.
+    Restricted to admin users.
+
+    JSON Parameters:
+        name (str): Full name of the employee.
+        email (str): Unique email address.
+        employee_id (str): Unique corporate employee identifier.
+        department (str): Corporate department.
+        designation (str): Work designation.
+        password (str, optional): Account password. Defaults to '<email_username>123'.
+        phone_number (str, optional): Phone number.
+        date_of_joining (str, optional): ISO date string. Defaults to today's date.
+        status (str, optional): Status field. Defaults to 'Active'.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success message and temporary password.
+            - 400: Missing required parameters or conflicts on email/employee_id.
+            - 500: Database insertion exceptions.
+    """
     data = request.json
     name = data.get("name")
     email = data.get("email")
@@ -266,27 +369,33 @@ def add_employee():
     if not name or not email or not employee_id or not department or not designation:
         return jsonify({"error": "Required fields are missing"}), 400
 
+    # Auto-generate temporary password if not provided explicitly
     if not password:
         password = email.split("@")[0] + "123"
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Check email availability
         cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         if cursor.fetchone():
             return jsonify({"error": "Email already exists in users"}), 400
 
+        # Check employee ID availability
         cursor.execute("SELECT id FROM employees WHERE employee_id = %s", (employee_id,))
         if cursor.fetchone():
             return jsonify({"error": "Employee ID already exists"}), 400
 
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        
+        # Insert user login credentials
         cursor.execute(
             "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, 'employee') RETURNING id",
             (name, email, hashed_password)
         )
         user_id = cursor.fetchone()[0]
 
+        # Insert detailed employee metadata
         cursor.execute(
             """
             INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status) 
@@ -307,6 +416,20 @@ def add_employee():
 @auth_bp.route("/employees/<int:emp_id>", methods=["PUT"])
 @require_role(["admin"])
 def update_employee(emp_id):
+    """
+    Updates employee details in both employees and users tables.
+    Restricted to admin users.
+
+    Args:
+        emp_id (int): DB primary key ID of the employee to update.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success update message.
+            - 400: Email already in use by another account.
+            - 404: Employee record not found.
+            - 500: Database execution errors.
+    """
     data = request.json
     name = data.get("name")
     email = data.get("email")
@@ -319,23 +442,27 @@ def update_employee(emp_id):
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Retrieve mapped user ID to update users credentials table
         cursor.execute("SELECT user_id FROM employees WHERE id = %s", (emp_id,))
         record = cursor.fetchone()
         if not record:
             return jsonify({"error": "Employee not found"}), 404
         user_id = record[0]
 
+        # Prevent duplicate email assignments across different accounts
         if email:
             cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (email, user_id))
             if cursor.fetchone():
                 return jsonify({"error": "Email is already taken by another user"}), 400
 
+        # Update core user credentials
         if name or email:
             cursor.execute(
                 "UPDATE users SET name = COALESCE(%s, name), email = COALESCE(%s, email) WHERE id = %s",
                 (name, email, user_id)
             )
 
+        # Update employee information
         cursor.execute(
             """
             UPDATE employees 
@@ -357,15 +484,30 @@ def update_employee(emp_id):
 @auth_bp.route("/employees/<int:emp_id>", methods=["DELETE"])
 @require_role(["admin"])
 def delete_employee(emp_id):
+    """
+    Permanently deletes employee record and corresponding login user account.
+    Restricted to admin users.
+
+    Args:
+        emp_id (int): DB primary key ID of the employee to delete.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success deletion message.
+            - 404: Employee record not found.
+            - 500: Database constraints or SQL exceptions.
+    """
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Check existence and map user_id
         cursor.execute("SELECT user_id FROM employees WHERE id = %s", (emp_id,))
         record = cursor.fetchone()
         if not record:
             return jsonify({"error": "Employee not found"}), 404
         user_id = record[0]
 
+        # Delete employee details and credentials
         cursor.execute("DELETE FROM employees WHERE id = %s", (emp_id,))
         cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
         conn.commit()
@@ -380,6 +522,14 @@ def delete_employee(emp_id):
 
 @auth_bp.route("/announcements", methods=["GET"])
 def get_announcements():
+    """
+    Fetches all system announcements sorted chronologically by creation timestamp.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: List of announcement items.
+            - 500: SQL query issues.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -399,6 +549,20 @@ def get_announcements():
 @auth_bp.route("/announcements", methods=["POST"])
 @require_role(["admin"])
 def create_announcement():
+    """
+    Posts a new announcement block.
+    Restricted to admin users.
+
+    JSON Parameters:
+        title (str): Title of the announcement.
+        content (str): Content body of the announcement.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success creation message.
+            - 400: Missing title or content.
+            - 500: Database insertion exceptions.
+    """
     data = request.json
     title = data.get("title")
     content = data.get("content")
@@ -425,6 +589,19 @@ def create_announcement():
 
 @auth_bp.route("/dashboard/stats", methods=["GET"])
 def get_dashboard_stats():
+    """
+    Generates statistics for the dashboard panels adjusted for the current user's role.
+
+    - Admins: Counts active employees, attendance counts today, pending leaves, and active job/app counts.
+    - Employees: Retrieves leave category balances, personal attendance records, and pending leave counts.
+    - Candidates: Counts submitted applications and current shortlisted applications.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Dictionary of metrics customized for the requestor's role.
+            - 401: Unauthorized access.
+            - 500: Aggregation query errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -505,6 +682,23 @@ def get_dashboard_stats():
 @auth_bp.route("/reports/<report_type>", methods=["GET"])
 @require_role(["admin"])
 def get_report(report_type):
+    """
+    Returns aggregated metrics for administrative chart visualizers.
+    Restricted to admin users.
+
+    - attendance: Grouped count of attendance statuses over the last 30 days.
+    - employee: Count of active employees per department.
+    - recruitment: Grouped count of applications by current workflow status.
+
+    Args:
+        report_type (str): Type of report dataset ('attendance', 'employee', 'recruitment').
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of aggregated report objects.
+            - 400: If report_type matches none of the available reports.
+            - 500: Database aggregate query issues.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -558,12 +752,27 @@ def get_report(report_type):
 
 @auth_bp.route("/edutech")
 def serve_edutech_redirect():
+    """
+    Redirects bare edutech routes to have trailing slash to ensure path integrity.
+
+    Returns:
+        Response: Redirection mapping client to /edutech/.
+    """
     return redirect("/edutech/")
 
 
 @auth_bp.route("/edutech/")
 @auth_bp.route("/edutech/<path:path>")
 def serve_edutech(path="index.html"):
+    """
+    Serves static portal assets for the EduTech sub-portal.
+
+    Args:
+        path (str): File path relative to edutech directory. Defaults to 'index.html'.
+
+    Returns:
+        Response: The file from directory.
+    """
     if not path or path == "":
         path = "index.html"
     return send_from_directory(EDUTECH_DIR, path)
@@ -572,6 +781,14 @@ def serve_edutech(path="index.html"):
 @auth_bp.route("/designations", methods=["GET"])
 @require_role(["admin", "employee"])
 def get_designations():
+    """
+    Lists designations registered in the designations lookup table.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Sorted designations listing.
+            - 500: Database lookup errors.
+    """
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -588,6 +805,19 @@ def get_designations():
 @auth_bp.route("/designations", methods=["POST"])
 @require_role(["admin"])
 def create_designation():
+    """
+    Registers a new unique designation name.
+    Restricted to admin users.
+
+    JSON Parameters:
+        name (str): The label of the new designation.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Newly created designation entity.
+            - 400: If parameters are empty or the designation already exists.
+            - 500: DB transaction or insert failure.
+    """
     data = request.json
     name = data.get("name")
     if not name or name.strip() == "":
@@ -603,10 +833,12 @@ def create_designation():
         return jsonify(new_row), 201
     except Exception as e:
         conn.rollback()
+        # Safely parse database unique violation errors to return clean API messages
         if "unique constraint" in str(e).lower() or "duplicate key" in str(e).lower():
             return jsonify({"error": "Designation already exists"}), 400
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
+
 

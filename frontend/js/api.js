@@ -1,8 +1,22 @@
+/**
+ * @file api.js
+ * @description Provides global AJAX Fetch utilities, HTML sanitization, and platform-specific visual style configurations.
+ */
+
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user") || "null");
 
-// --- AJAX Fetch Helper ---
+/**
+ * Executes an asynchronous AJAX HTTP request with Bearer authorization and content-type parsing.
+ * 
+ * @async
+ * @param {string} endpoint - The target API URL suffix path (e.g. '/login').
+ * @param {string} [method="GET"] - The HTTP Verb to use.
+ * @param {Object|null} [body=null] - Optional JSON body payload.
+ * @throws {Error} Propagates HTTP status code failures and backend-specific error messages.
+ * @returns {Promise<any>} Parses JSON response data.
+ */
 async function apiCall(endpoint, method = "GET", body = null) {
     const options = {
         method,
@@ -31,6 +45,12 @@ async function apiCall(endpoint, method = "GET", body = null) {
     }
 }
 
+/**
+ * Escapes special HTML characters to prevent Cross-Site Scripting (XSS) code injections.
+ * 
+ * @param {string} str - Raw input text to escape.
+ * @returns {string} Sanitized string safe for DOM innerHTML insertion.
+ */
 function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
@@ -38,7 +58,12 @@ function escapeHTML(str) {
     );
 }
 
-// --- Platform Helpers ---
+/**
+ * Resolves a vector SVG icon template for a specific video conferencing platform.
+ * 
+ * @param {string} platform - The name of the platform (Zoom, Google Meet, Teams, etc.)
+ * @returns {string} Inline HTML representation of the platform's brand SVG icon.
+ */
 function getPlatformIcon(platform) {
     platform = (platform || '').trim();
     if (platform === 'Zoom') {
@@ -106,6 +131,12 @@ function getPlatformIcon(platform) {
     }
 }
 
+/**
+ * Resolves a transparency-layered backdrop background color for a platform badge.
+ * 
+ * @param {string} platform - The name of the platform.
+ * @returns {string} RGBA color string.
+ */
 function getPlatformBg(platform) {
     platform = (platform || '').trim();
     if (platform === 'Zoom') return 'rgba(45, 140, 255, 0.12)';
@@ -116,6 +147,12 @@ function getPlatformBg(platform) {
     return 'rgba(255, 255, 255, 0.08)';
 }
 
+/**
+ * Resolves a foreground brand accent text color for a platform badge.
+ * 
+ * @param {string} platform - The name of the platform.
+ * @returns {string} Hex or CSS variable color code.
+ */
 function getPlatformColor(platform) {
     platform = (platform || '').trim();
     if (platform === 'Zoom') return '#4a9cff';
@@ -125,3 +162,4 @@ function getPlatformColor(platform) {
     if (platform === 'Webex') return '#5891f7';
     return 'var(--ink-soft)';
 }
+

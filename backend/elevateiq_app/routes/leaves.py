@@ -1,3 +1,11 @@
+"""
+Leaves and Attendance Tracking blueprint routes.
+
+Manages employee leaves lifecycle (applying, listing, approving/rejecting leave applications) 
+and daily attendance logs (clocking check-ins, clocking check-outs, computing hours, and 
+classifying presence status as Present, Half Day, or Absent).
+"""
+
 from datetime import date, datetime
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
@@ -8,6 +16,18 @@ leaves_bp = Blueprint("leaves", __name__)
 
 @leaves_bp.route("/leaves", methods=["GET"])
 def get_leaves():
+    """
+    Fetches leave records based on current user role and request scope.
+
+    Admins and designated team leaders/approvers can fetch all system leaves using 'scope=all'.
+    Standard employees retrieve only their own personal leave requests.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of leave applications with formatted ISO dates.
+            - 401: Unauthorized access.
+            - 500: Database select exception.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -20,7 +40,7 @@ def get_leaves():
         if user["role"] == "admin":
             is_approver = True
         else:
-            # Check designation for employee
+            # Check designation for employee to verify leadership privileges
             cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
             res = cursor.fetchone()
             if res:
@@ -29,8 +49,8 @@ def get_leaves():
                 if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
                     is_approver = True
 
+        # Grant access to all requests if requested scope is 'all' and user is authorized
         if (scope == "all" and is_approver) or user["role"] == "admin":
-            # Admin/Approver sees all leave requests
             cursor.execute(
                 """
                 SELECT l.*, e.employee_id, u.name, e.department, e.designation,
@@ -42,7 +62,7 @@ def get_leaves():
                 """
             )
         else:
-            # Employee sees their own leave requests
+            # Fallback to fetching only the individual employee's own requests
             cursor.execute(
                 "SELECT * FROM leaves WHERE employee_id = %s ORDER BY created_at DESC",
                 (user["emp_db_id"],)
@@ -66,6 +86,24 @@ def get_leaves():
 
 @leaves_bp.route("/leaves", methods=["POST"])
 def apply_leave():
+    """
+    Submits a new leave request.
+    Validates category constraints and verifies that the employee has sufficient balance.
+
+    JSON Parameters:
+        leave_type (str): Category of leave ('Casual', 'Sick', 'Earned', 'Emergency').
+        start_date (str): 'YYYY-MM-DD' start date.
+        end_date (str): 'YYYY-MM-DD' end date.
+        reason (str, optional): Explanation notes.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Success creation message.
+            - 400: Missing/invalid parameters, or insufficient balances.
+            - 403: If caller is not an employee.
+            - 404: Employee record not found.
+            - 500: Database transaction exceptions.
+    """
     user = get_current_user()
     if not user or user["role"] != "employee":
         return jsonify({"error": "Forbidden"}), 403
@@ -82,6 +120,7 @@ def apply_leave():
     if leave_type not in ["Casual", "Sick", "Earned", "Emergency"]:
         return jsonify({"error": "Invalid leave type. Must be Casual, Sick, Earned, or Emergency."}), 400
 
+    # Parse date strings to Python date objects
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
@@ -91,7 +130,7 @@ def apply_leave():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Check leave balance
+        # Check leave balance from employee record
         cursor.execute("SELECT * FROM employees WHERE id = %s", (user["emp_db_id"],))
         emp = cursor.fetchone()
         if not emp:
@@ -101,6 +140,7 @@ def apply_leave():
         balance_col = f"{leave_type.lower()}_leave"
         balance = emp.get(balance_col, 0)
 
+        # Enforce balance checking prior to registering the request
         if balance < leave_days:
             return jsonify({"error": f"Insufficient leave balance. Requested {leave_days} days of {leave_type} leave, but only {balance} days remaining."}), 400
 
@@ -123,6 +163,27 @@ def apply_leave():
 
 @leaves_bp.route("/leaves/<int:leave_id>", methods=["PUT"])
 def review_leave(leave_id):
+    """
+    Approves or Rejects a pending leave request.
+    Restricted to Admins and Team Leaders.
+
+    If approved, deducts the corresponding count from the employee's category balance,
+    and inserts attendance records marked as 'Leave' for the duration dates.
+
+    Args:
+        leave_id (int): Primary key ID of the leave request.
+
+    JSON Parameters:
+        status (str): The decision action ('Approved' or 'Rejected').
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success status change message.
+            - 400: Already processed, insufficient balance, or invalid parameters.
+            - 403: Forbidden access.
+            - 404: Request or employee record not found.
+            - 500: Database update or transaction exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -134,6 +195,7 @@ def review_leave(leave_id):
         if user["role"] == "admin":
             is_approver = True
         else:
+            # Check designation for employee to verify leadership privileges
             cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
             res = cursor.fetchone()
             if res:
@@ -165,7 +227,7 @@ def review_leave(leave_id):
         leave_type = leave["leave_type"]
 
         if action == "Approved":
-            # Deduct balance
+            # Retrieve current category balance
             balance_col = f"{leave_type.lower()}_leave"
             cursor.execute(f"SELECT {balance_col} FROM employees WHERE id = %s", (emp_id,))
             emp_row = cursor.fetchone()
@@ -176,12 +238,13 @@ def review_leave(leave_id):
             if balance < leave_days:
                 return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400
 
+            # Deduct approved leave days from balance
             cursor.execute(
                 f"UPDATE employees SET {balance_col} = {balance_col} - %s WHERE id = %s",
                 (leave_days, emp_id)
             )
 
-            # Insert attendance record as 'Leave' for the duration
+            # Insert attendance records marked as 'Leave' for the duration
             curr = leave["start_date"]
             while curr <= leave["end_date"]:
                 cursor.execute(
@@ -207,6 +270,18 @@ def review_leave(leave_id):
 
 @leaves_bp.route("/attendance", methods=["GET"])
 def get_attendance():
+    """
+    Lists attendance log entries.
+
+    - Admins: Retrieve all logs across the company.
+    - Employees: Retrieve only their own logged attendance dates.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of attendance objects.
+            - 401: Unauthorized access.
+            - 500: Database select query exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -238,6 +313,7 @@ def get_attendance():
             )
             records = cursor.fetchall()
 
+        # Format dates, check-in, check-out times, and working hours for clean JSON responses
         for rec in records:
             if rec.get("date"):
                 rec["date"] = rec["date"].isoformat()
@@ -258,6 +334,17 @@ def get_attendance():
 
 @leaves_bp.route("/attendance/checkin", methods=["POST"])
 def check_in():
+    """
+    Registers the start clock-in time for the current date.
+    Restricted to employees.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Checked in successfully.
+            - 400: If already checked in today.
+            - 403: Forbidden access.
+            - 500: Database insertion exceptions.
+    """
     user = get_current_user()
     if not user or user["role"] != "employee":
         return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
@@ -268,6 +355,7 @@ def check_in():
     current_time = datetime.now().time().strftime("%H:%M:%S")
     
     try:
+        # Enforce unique check-ins per day per employee
         cursor.execute(
             "SELECT id FROM attendance WHERE employee_id = %s AND date = %s",
             (user["emp_db_id"], today_date)
@@ -291,6 +379,22 @@ def check_in():
 
 @leaves_bp.route("/attendance/checkout", methods=["POST"])
 def check_out():
+    """
+    Registers the clock-out time for the current date.
+    Restricted to employees.
+
+    Computes working hours using duration delta and updates status classification:
+    - >= 8.0 hours: 'Present'
+    - >= 4.0 hours: 'Half Day'
+    - < 4.0 hours: 'Absent'
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Checked out successfully along with hours and status.
+            - 400: If check-in is missing or checkout was already recorded today.
+            - 403: Forbidden access.
+            - 500: Database update exceptions.
+    """
     user = get_current_user()
     if not user or user["role"] != "employee":
         return jsonify({"error": "Forbidden"}), 403
@@ -314,11 +418,13 @@ def check_out():
 
         check_in_time = record["check_in"]
         
+        # Calculate delta difference between check-in and check-out
         dt_in = datetime.combine(date.min, check_in_time)
         dt_out = datetime.combine(date.min, current_time)
         delta = dt_out - dt_in
         working_hours = max(0.0, delta.total_seconds() / 3600.0)
 
+        # Status rules based on hours worked
         status = 'Present'
         if working_hours >= 8.0:
             status = 'Present'
@@ -343,3 +449,4 @@ def check_out():
     finally:
         cursor.close()
         conn.close()
+

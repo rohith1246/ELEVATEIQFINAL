@@ -8,7 +8,8 @@
 </head>
 <body>
 
-<!-- Preloader Overlay -->
+
+<!-- ==================== PRELOADER OVERLAY ==================== -->
 <div id="preloader" class="preloader-overlay">
   <video id="preloader-video" class="preloader-video" autoplay muted playsinline>
     <source src="logo_animated.mp4" type="video/mp4">
@@ -16,17 +17,22 @@
 </div>
 <script src="preloader.js"></script>
 
+
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Dynamic backdrop gradient orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
     <a href="index.html" class="logo">
         <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -50,10 +56,13 @@
     </div>
 </nav>
 
+
+<!-- ==================== HERO HEADER SECTION ==================== -->
 <section class="auth-wrap" style="min-height:100vh; padding-top:140px;">
 
     <div style="text-align:center; position:relative; z-index:2; max-width:1000px; margin:auto;">
 
+        <!-- Hiring Notice Badge -->
         <div style="
             display:inline-flex;
             align-items:center;
@@ -82,9 +91,14 @@
             We're hiring across 6 teams
         </div>
 
+        <!-- Animated Logo with Side-by-Side EduTech Link -->
         <div style="
             display:flex;
+            flex-direction:row;
+            flex-wrap:wrap;
             justify-content:center;
+            align-items:center;
+            gap: 24px;
             margin-bottom:30px;
             opacity:0;
             animation:fadeUp .9s ease forwards .15s;
@@ -100,8 +114,54 @@
                  "
                  onmouseover="this.style.transform='scale(1.03)'"
                  onmouseout="this.style.transform='scale(1)'">
+            
+            <div class="hero-separator" style="
+                width: 1px;
+                height: 80px;
+                background: var(--glass-border);
+            "></div>
+
+            <a href="edutech/index.html" class="hero-edutech-link" style="
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+                text-decoration: none;
+                transition: transform 0.3s ease;
+                text-align: left;
+            " onmouseover="this.style.transform='scale(1.03)'"
+               onmouseout="this.style.transform='scale(1)'">
+                <span style="
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    background: linear-gradient(135deg, var(--blue), var(--orange));
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                ">Access Our</span>
+                <span style="
+                    font-size: clamp(22px, 3.5vw, 32px);
+                    font-weight: 800;
+                    color: #fff;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    margin-top: 4px;
+                ">EduTech Portal</span>
+                <span style="
+                    font-size: 13px;
+                    color: var(--ink-soft);
+                    margin-top: 6px;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                ">
+                    Explore courses, certs & path finder ➜
+                </span>
+            </a>
         </div>
 
+        <!-- Tagline -->
         <p style="
             max-width:650px;
             margin:26px auto 0;
@@ -115,6 +175,7 @@
             Elevate Your Business. Empower Your Future.
         </p>
 
+        <!-- Call-to-action buttons -->
         <div style="
             display:flex;
             gap:14px;
@@ -134,9 +195,19 @@
 <style>
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0); } }
 @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+@media (max-width: 600px) {
+  .hero-separator {
+    display: none;
+  }
+  .hero-edutech-link {
+    align-items: center !important;
+    text-align: center !important;
+  }
+}
 </style>
 
-<!-- Services Section -->
+
+<!-- ==================== SERVICES SECTION ==================== -->
 <section class="section" id="services" style="padding-top: 100px;">
   <div class="section-head">
     <div class="label">Our Services</div>
@@ -184,7 +255,8 @@
   </div>
 </section>
 
-<!-- Portfolio Section -->
+
+<!-- ==================== PORTFOLIO SECTION ==================== -->
 <section class="section" id="portfolio" style="padding-top: 80px;">
   <div class="section-head">
     <div class="label">Portfolio</div>
@@ -213,7 +285,8 @@
   </div>
 </section>
 
-<!-- Call to Action -->
+
+<!-- ==================== CALL TO ACTION SECTION ==================== -->
 <div style="text-align:center; padding:70px 6vw; margin:60px 6vw 80px; border-radius:24px; background:linear-gradient(135deg, rgba(6, 14, 34, 0.9), rgba(13, 11, 40, 0.85)); border:1px solid var(--glass-border); position:relative; z-index:2; backdrop-filter:blur(10px);">
   <h2 style="font-size:clamp(26px,3.6vw,38px); font-weight:600; letter-spacing:-0.5px; color:#fff;">Ready to get started?</h2>
   <p style="color:var(--ink-soft); margin-top:12px; font-size:15px; max-width:600px; margin-left:auto; margin-right:auto;">
@@ -225,11 +298,16 @@
   </div>
 </div>
 
+
+<!-- ==================== FOOTER ==================== -->
 <footer>
   © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
+
+<!-- ==================== SCRIPTS ==================== -->
 <script>
+// Check if user session token exists in local storage to dynamically update login/signup links to dashboard controls
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user") || "null");
 if (token && user) {

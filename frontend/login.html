@@ -9,17 +9,21 @@
 <body>
 
 
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Dynamic backdrop gradient orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
   <a href="index.html" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -43,6 +47,8 @@
   </div>
 </nav>
 
+
+<!-- ==================== LOGIN FORM CARD ==================== -->
 <section class="auth-wrap">
   <div class="auth-card">
     <h1>Welcome Back</h1>
@@ -55,6 +61,7 @@
       <button type="submit" class="btn-primary auth-submit">Log in</button>
     </form>
 
+    <!-- Error/Success status message display elements -->
     <div class="msg error" id="errorMsg"></div>
     <div class="msg success" id="successMsg"></div>
 
@@ -62,18 +69,24 @@
   </div>
 </section>
 
+
+<!-- ==================== FOOTER ==================== -->
 <footer>
   © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
+
+<!-- ==================== SCRIPTS ==================== -->
 <script>
+// Determine backend API URL depending on current context (localhost vs production origin)
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 
-// Check if user already logged in, redirect
+// Auto-redirect to dashboard if token session is already active
 if (localStorage.getItem("token")) {
   window.location.href = "dashboard.html";
 }
 
+// Handle form submission and authentication integration
 document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const errorMsg = document.getElementById('errorMsg');
@@ -87,6 +100,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   };
 
   try {
+    // Send request payload to authentication service
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,6 +111,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if (res.ok) {
       successMsg.textContent = data.message || 'Login successful.';
       successMsg.style.display = 'block';
+      // Cache token and user detail elements locally for persistent session state
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);

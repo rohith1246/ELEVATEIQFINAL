@@ -9,17 +9,21 @@
 <body>
 
 
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Dynamic Backdrop Gradient Orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
   <a href="index.html" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -43,6 +47,8 @@
   </div>
 </nav>
 
+
+<!-- ==================== CONTACT LAYOUT AND FORM ==================== -->
 <section class="auth-wrap" style="padding-top: 140px; padding-bottom: 80px; min-height: 100vh;">
   <div class="glass-card contact-grid">
     
@@ -95,11 +101,16 @@
   </div>
 </section>
 
+
+<!-- ==================== FOOTER ==================== -->
 <footer>
   © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
+
+<!-- ==================== SCRIPTS ==================== -->
 <script>
+// Handle contact form submission and API integration
 document.getElementById('contactForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const name = document.getElementById('name').value;
@@ -110,6 +121,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
   msgEl.style.display = 'none';
   
   try {
+    // Send form data to back-end contact API endpoint
     const res = await fetch('/api/elevate-contact', {
       method: 'POST',
       headers: {

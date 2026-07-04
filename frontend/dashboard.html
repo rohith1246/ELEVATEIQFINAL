@@ -11,17 +11,21 @@
 </head>
 <body>
 
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Backdrop Gradient Blur Orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== HEADER / NAVIGATION ==================== -->
 <nav>
   <a href="index.html" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -32,25 +36,30 @@
   </div>
 </nav>
 
+
+<!-- ==================== MAIN DASHBOARD CONTAINER ==================== -->
 <div class="dash-container">
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation Menu (Populated Dynamically) -->
     <div class="sidebar" id="sidebarMenu">
         <!-- Rendered Dynamically based on role -->
     </div>
 
-    <!-- Main Content Area -->
+    <!-- Main Dynamic Content Workspace -->
     <div class="dash-content">
         <h1 id="dashTitle" style="font-size:28px; margin-bottom:6px;">Dashboard</h1>
         <p id="dashSub" style="color:var(--ink-soft); font-size:14px; margin-bottom:30px;"></p>
 
-        <!-- Dynamic Content Panels -->
+        <!-- Dynamic Content Panels (Injected by loadPanelData) -->
         <div id="panelContainer">
             <!-- Panels injected by JavaScript -->
         </div>
     </div>
 </div>
 
-<!-- Edit Employee Modal -->
+
+<!-- ==================== POPUP MODALS ==================== -->
+
+<!-- Component: Edit Employee Modal -->
 <div class="modal" id="editEmployeeModal">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModal('editEmployeeModal')">&times;</button>
@@ -949,6 +958,8 @@ Object.keys(layouts).forEach(panelId => {
 });
 </script>
 
+
+<!-- ==================== EXTERNAL JS MODULES ==================== -->
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/chat.js"></script>
@@ -956,6 +967,8 @@ Object.keys(layouts).forEach(panelId => {
 <script src="js/recruitment.js"></script>
 <script src="js/leaves.js"></script>
 
+
+<!-- ==================== CORE DASHBOARD LOGIC ==================== -->
 <script>
 // Load dynamic dashboard
 initDashboard();

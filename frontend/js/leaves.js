@@ -1,4 +1,18 @@
-// 1. Admin Overview
+/**
+ * @file leaves.js
+ * @description Central dashboard sub-controller managing Admin Overview stats, employee CRUD operations,
+ * attendance registries, leave application approvals, notice boards, report engines, and candidate application tracking.
+ */
+
+/* ==========================================================================
+   1. ADMIN OVERVIEW CONTROLLER
+   ========================================================================== */
+
+/**
+ * Loads dashboard overview metrics and company notice board announcements.
+ * 
+ * @async
+ */
 async function loadAdminOverview() {
     const stats = await apiCall("/dashboard/stats");
     document.getElementById("stat_total_emp").textContent = stats.active_employees;
@@ -24,9 +38,19 @@ async function loadAdminOverview() {
     loadAdminMeetings();
 }
 
-// 2. Admin Employees Management
+
+/* ==========================================================================
+   2. ADMIN EMPLOYEES MANAGEMENT
+   ========================================================================== */
+
 let allEmployees = [];
 
+/**
+ * Fetches company designations list and populates add/edit dropdown selectors.
+ * 
+ * @async
+ * @param {string|null} [selectedVal=null] - Pre-selected designation name.
+ */
 async function loadDesignations(selectedVal = null) {
     try {
         const list = await apiCall("/designations");
@@ -55,6 +79,12 @@ async function loadDesignations(selectedVal = null) {
     }
 }
 
+/**
+ * Toggles the designation selector interface between dropdown and custom input modes.
+ * 
+ * @param {string} mode - Mode key identifier ('add' or 'edit').
+ * @param {boolean} showInput - Whether to show the text input.
+ */
 function toggleDesgInput(mode, showInput) {
     const selectArea = document.getElementById(`${mode}DesgSelectArea`);
     const inputArea = document.getElementById(`${mode}DesgInputArea`);
@@ -73,6 +103,12 @@ function toggleDesgInput(mode, showInput) {
     }
 }
 
+/**
+ * Dispatches a POST request to add a new custom designation.
+ * 
+ * @async
+ * @param {string} mode - 'add' or 'edit' context marker.
+ */
 async function submitCustomDesignation(mode) {
     const customInput = document.getElementById(`${mode}DesgCustom`);
     if (!customInput) return;
@@ -89,12 +125,22 @@ async function submitCustomDesignation(mode) {
     }
 }
 
+/**
+ * Loads employee database roster list and updates table.
+ * 
+ * @async
+ */
 async function loadAdminEmployees() {
     await loadDesignations();
     allEmployees = await apiCall("/employees");
     renderEmployeesTable(allEmployees);
 }
 
+/**
+ * Generates table row templates for employee accounts.
+ * 
+ * @param {Array<Object>} list - Employees list.
+ */
 function renderEmployeesTable(list) {
     const tbody = document.getElementById("employeesTableBody");
     tbody.innerHTML = "";
@@ -116,6 +162,9 @@ function renderEmployeesTable(list) {
     });
 }
 
+/**
+ * Filters employee management list depending on search query matching terms.
+ */
 function filterEmployees() {
     const q = document.getElementById("empSearchInput").value.toLowerCase();
     const filtered = allEmployees.filter(emp => 
@@ -127,6 +176,7 @@ function filterEmployees() {
     renderEmployeesTable(filtered);
 }
 
+// Add Employee submission form handler
 const addEmployeeForm = document.getElementById("addEmployeeForm");
 if (addEmployeeForm) {
     addEmployeeForm.addEventListener("submit", async function(e) {
@@ -149,6 +199,12 @@ if (addEmployeeForm) {
     });
 }
 
+/**
+ * Populates employee modification form with active details.
+ * 
+ * @async
+ * @param {Object} emp - Target employee account.
+ */
 async function editEmployeePopup(emp) {
     document.getElementById("editEmpId").value = emp.id;
     document.getElementById("editName").value = emp.name;
@@ -161,6 +217,7 @@ async function editEmployeePopup(emp) {
     openModal("editEmployeeModal");
 }
 
+// Save modified employee details form handler
 const editEmployeeForm = document.getElementById("editEmployeeForm");
 if (editEmployeeForm) {
     editEmployeeForm.addEventListener("submit", async function(e) {
@@ -181,6 +238,12 @@ if (editEmployeeForm) {
     });
 }
 
+/**
+ * Dispatches a delete request to terminate an employee account and profile.
+ * 
+ * @async
+ * @param {number} id - Target employee database primary key ID.
+ */
 async function deleteEmployee(id) {
     if (confirm("Are you sure you want to permanently delete this employee? This will also remove their user account.")) {
         await apiCall(`/employees/${id}`, "DELETE");
@@ -189,7 +252,16 @@ async function deleteEmployee(id) {
     }
 }
 
-// 3. Admin Attendance Register
+
+/* ==========================================================================
+   3. ADMIN ATTENDANCE REGISTER
+   ========================================================================== */
+
+/**
+ * Loads daily attendance logs and updates registry table.
+ * 
+ * @async
+ */
 async function loadAdminAttendance() {
     const records = await apiCall("/attendance");
     const tbody = document.getElementById("attendanceTableBody");
@@ -211,7 +283,16 @@ async function loadAdminAttendance() {
     });
 }
 
-// 4. Admin Leaves Requests Review
+
+/* ==========================================================================
+   4. ADMIN LEAVES REQUESTS REVIEW
+   ========================================================================== */
+
+/**
+ * Fetches pending and processed leave request records and renders reviews table.
+ * 
+ * @async
+ */
 async function loadAdminLeaves() {
     const leaves = await apiCall("/leaves?scope=all");
     const tbody = document.getElementById("leavesTableBody");
@@ -253,13 +334,29 @@ async function loadAdminLeaves() {
     });
 }
 
+/**
+ * Dispatches leave application review decision POST updates.
+ * 
+ * @async
+ * @param {number} id - Target leave ID.
+ * @param {string} action - Action status decision ('Approved' or 'Rejected').
+ */
 async function reviewLeave(id, action) {
     await apiCall(`/leaves/${id}`, "PUT", { status: action });
     alert(`Leave request ${action.toLowerCase()} successfully.`);
     loadAdminLeaves();
 }
 
-// 6. Admin Announcements Panel
+
+/* ==========================================================================
+   6. ADMIN ANNOUNCEMENTS PANEL
+   ========================================================================== */
+
+/**
+ * Loads published announcements history logs.
+ * 
+ * @async
+ */
 async function loadAdminAnnouncements() {
     const list = await apiCall("/announcements");
     const log = document.getElementById("announcementLog");
@@ -276,6 +373,7 @@ async function loadAdminAnnouncements() {
     });
 }
 
+// Notice Board announcement publish form handler
 const announcementForm = document.getElementById("announcementForm");
 if (announcementForm) {
     announcementForm.addEventListener("submit", async function(e) {
@@ -291,7 +389,17 @@ if (announcementForm) {
     });
 }
 
-// 7. Admin Reports Module
+
+/* ==========================================================================
+   7. ADMIN REPORTS MODULE
+   ========================================================================== */
+
+/**
+ * Triggers backend reporting queries and structures output results.
+ * 
+ * @async
+ * @param {string} type - Report category key ('attendance', 'employee', or 'recruitment').
+ */
 async function generateReport(type) {
     const data = await apiCall(`/reports/${type}`);
     const card = document.getElementById("reportOutputCard");
@@ -347,9 +455,15 @@ async function generateReport(type) {
 }
 
 
-// === EMPLOYEE PORTAL HANDLERS ===
+/* ==========================================================================
+   EMPLOYEE PORTAL HANDLERS
+   ========================================================================== */
 
-// 1. Employee Overview
+/**
+ * Pulls employee dashboard details, notice board, and remaining leave balances.
+ * 
+ * @async
+ */
 async function loadEmpOverview() {
     const stats = await apiCall("/dashboard/stats");
     document.getElementById("bal_casual").textContent = stats.casual_leave_balance;
@@ -372,19 +486,33 @@ async function loadEmpOverview() {
     loadEmployeeMeetings();
 }
 
+/**
+ * Triggers a Check In attendance registration request.
+ * 
+ * @async
+ */
 async function markCheckIn() {
     const res = await apiCall("/attendance/checkin", "POST");
     document.getElementById("attendanceTimerStatus").textContent = res.message;
     alert(res.message);
 }
 
+/**
+ * Triggers a Check Out attendance registration request.
+ * 
+ * @async
+ */
 async function markCheckOut() {
     const res = await apiCall("/attendance/checkout", "POST");
     document.getElementById("attendanceTimerStatus").textContent = res.message;
     alert(res.message);
 }
 
-// 2. Employee Attendance Logs
+/**
+ * Pulls personal attendance logs and renders history tables.
+ * 
+ * @async
+ */
 async function loadEmpAttendance() {
     const records = await apiCall("/attendance");
     const tbody = document.getElementById("empAttendanceTableBody");
@@ -403,7 +531,11 @@ async function loadEmpAttendance() {
     });
 }
 
-// 3. Employee Leave Applying
+/**
+ * Loads employee submitted leave applications log history.
+ * 
+ * @async
+ */
 async function loadEmpLeaves() {
     const records = await apiCall("/leaves");
     const tbody = document.getElementById("empLeavesTableBody");
@@ -425,6 +557,7 @@ async function loadEmpLeaves() {
     });
 }
 
+// Apply for leave form submission handler
 const applyLeaveForm = document.getElementById("applyLeaveForm");
 if (applyLeaveForm) {
     applyLeaveForm.addEventListener("submit", async function(e) {
@@ -443,7 +576,11 @@ if (applyLeaveForm) {
     });
 }
 
-// 4. Employee Announcements Log
+/**
+ * Loads notice board logs on employee notice board panels.
+ * 
+ * @async
+ */
 async function loadEmpAnnouncements() {
     const list = await apiCall("/announcements");
     const container = document.getElementById("empAnnouncementBoard");
@@ -461,7 +598,15 @@ async function loadEmpAnnouncements() {
 }
 
 
-// === PROFILE HANDLERS (Shared) ===
+/* ==========================================================================
+   PROFILE SETTINGS HANDLERS (SHARED BY ALL ROLES)
+   ========================================================================== */
+
+/**
+ * Fetches active personal profile parameters and populates modifications form.
+ * 
+ * @async
+ */
 async function loadProfile() {
     const prof = await apiCall("/profile");
     document.getElementById("profName").value = prof.name;
@@ -489,6 +634,7 @@ async function loadProfile() {
     }
 }
 
+// Modify settings profile form submit handler
 const profileForm = document.getElementById("profileForm");
 if (profileForm) {
     profileForm.addEventListener("submit", async function(e) {
@@ -515,7 +661,15 @@ if (profileForm) {
 }
 
 
-// === CANDIDATE PORTAL HANDLERS ===
+/* ==========================================================================
+   CANDIDATE PORTAL HANDLERS
+   ========================================================================== */
+
+/**
+ * Retrieves submitted jobs applications status logs for active candidate portal.
+ * 
+ * @async
+ */
 async function loadCandidateOverview() {
     const apps = await apiCall("/applications");
     const tbody = document.getElementById("candApplicationsTableBody");
@@ -533,7 +687,16 @@ async function loadCandidateOverview() {
     });
 }
 
-// --- Contacts Tab Controller ---
+
+/* ==========================================================================
+   CONTACT INQUIRIES REGISTER CONTROLLER
+   ========================================================================== */
+
+/**
+ * Loads contact submissions inquiries lists from both EduTech portal and ElevateIQ website.
+ * 
+ * @async
+ */
 async function loadAdminContacts() {
     try {
         const edutechBody = document.getElementById("edutechContactsTableBody");
@@ -583,6 +746,11 @@ async function loadAdminContacts() {
     }
 }
 
+/**
+ * Switches the visual list table view context between EduTech contacts and ElevateIQ contacts.
+ * 
+ * @param {string} type - Tab key identifier ('edutech' or 'elevate').
+ */
 function switchContactTab(type) {
     const btnEdu = document.getElementById("btnEduTechContacts");
     const btnElv = document.getElementById("btnElevateContacts");

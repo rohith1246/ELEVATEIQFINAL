@@ -1,3 +1,9 @@
+/**
+ * @file chat.js
+ * @description Real-time chat workspace controller. Integrates SSE streams for message push notifications,
+ * manages DMs/Group threads state, dynamic user query filters, group provisioning, and admin auditing/oversight portals.
+ */
+
 let currentUser = user;
 let chatEventSource = null;
 let chatPollingInterval = null;
@@ -12,6 +18,10 @@ let lastDMListJson = "";
 let lastGroupMessagesJson = "";
 let lastGroupListJson = "";
 
+/**
+ * Initializes Server-Sent Events (SSE) stream for real-time notification dispatching.
+ * Listens for new messages or conversation updates and triggers thread/list refreshes.
+ */
 function initChatSSE() {
     if (chatEventSource) {
         chatEventSource.close();
@@ -43,7 +53,12 @@ function initChatSSE() {
     };
 }
 
-// Messages Panel (DMs)
+/**
+ * Initializes the Direct Messages (DMs) user interface workspace.
+ * Resets selection state and fetches initial conversations list.
+ * 
+ * @async
+ */
 async function loadMessagesPanel() {
     activeConversationId = null;
     lastDMMessagesJson = "";
@@ -53,6 +68,12 @@ async function loadMessagesPanel() {
     await refreshDMList();
 }
 
+/**
+ * Fetches and renders active 1-on-1 DM conversations list from backend.
+ * Uses caching checks to prevent redundant DOM re-rendering.
+ * 
+ * @async
+ */
 async function refreshDMList() {
     try {
         const res = await apiCall("/chat/conversations");
@@ -93,6 +114,12 @@ async function refreshDMList() {
     }
 }
 
+/**
+ * Periodically polls new DM list updates and thread messages.
+ * Used as a fallback check.
+ * 
+ * @async
+ */
 async function pollMessages() {
     await refreshDMList();
     if (activeConversationId) {
@@ -100,6 +127,13 @@ async function pollMessages() {
     }
 }
 
+/**
+ * Selects and activates a DM thread, marks it as read, and fetches its message history.
+ * 
+ * @async
+ * @param {number} id - Target conversation ID.
+ * @param {string} partnerName - Name of the employee we are chatting with.
+ */
 async function selectDMConversation(id, partnerName) {
     activeConversationId = id;
     lastDMMessagesJson = "";
@@ -119,6 +153,12 @@ async function selectDMConversation(id, partnerName) {
     await refreshDMList();
 }
 
+/**
+ * Queries conversation message list from backend and populates the message thread view.
+ * 
+ * @async
+ * @param {boolean} [forceScroll=false] - Whether to force scroll to the bottom of the container.
+ */
 async function refreshDMThread(forceScroll = false) {
     if (!activeConversationId) return;
     try {
@@ -162,6 +202,12 @@ async function refreshDMThread(forceScroll = false) {
     }
 }
 
+/**
+ * Sends a message in the active thread (DM or Group) and renders a temporary "sending..." bubble.
+ * 
+ * @async
+ * @param {string} type - Either 'dm' or 'group'.
+ */
 async function sendChatMessage(type) {
     if (type === 'dm') {
         const input = document.getElementById("dmInput");
@@ -226,18 +272,34 @@ async function sendChatMessage(type) {
     }
 }
 
+/**
+ * Handles keyboard listener shortcuts (e.g. Enter to send).
+ * 
+ * @param {KeyboardEvent} e - Keyboard event context.
+ * @param {string} type - 'dm' or 'group'.
+ */
 function handleChatKey(e, type) {
     if (e.key === 'Enter') {
         sendChatMessage(type);
     }
 }
 
+/**
+ * Opens modal wrapper for launching a new DM conversation.
+ * 
+ * @async
+ */
 async function openNewDMModal() {
     document.getElementById("dmUserSearch").value = "";
     openModal("newDMModal");
     await loadDMUsersList();
 }
 
+/**
+ * Retrieves eligible workspace users list for starting DMs.
+ * 
+ * @async
+ */
 async function loadDMUsersList() {
     try {
         const users = await apiCall("/chat/users");
@@ -246,6 +308,11 @@ async function loadDMUsersList() {
     } catch(e) {}
 }
 
+/**
+ * Formulates rows of users inside the new DM search modal.
+ * 
+ * @param {Array<Object>} list - The user array items.
+ */
 function renderDMUsersList(list) {
     const container = document.getElementById("dmUsersList");
     container.innerHTML = "";
@@ -266,12 +333,22 @@ function renderDMUsersList(list) {
     });
 }
 
+/**
+ * Filters the list of workspace employees depending on search input value.
+ */
 function filterDMUsersList() {
     const q = document.getElementById("dmUserSearch").value.toLowerCase();
     const filtered = allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
     renderDMUsersList(filtered);
 }
 
+/**
+ * Sends a conversation initiation POST and opens the DM thread.
+ * 
+ * @async
+ * @param {number} userId - The selected recipient user ID.
+ * @param {string} userName - The name of the recipient.
+ */
 async function startDMWithUser(userId, userName) {
     try {
         const res = await apiCall("/chat/conversations", "POST", { type: "dm", members: [userId] });
@@ -281,7 +358,11 @@ async function startDMWithUser(userId, userName) {
     } catch(e) {}
 }
 
-// Groups Panel (DMs)
+/**
+ * Initializes the Group Chats interface panel.
+ * 
+ * @async
+ */
 async function loadGroupsPanel() {
     activeGroupConversationId = null;
     lastGroupMessagesJson = "";
@@ -295,6 +376,11 @@ async function loadGroupsPanel() {
     await refreshGroupList();
 }
 
+/**
+ * Pulls active group chats list and dynamically injects them into the sidebar.
+ * 
+ * @async
+ */
 async function refreshGroupList() {
     try {
         const res = await apiCall("/chat/conversations");
@@ -334,6 +420,11 @@ async function refreshGroupList() {
     }
 }
 
+/**
+ * Periodically polls new group messages and listings.
+ * 
+ * @async
+ */
 async function pollGroups() {
     await refreshGroupList();
     if (activeGroupConversationId) {
@@ -341,6 +432,13 @@ async function pollGroups() {
     }
 }
 
+/**
+ * Sets selected active group chat, marks it read, and renders control buttons.
+ * 
+ * @async
+ * @param {number} id - Target group conversation ID.
+ * @param {string} name - Group name.
+ */
 async function selectGroupConversation(id, name) {
     activeGroupConversationId = id;
     lastGroupMessagesJson = "";
@@ -362,6 +460,12 @@ async function selectGroupConversation(id, name) {
     await refreshGroupList();
 }
 
+/**
+ * Fetches group chat history, dynamically lists members sidebar, and calculates simulated online counts.
+ * 
+ * @async
+ * @param {boolean} [forceScroll=false] - Whether to force scroll to the bottom of the container.
+ */
 async function refreshGroupThread(forceScroll = false) {
     if (!activeGroupConversationId) return;
     try {
@@ -375,7 +479,7 @@ async function refreshGroupThread(forceScroll = false) {
         }
         lastGroupMessagesJson = cacheKey;
 
-        // Update Title & Simulated Online count
+        // Update Title & Simulated Online count representation
         const membersCount = res.members ? res.members.length : 0;
         const onlineCount = Math.max(1, Math.ceil(membersCount * 0.45));
         const groupTitleElem = document.getElementById("groupActiveTitle");
@@ -427,6 +531,11 @@ async function refreshGroupThread(forceScroll = false) {
     }
 }
 
+/**
+ * Launches modal dialogue for constructing a new workspace group channel.
+ * 
+ * @async
+ */
 async function openCreateGroupModal() {
     document.getElementById("newGroupName").value = "";
     openModal("createGroupModal");
@@ -449,6 +558,12 @@ async function openCreateGroupModal() {
     } catch(e) {}
 }
 
+/**
+ * Handles group chat creation request POST and activates it.
+ * 
+ * @async
+ * @param {Event} e - Submit event context.
+ */
 async function submitCreateGroup(e) {
     e.preventDefault();
     const groupName = document.getElementById("newGroupName").value.trim();
@@ -472,6 +587,12 @@ async function submitCreateGroup(e) {
     } catch(e) {}
 }
 
+/**
+ * Shows list of users eligible to join a specific group chat.
+ * 
+ * @async
+ * @param {number} groupId - Target group channel ID.
+ */
 async function openAddMemberModal(groupId) {
     openModal("addGroupMemberModal");
     const container = document.getElementById("addGroupMembersList");
@@ -504,6 +625,13 @@ async function openAddMemberModal(groupId) {
     } catch(e) {}
 }
 
+/**
+ * Dispatches group member insertion POST request.
+ * 
+ * @async
+ * @param {number} groupId - Target group.
+ * @param {number} userId - Target employee.
+ */
 async function addGroupMember(groupId, userId) {
     try {
         await apiCall(`/chat/groups/${groupId}/members`, "POST", { user_id: userId });
@@ -512,7 +640,11 @@ async function addGroupMember(groupId, userId) {
     } catch(e) {}
 }
 
-// Oversight Panel (Admin & TL Only)
+/**
+ * Initializes the Oversight Panel monitoring view for administrators or Team Leaders.
+ * 
+ * @async
+ */
 async function loadOversightPanel() {
     activeOversightConversationId = null;
     document.getElementById("oversightMainArea").style.display = "none";
@@ -521,6 +653,11 @@ async function loadOversightPanel() {
     chatPollingInterval = setInterval(pollOversight, 3000);
 }
 
+/**
+ * Fetches auditing index log of active conversations from backend.
+ * 
+ * @async
+ */
 async function refreshOversightList() {
     try {
         let list = [];
@@ -564,6 +701,11 @@ async function refreshOversightList() {
     }
 }
 
+/**
+ * Fallback poller handler for active Oversight connection.
+ * 
+ * @async
+ */
 async function pollOversight() {
     await refreshOversightList();
     if (activeOversightConversationId) {
@@ -571,6 +713,14 @@ async function pollOversight() {
     }
 }
 
+/**
+ * Sets selected oversight tracking connection and renders read-only audits.
+ * 
+ * @async
+ * @param {number} id - Target conversation.
+ * @param {string} type - 'dm' or 'group'.
+ * @param {string} title - Label title text.
+ */
 async function selectOversightConversation(id, type, title) {
     activeOversightConversationId = id;
     activeOversightType = type;
@@ -581,6 +731,11 @@ async function selectOversightConversation(id, type, title) {
     await refreshOversightThread();
 }
 
+/**
+ * Queries history data for auditing and renders messages in read-only visual panels.
+ * 
+ * @async
+ */
 async function refreshOversightThread() {
     if (!activeOversightConversationId) return;
     try {
@@ -620,3 +775,4 @@ async function refreshOversightThread() {
         console.error(e);
     }
 }
+

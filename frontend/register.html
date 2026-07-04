@@ -9,17 +9,21 @@
 <body>
 
 
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Dynamic backdrop gradient orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
   <a href="index.html" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -43,6 +47,8 @@
   </div>
 </nav>
 
+
+<!-- ==================== REGISTER FORM CARD ==================== -->
 <section class="auth-wrap">
   <div class="auth-card">
     <h1>Create Account</h1>
@@ -62,6 +68,7 @@
       <button type="submit" class="btn-primary auth-submit">Create Account</button>
     </form>
 
+    <!-- Error/Success status message display elements -->
     <div class="msg error" id="errorMsg"></div>
     <div class="msg success" id="successMsg"></div>
 
@@ -69,13 +76,19 @@
   </div>
 </section>
 
+
+<!-- ==================== FOOTER ==================== -->
 <footer>
   © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
+
+<!-- ==================== SCRIPTS ==================== -->
 <script>
+// Determine backend API URL depending on current context (localhost vs production origin)
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 
+// Handle candidate registration form submission and integration
 document.getElementById('registerForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const errorMsg = document.getElementById('errorMsg');
@@ -91,6 +104,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   };
 
   try {
+    // Send register request to back-end API
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

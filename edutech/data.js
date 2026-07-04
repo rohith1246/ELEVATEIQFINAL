@@ -1,5 +1,13 @@
-/* ===================== Mock Data ===================== */
+/**
+ * @file data.js
+ * @description Mock data definitions for ElevateIQ EduTech portal.
+ * Houses SVG path strings, course catalogues, leadership boards, and FAQ registries.
+ */
 
+/**
+ * Registry of inline SVG icon paths for course categories.
+ * @type {Object<string, string>}
+ */
 const ICONS = {
   code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
   coffee: '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>',
@@ -21,9 +29,18 @@ const ICONS = {
   rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/>',
 };
 
+/**
+ * Returns formatted SVG markup tag.
+ * 
+ * @param {string} paths - Inner path coordinates.
+ * @returns {string} XML SVG string element.
+ */
 const svgIcon = (paths) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 
-/* ---------- Courses ---------- */
+/**
+ * Collection of course catalog offerings.
+ * @type {Array<Object>}
+ */
 const COURSES = [
   { title:'Full Stack Web Development', level:'Beginner', duration:'20 weeks', price:45000, oldPrice:60000, rating:4.8, icon:'layers' },
   { title:'Python for Backend Engineers', level:'Beginner', duration:'12 weeks', price:28000, oldPrice:35000, rating:4.7, icon:'code' },
@@ -36,7 +53,10 @@ const COURSES = [
   { title:'UI/UX Design Professional', level:'Beginner', duration:'12 weeks', price:34000, oldPrice:42000, rating:4.8, icon:'palette' },
 ];
 
-/* ---------- Team ---------- */
+/**
+ * List of active company advisors and faculty mentors.
+ * @type {Array<Object>}
+ */
 const TEAM = [
   { name:'Vikram Anand', role:'Founder & CEO', img:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='150' cy='110' r='70' fill='%239aa0a6'/><rect x='60' y='210' width='180' height='60' rx='30' fill='%239aa0a6'/></svg>", bio:'Ex-engineering lead. 14 years building hiring pipelines.' },
   { name:'Meera Kapoor', role:'Head of Curriculum', img:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='150' cy='110' r='70' fill='%239aa0a6'/><rect x='60' y='210' width='180' height='60' rx='30' fill='%239aa0a6'/></svg>", bio:'Designs every roadmap from real job descriptions.' },
@@ -44,7 +64,10 @@ const TEAM = [
   { name:'Ananya Iyer', role:'Head of Placements', img:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='150' cy='110' r='70' fill='%239aa0a6'/><rect x='60' y='210' width='180' height='60' rx='30' fill='%239aa0a6'/></svg>", bio:'Runs the hiring partner network of 210+ companies.' },
 ];
 
-/* ---------- FAQ ---------- */
+/**
+ * Frequently Asked Questions (FAQ) entries.
+ * @type {Array<Object>}
+ */
 const FAQS = [
   { q:'Do I need prior coding experience to join?', a:'No. Most of our tracks (Full Stack, Python, UI/UX) start from zero. Advanced tracks like AI/ML assume basic programming comfort, which we can help you build first with a short prep module.' },
   { q:'How does the placement guarantee work?', a:"We don't promise a specific salary, but our placement team works with every eligible graduate — mock interviews, referrals, and application support — until you accept an offer or exhaust our partner network." },
@@ -53,3 +76,4 @@ const FAQS = [
   { q:'Are the certificates recognized by employers?', a:"Our certificates carry weight primarily because of the outcomes attached to them — but what actually gets you hired is the project portfolio and mock interview record we build with you." },
   { q:'What is the refund policy?', a:'Full refund within the first 7 days of a cohort if the program is not the right fit — no questions asked. See our Refund Policy for the complete terms.' },
 ];
+

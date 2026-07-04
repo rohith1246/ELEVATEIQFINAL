@@ -21,7 +21,9 @@
 }
 
 /* =============================================
-   RESET & BASE
+   RESET & BASE STYLES
+   Apply box-sizing reset, zero margins/padding, and set the default
+   branding typography stack for all layout elements across the app.
    =============================================*/
 *, *::before, *::after {
   box-sizing: border-box;

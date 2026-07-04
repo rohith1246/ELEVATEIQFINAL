@@ -1,5 +1,16 @@
+/**
+ * @file recruitment.js
+ * @description Admin/HR Recruitment workflows sub-controller.
+ * Manages active job vacancies creation, application auditing, resume downloads, and applicant status pipelines.
+ */
+
+/**
+ * Loads job postings and submitted candidate applications lists into the dashboard.
+ * 
+ * @async
+ */
 async function loadAdminRecruitment() {
-    // Jobs
+    // Renders active Job vacancies list
     const jobs = await apiCall("/jobs");
     const jobsTbody = document.getElementById("jobsTableBody");
     jobsTbody.innerHTML = "";
@@ -20,7 +31,7 @@ async function loadAdminRecruitment() {
         `;
     });
 
-    // Applications
+    // Renders candidate job applications list
     const apps = await apiCall("/applications");
     const appsTbody = document.getElementById("applicationsTableBody");
     appsTbody.innerHTML = "";
@@ -48,8 +59,13 @@ async function loadAdminRecruitment() {
     });
 }
 
+/**
+ * Triggers an authenticated file transfer to download a candidate resume.
+ * 
+ * @param {string} filename - The target filename stored in backend upload directory.
+ */
 function viewResumeFile(filename) {
-    // Authenticated download
+    // Fetch binary file blob passing Bearer authentication token
     fetch(`${API_BASE}/uploads/resumes/${filename}`, {
         headers: { "Authorization": `Bearer ${token}` }
     })
@@ -66,18 +82,33 @@ function viewResumeFile(filename) {
     .catch(err => alert("Error downloading resume file: " + err));
 }
 
+/**
+ * Dispatches a request to toggle a job status between Open and Closed.
+ * 
+ * @async
+ * @param {number} id - Target job vacancy ID.
+ * @param {string} newStatus - New status value ('Open' or 'Closed').
+ */
 async function toggleJobStatus(id, newStatus) {
     await apiCall(`/jobs/${id}`, "PUT", { status: newStatus });
     alert(`Job status updated to ${newStatus}`);
     loadAdminRecruitment();
 }
 
+/**
+ * Updates an applicant's review pipeline status (e.g. Shortlisted, Accepted, Rejected).
+ * 
+ * @async
+ * @param {number} id - Target application ID.
+ * @param {string} newStatus - Target status.
+ */
 async function updateAppStatus(id, newStatus) {
     await apiCall(`/applications/${id}`, "PUT", { status: newStatus });
     alert(`Application status updated to ${newStatus}`);
     loadAdminRecruitment();
 }
 
+// Handle job creation form submission
 const addJobForm = document.getElementById("addJobForm");
 if (addJobForm) {
     addJobForm.addEventListener("submit", async function(e) {
@@ -98,3 +129,4 @@ if (addJobForm) {
         loadAdminRecruitment();
     });
 }
+

@@ -29,7 +29,7 @@
 }
 .filter-chip:hover, .filter-chip.active{ color:var(--ink); border-color:var(--pink); background:rgba(236,47,123,0.12); }
 
-/* Modal overlay */
+/* Modal overlay styling */
 .modal {
   display: none;
   position: fixed;
@@ -49,17 +49,21 @@
 <body>
 
 
+<!-- ==================== BACKGROUND VISUALS ==================== -->
 <!-- Ambient Background Video -->
 <video autoplay muted loop playsinline class="video-bg">
   <source src="logo_animated.mp4" type="video/mp4">
 </video>
 
+<!-- Dynamic backdrop gradient orbs -->
 <div class="bg-canvas">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 </div>
 
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
   <a href="index.html" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
@@ -83,6 +87,8 @@
   </div>
 </nav>
 
+
+<!-- ==================== CAREERS HEADER AND FILTER CHIPS ==================== -->
 <section class="section" style="padding-top:160px;">
   <div class="section-head">
     <div class="label">Careers</div>
@@ -90,19 +96,23 @@
     <p>Don't see a perfect fit? <a href="contact.html" style="color:var(--blue);">Send us your resume directly</a>.</p>
   </div>
 
+  <!-- Department Selection Filter -->
   <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
     <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
     <div class="filter-chip" id="chip_it" onclick="filterDepartment('IT Services')">IT Services</div>
     <div class="filter-chip" id="chip_nonit" onclick="filterDepartment('Non-IT Services')">Non-IT Services</div>
   </div>
 
+
+  <!-- ==================== DYNAMIC JOBS LISTING CONTAINER ==================== -->
   <div id="jobsContainer" style="display:flex; flex-direction:column; gap:14px;">
      <!-- Job openings loaded dynamically -->
      <div style="text-align:center; color:var(--ink-soft);">Loading current openings...</div>
   </div>
 </section>
 
-<!-- Resume Application Modal -->
+
+<!-- ==================== RESUME APPLICATION MODAL ==================== -->
 <div class="modal" id="applyModal">
   <div class="auth-card" style="position:relative; max-width:480px; width:100%;">
     <button onclick="closeApplyModal()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--ink-faint); font-size:24px; cursor:pointer;">&times;</button>
@@ -117,20 +127,26 @@
       <div class="field"><label>Upload Resume (PDF/DOCX/TXT)</label><input type="file" id="applyResume" required style="padding:10px;"></div>
       <button type="submit" class="btn-primary auth-submit">Submit Application</button>
     </form>
+    <!-- Success/error status messages -->
     <div class="msg error" id="applyErrorMsg"></div>
     <div class="msg success" id="applySuccessMsg"></div>
   </div>
 </div>
 
+
+<!-- ==================== FOOTER ==================== -->
 <footer>
   © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
 </footer>
 
+
+<!-- ==================== SCRIPTS ==================== -->
 <script>
+// Backend API Host Location determination
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 let allJobs = [];
 
-// Session check
+// Session check and dynamic navbar modifications
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user") || "null");
 if (token && user) {
@@ -145,7 +161,7 @@ function logout(e) {
   window.location.reload();
 }
 
-// Load Jobs
+// Fetch open roles from API and refresh job layout
 async function loadJobs() {
   try {
     const res = await fetch(`${API_BASE}/jobs`);
@@ -156,6 +172,7 @@ async function loadJobs() {
   }
 }
 
+// Dynamically formulate HTML rows for each job listing
 function renderJobs(list) {
   const container = document.getElementById("jobsContainer");
   container.innerHTML = "";
@@ -182,8 +199,8 @@ function renderJobs(list) {
   });
 }
 
+// Filter listings depending on clicked department chip category
 function filterDepartment(dept) {
-  // Update chips
   document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
   if (dept === 'All') {
     document.getElementById("chip_all").classList.add("active");
@@ -197,14 +214,13 @@ function filterDepartment(dept) {
   }
 }
 
-// Modal actions
+// Set up apply modal fields and auto-complete candidate details if logged in
 function openApplyModal(jobId, jobTitle) {
   document.getElementById("applyJobId").value = jobId;
   document.getElementById("applyJobTitle").textContent = `Position: ${jobTitle}`;
   document.getElementById("applyErrorMsg").style.display = "none";
   document.getElementById("applySuccessMsg").style.display = "none";
   
-  // Auto fill details if user is candidate
   if (user) {
     document.getElementById("applyName").value = user.name;
     document.getElementById("applyEmail").value = user.email;
@@ -222,6 +238,7 @@ function closeApplyModal() {
   document.getElementById("applyModal").classList.remove("open");
 }
 
+// Handle career application form upload POST
 document.getElementById("applyForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const errorMsg = document.getElementById("applyErrorMsg");
@@ -229,6 +246,7 @@ document.getElementById("applyForm").addEventListener("submit", async function(e
   errorMsg.style.display = "none";
   successMsg.style.display = "none";
 
+  // Formulate Multipart Form-data for binary upload transfer
   const formData = new FormData();
   formData.append("job_id", document.getElementById("applyJobId").value);
   formData.append("name", document.getElementById("applyName").value);
@@ -257,7 +275,7 @@ document.getElementById("applyForm").addEventListener("submit", async function(e
   }
 });
 
-// Init load
+// Run load on document ready
 loadJobs();
 </script>
 

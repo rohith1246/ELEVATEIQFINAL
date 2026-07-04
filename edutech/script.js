@@ -1,4 +1,10 @@
-/* ===================== ElevateIQ — Interactions ===================== */
+/**
+ * @file script.js
+ * @description Interactive behaviors for the EduTech Sub-Portal.
+ * Implements smooth scroll wrappers, GSAP reveal animations, particle canvas renderers,
+ * dynamic search course grids, testimonial carousels, and a rule-based AI guide widget.
+ */
+
 (function(){
   "use strict";
 
@@ -6,7 +12,9 @@
   if (hasGSAP && typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------------- Preloader ---------------- */
+  /* ============================================================
+     1. PRELOADER TRANSITIONS
+     ============================================================ */
   window.addEventListener("load", () => {
     const bar = document.getElementById("preload-bar");
     const pre = document.getElementById("preloader");
@@ -19,11 +27,12 @@
         setTimeout(() => pre.remove(), 550);
       }
       document.body.classList.add("loaded");
-      // hero canvas initialization removed for minimal UI
     }, 650);
   });
 
-  /* ---------------- Lenis smooth scroll ---------------- */
+  /* ============================================================
+     2. LENIS SMOOTH SCROLL INTEGRATION
+     ============================================================ */
   let lenis;
   try{
     if (typeof Lenis !== "undefined" && !reduceMotion){
@@ -38,9 +47,9 @@
     }
   }catch(e){ /* smooth scroll optional */ }
 
-  /* Custom cursor removed — use native pointer for accessibility and simplicity */
-
-  /* ---------------- Magnetic buttons ---------------- */
+  /* ============================================================
+     3. MAGNETIC HOVER BUTTONS
+     ============================================================ */
   document.querySelectorAll(".magnetic").forEach(btn=>{
     btn.addEventListener("mousemove", e=>{
       const r = btn.getBoundingClientRect();
@@ -51,7 +60,9 @@
     btn.addEventListener("mouseleave", ()=>{ btn.style.transform = "translate(0,0)"; });
   });
 
-  /* ---------------- Navbar ---------------- */
+  /* ============================================================
+     4. NAVBAR SCROLL AND TOGGLE LISTENERS
+     ============================================================ */
   const navbar = document.getElementById("navbar");
   const navToggle = document.getElementById("navToggle");
   const navLinks = document.getElementById("navLinks");
@@ -69,12 +80,16 @@
     if (lenis) lenis.scrollTo(0); else window.scrollTo({top:0, behavior:"smooth"});
   });
 
-  /* ---------------- Hero canvas particles ---------------- */
+  /* ============================================================
+     5. HERO CANVAS CONNECTING PARTICLES
+     ============================================================ */
   function initHeroLoad(){
     const canvas = document.getElementById("hero-canvas");
     if (!canvas || reduceMotion) return;
     const ctx = canvas.getContext("2d");
     let w,h,particles=[];
+    
+    /** Resizes particles canvas bounding sizes */
     function resize(){
       w = canvas.width = canvas.offsetWidth * devicePixelRatio;
       h = canvas.height = canvas.offsetHeight * devicePixelRatio;
@@ -92,6 +107,8 @@
         c:colors[i%3]
       });
     }
+
+    /** Animation tick generator loop */
     function tick(){
       ctx.clearRect(0,0,w,h);
       particles.forEach((p,i)=>{
@@ -117,7 +134,9 @@
     tick();
   }
 
-  /* ---------------- Hero text reveal + floating icons ---------------- */
+  /* ============================================================
+     6. HERO ANIMATION TIMELINES (GSAP)
+     ============================================================ */
   if (hasGSAP){
     gsap.from(".hero-line span", { yPercent:120, duration:1, ease:"power4.out", stagger:0.12, delay:0.2 });
     gsap.from(".hero-badge", { opacity:0, y:-14, duration:0.8, delay:0.1 });
@@ -128,7 +147,12 @@
     });
   }
 
-  /* ---------------- Scroll reveal ---------------- */
+  /* ============================================================
+     7. SCROLL TRIGGER REVEAL ENGINES
+     ============================================================ */
+  /**
+   * Initializes ScrollTrigger reveal bindings for marked DOM nodes.
+   */
   function setupReveal(){
     const items = document.querySelectorAll(".reveal");
     if (hasGSAP && typeof ScrollTrigger !== "undefined"){
@@ -143,13 +167,20 @@
     }
   }
 
-  /* ---------------- Counters ---------------- */
+  /* ============================================================
+     8. QUANTITATIVE STAT COUNTERS
+     ============================================================ */
+  /**
+   * Triggers stat counting animations when elements cross scroll viewport.
+   */
   function setupCounters(){
     document.querySelectorAll("[data-count]").forEach(el=>{
       const target = parseFloat(el.getAttribute("data-count"));
       const decimals = parseInt(el.getAttribute("data-decimal")||"0");
       const prefix = el.getAttribute("data-prefix")||"";
       const suffix = el.getAttribute("data-suffix")||"";
+      
+      /** Fires the counter animation */
       const run = ()=>{
         let obj = {val:0};
         if (hasGSAP){
@@ -169,8 +200,23 @@
     });
   }
 
-  /* ---------------- Render: Courses ---------------- */
+  /* ============================================================
+     9. COURSES LIST RENDERER & FILTERS
+     ============================================================ */
+  
+  /**
+   * Formats Indian Rupee currency labels.
+   * 
+   * @param {number} n - Raw value.
+   * @returns {string} Formatted label.
+   */
   function money(n){ return "₹" + n.toLocaleString("en-IN"); }
+  
+  /**
+   * Generates course catalog card row elements.
+   * 
+   * @param {Array<Object>} list - The courses data items array.
+   */
   function renderCourses(list){
     const grid = document.getElementById("coursesGrid");
     if (!list.length){ grid.innerHTML = `<p style="color:var(--muted); grid-column:1/-1; text-align:center; padding:40px 0;">No programs match that search.</p>`; return; }
@@ -187,7 +233,6 @@
             <span class="rating">${svgIcon('<polygon points="12 2 15 8.5 22 9.5 17 14.5 18.5 21.5 12 18 5.5 21.5 7 14.5 2 9.5 9 8.5 12 2"/>')}${c.rating}</span>
           </div>
           <div class="course-foot">
-           
             <button class="btn btn-primary btn-sm magnetic enroll-btn">Enroll</button>
           </div>
         </div>
@@ -198,11 +243,16 @@
     }));
   }
 
+  /**
+   * Binds listeners to course search inputs and filter pills.
+   */
   function setupCourses(){
     renderCourses(COURSES);
     const search = document.getElementById("courseSearch");
     const pills = document.querySelectorAll(".pill");
     let activeFilter = "all";
+    
+    /** Applies search and level filtering tags */
     function apply(){
       const q = search.value.trim().toLowerCase();
       const filtered = COURSES.filter(c=>{
@@ -221,7 +271,13 @@
     }));
   }
 
-  /* ---------------- Roadmap rail fill ---------------- */
+
+  /* ============================================================
+     10. ROADMAP ACTIVE PROGRESS RAILS
+     ============================================================ */
+  /**
+   * Tracks roadmap list nodes scroll events to trigger active paths lines.
+   */
   function setupRoadmap(){
     const nodes = document.querySelectorAll("[data-node]");
     const fill = document.getElementById("railFill");
@@ -246,7 +302,13 @@
     }
   }
 
-  /* ---------------- Render: Team ---------------- */
+
+  /* ============================================================
+     11. MENTOR PROFILES & FAQ ACCORDIONS
+     ============================================================ */
+  /**
+   * Renders the leadership/mentor grid flip cards.
+   */
   function renderTeam(){
     document.getElementById("teamGrid").innerHTML = TEAM.map(t => `
       <div class="flip-card reveal">
@@ -266,7 +328,9 @@
       </div>`).join("");
   }
 
-  /* ---------------- Render: FAQ ---------------- */
+  /**
+   * Renders and binds accordion animations to FAQ cards.
+   */
   function renderFAQ(){
     const list = document.getElementById("faqList");
     list.innerHTML = FAQS.map((f,i) => `
@@ -290,12 +354,22 @@
     });
   }
 
-  /* ---------------- Testimonials carousel ---------------- */
+
+  /* ============================================================
+     12. TESTIMONIALS SLIDER CAROUSEL
+     ============================================================ */
+  /**
+   * Sets up horizontal translation calculations for testimonials track.
+   */
   function setupTestimonials(){
     const track = document.getElementById("testTrack");
     const cards = track.children;
     let index = 0;
+    
+    /** Returns single card outer bounding sizes */
     function cardWidth(){ return cards[0].getBoundingClientRect().width + 24; }
+    
+    /** Translates track container by increment step */
     function go(dir){
       const visible = Math.max(1, Math.floor(track.parentElement.offsetWidth / cardWidth()));
       index = Math.max(0, Math.min(cards.length - visible, index + dir));
@@ -305,7 +379,13 @@
     document.getElementById("testNext").addEventListener("click", ()=> go(1));
   }
 
-  /* ---------------- Contact form validation ---------------- */
+
+  /* ============================================================
+     13. CONTACT FORM VALIDATIONS AND FETCH API
+     ============================================================ */
+  /**
+   * Binds submission handlers and validation checks to input forms.
+   */
   function setupForm(){
     const form = document.getElementById("contactForm");
     const success = document.getElementById("formSuccess");
@@ -316,6 +396,8 @@
       track: v => v !== "" || "Select a track you're interested in",
       message: v => v.trim().length >= 10 || "Tell us a little more (10+ characters)",
     };
+    
+    // Submits main advisory inquiry contact details
     form.addEventListener("submit", e=>{
       e.preventDefault();
       let valid = true;
@@ -372,6 +454,7 @@
       }
     });
 
+    // Submits email address to newsletter registry endpoint
     const newsletter = document.getElementById("newsletterForm");
     newsletter.addEventListener("submit", e=>{
       e.preventDefault();
@@ -413,7 +496,13 @@
     });
   }
 
-  /* ---------------- AI Advisor (rule-based) ---------------- */
+
+  /* ============================================================
+     14. CHAT AI ADVISOR FLOATING PANEL
+     ============================================================ */
+  /**
+   * Initializes state and listeners for advisor rule-based reply filters.
+   */
   function setupAI(){
     const toggle = document.getElementById("ai-toggle");
     const panel = document.getElementById("ai-panel");
@@ -432,12 +521,14 @@
       { k:["contact","talk","human","advisor","call"], r:"Happy to connect you with a human advisor — scroll down to the Contact section and send a message, or use the WhatsApp option." },
     ];
 
+    /** Filters text triggers to return matching rule response */
     function reply(text){
       const lower = text.toLowerCase();
       const hit = responses.find(r => r.k.some(k => lower.includes(k)));
       return hit ? hit.r : "Good question — an advisor can give you a precise answer on that. Want me to route you to the contact form?";
     }
 
+    /** Appends message bubble wrapper element */
     function addMsg(text, who){
       const el = document.createElement("div");
       el.className = "ai-msg " + who;
@@ -446,6 +537,7 @@
       body.scrollTop = body.scrollHeight;
     }
 
+    /** Handles parsing dispatch commands */
     function handleSend(text){
       if (!text.trim()) return;
       addMsg(text, "user");
@@ -460,7 +552,10 @@
     });
   }
 
-  /* ---------------- Init ---------------- */
+
+  /* ============================================================
+     15. INITIALIZATION CONTROLLER
+     ============================================================ */
   document.getElementById("year").textContent = new Date().getFullYear();
   setupCourses();
   renderTeam();
@@ -473,31 +568,33 @@
   setupReveal();
 
 
-/* ===== Active Navbar on Scroll ===== */
+  /* ============================================================
+     16. ACTIVE VIEWPORT SCROLL NAVIGATION STYLES
+     ============================================================ */
+  const sections = document.querySelectorAll("section[id]");
+  const navItems = document.querySelectorAll(".nav-links a");
 
-const sections = document.querySelectorAll("section[id]");
-const navItems = document.querySelectorAll(".nav-links a");
+  window.addEventListener("scroll", () => {
+      let current = "";
 
-window.addEventListener("scroll", () => {
-    let current = "";
+      sections.forEach(section => {
+          const sectionTop = section.offsetTop - 120;
+          const sectionHeight = section.offsetHeight;
 
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop - 120;
-        const sectionHeight = section.offsetHeight;
+          if (window.scrollY >= sectionTop &&
+              window.scrollY < sectionTop + sectionHeight) {
+              current = section.getAttribute("id");
+          }
+      });
 
-        if (window.scrollY >= sectionTop &&
-            window.scrollY < sectionTop + sectionHeight) {
-            current = section.getAttribute("id");
-        }
-    });
+      navItems.forEach(link => {
+          link.classList.remove("active");
 
-    navItems.forEach(link => {
-        link.classList.remove("active");
-
-        if (link.getAttribute("href") === "#" + current) {
-            link.classList.add("active");
-        }
-    });
-});
+          if (link.getAttribute("href") === "#" + current) {
+              link.classList.add("active");
+          }
+      });
+  });
 
 })();
+

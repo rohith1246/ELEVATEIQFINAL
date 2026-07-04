@@ -1,3 +1,12 @@
+"""
+Real-Time Chat blueprint route handlers.
+
+Implements instant messaging features using Server-Sent Events (SSE) stream connections.
+Includes support for Direct Messages (DMs) and group chat rooms created by Admins/Team Leaders.
+Messages and conversation notifications are broadcasted instantly to online members'
+active SSE event queues.
+"""
+
 import json
 import queue
 from flask import Blueprint, request, jsonify, Response
@@ -7,22 +16,48 @@ from ..auth import get_current_user, serializer, check_is_team_leader
 
 chat_bp = Blueprint("chat", __name__)
 
-# Global dictionary to store SSE subscriber queues
+# Global dictionary storing list of active SSE subscriber queues keyed by user ID
+# Format: { user_id (int): set(queue.Queue) }
 user_queues = {}
 
 def register_queue(user_id, q):
+    """
+    Registers a client's message queue to receive real-time push events.
+
+    Args:
+        user_id (int): The primary key ID of the user.
+        q (queue.Queue): The queue instance to bind.
+    """
     user_queues.setdefault(user_id, set()).add(q)
 
 def unregister_queue(user_id, q):
+    """
+    Unregisters a client's message queue, cleaning up memory when a client disconnects.
+
+    Args:
+        user_id (int): The primary key ID of the user.
+        q (queue.Queue): The queue instance to remove.
+    """
     queues = user_queues.get(user_id)
     if queues:
         queues.discard(q)
+        # Clean up empty parent set to prevent dictionary bloat
         if not queues:
             user_queues.pop(user_id, None)
 
 
 @chat_bp.route("/chat/stream")
 def chat_stream():
+    """
+    Serves a persistent HTTP Server-Sent Events (SSE) data stream.
+
+    Validates authentication token from cookies or query arguments. Keeps the socket 
+    connection open, sending a 'ping' frame every 20 seconds to keep connection alive, 
+    and yielding chat messages or notifications immediately when they are pushed.
+
+    Returns:
+        Response: A Flask Response object streaming content with 'text/event-stream' mimetype.
+    """
     token = request.cookies.get("token") or request.args.get("token")
     if not token:
         return "Unauthorized", 401
@@ -32,19 +67,27 @@ def chat_stream():
         return "Unauthorized", 401
         
     user_id = user["id"]
+    # Initialize a queue to buffer messages with a safe maximum limit of 100 entries
     q = queue.Queue(maxsize=100)
     register_queue(user_id, q)
     
     def event_stream():
+        """
+        Generator function yielding SSE structured event strings.
+        """
         try:
+            # Yield initial connection success packet
             yield "data: {\"type\": \"connected\"}\n\n"
             while True:
                 try:
+                    # Block waiting for a message for max 20 seconds
                     msg_data = q.get(timeout=20)
                     yield f"data: {msg_data}\n\n"
                 except queue.Empty:
+                    # Yield lightweight keep-alive ping frame to prevent proxy/gateway timeouts
                     yield "data: {\"type\": \"ping\"}\n\n"
         finally:
+            # Ensure socket closure cleans up queue pointers
             unregister_queue(user_id, q)
             
     return Response(event_stream(), mimetype="text/event-stream")
@@ -52,6 +95,15 @@ def chat_stream():
 
 @chat_bp.route("/chat/user-details", methods=["GET"])
 def chat_user_details():
+    """
+    Retrieves authorized privileges and profile metadata for the chat layout.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Object containing user credentials and capability flags.
+            - 401: Unauthorized access.
+            - 500: Database exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -67,11 +119,13 @@ def chat_user_details():
             can_approve = True
             is_hr = True
         else:
+            # Check designation from database
             cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
             res = cursor.fetchone()
             if res:
                 designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
                 designation = designation.lower()
+                # Check for approval and human resources keywords
                 if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
                     can_approve = True
                 if "hr" in designation or "human resource" in designation:
@@ -96,6 +150,15 @@ def chat_user_details():
 
 @chat_bp.route("/chat/users", methods=["GET"])
 def chat_list_users():
+    """
+    Lists all system users eligible for chat (Employees and Admins), excluding self.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Array of user profiles.
+            - 401: Unauthorized.
+            - 500: SQL query issues.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -103,6 +166,7 @@ def chat_list_users():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # Select active employees/admins to prevent displaying guest candidates in corporate chat
         cursor.execute(
             "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin') AND id != %s ORDER BY name ASC",
             (user["id"],)
@@ -118,6 +182,24 @@ def chat_list_users():
 
 @chat_bp.route("/chat/conversations", methods=["POST"])
 def chat_create_conversation():
+    """
+    Initializes a Direct Message session or a Group Chat room.
+
+    Checks permissions for group creation. Returns existing direct message metadata 
+    if a session between the two users already exists. Disseminates updates to all members.
+
+    JSON Parameters:
+        type (str, optional): 'dm' or 'group'. Defaults to 'dm'.
+        name (str, optional): The label of the group chat. Required for group.
+        members (list of int): List of participant user IDs.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200/201: Conversation configuration metadata.
+            - 400: Validation exceptions.
+            - 403: Security restriction (e.g. groups restricted to Leaders/Admins).
+            - 500: Database insertion or broadcast failures.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -143,9 +225,11 @@ def chat_create_conversation():
             if len(members) != 1:
                 return jsonify({"error": "DM requires exactly 1 counterparty user ID."}), 400
                 
+        # Exclude sender from members array before compiling final participants list
         members = [m_id for m_id in members if m_id != user["id"]]
         all_member_ids = list(set([user["id"]] + members))
         
+        # Prevent duplicate Direct Message channels
         if conv_type == "dm":
             cursor.execute(
                 """
@@ -167,6 +251,7 @@ def chat_create_conversation():
         )
         conv_id = cursor.fetchone()["id"]
         
+        # Link member IDs in intermediate mapping table
         for m_id in all_member_ids:
             cursor.execute(
                 "INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s)",
@@ -175,7 +260,7 @@ def chat_create_conversation():
             
         conn.commit()
 
-        # Push conversation update via SSE to all conversation members
+        # Push conversation configuration notification via SSE to all conversation members
         try:
             event_payload = json.dumps({
                 "type": "conversation_update",
@@ -204,6 +289,18 @@ def chat_create_conversation():
 
 @chat_bp.route("/chat/conversations", methods=["GET"])
 def chat_list_conversations():
+    """
+    Lists all active conversation channels the current user is a member of.
+
+    Includes details of the last sent message, last message timestamp, and count 
+    of unread messages. Dynamically appends counterparty metadata ('dm_user') for DMs.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Sorted listing of conversation channels.
+            - 401: Unauthorized.
+            - 500: Database runtime issues.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -211,6 +308,7 @@ def chat_list_conversations():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # Select conversation details sorted by activity or creation date
         cursor.execute(
             """
             SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
@@ -243,6 +341,7 @@ def chat_list_conversations():
         )
         conversations = cursor.fetchall()
         
+        # Append DM counterparty user info
         for c in conversations:
             if c["type"] == "dm":
                 cursor.execute(
@@ -271,6 +370,22 @@ def chat_list_conversations():
 
 @chat_bp.route("/chat/conversations/<int:conv_id>/messages", methods=["GET"])
 def chat_get_messages(conv_id):
+    """
+    Fetches the conversation message history and member profile list.
+
+    Enforces security by confirming the user is a member of the room, or is an admin,
+    or is a team leader accessing a group room.
+
+    Args:
+        conv_id (int): Primary key ID of the conversation.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Object containing conversation config, message list, and members info.
+            - 403: Forbidden access.
+            - 404: Conversation not found.
+            - 500: Database aggregation query exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -289,6 +404,7 @@ def chat_get_messages(conv_id):
         is_tl = check_is_team_leader(user, cursor)
         is_admin = user.get("role") == "admin"
         
+        # Restrict history access to members, admins, or group team leaders
         allowed = is_member or is_admin or (is_tl and conv["type"] == "group")
         if not allowed:
             return jsonify({"error": "Access denied"}), 403
@@ -309,6 +425,7 @@ def chat_get_messages(conv_id):
                 m["sent_at"] = m["sent_at"].isoformat()
                 
         members_list = []
+        # Return participant profile listings for group chats
         if conv["type"] == "group":
             cursor.execute(
                 """
@@ -341,6 +458,25 @@ def chat_get_messages(conv_id):
 
 @chat_bp.route("/chat/conversations/<int:conv_id>/messages", methods=["POST"])
 def chat_send_message(conv_id):
+    """
+    Submits a message text string and broadcasts it to all conversation members.
+
+    Inserts the message into database records, appends a read receipt mark for the sender,
+    and publishes the message metadata directly to matching subscriber queues in user_queues.
+
+    Args:
+        conv_id (int): Primary key ID of the target conversation.
+
+    JSON Parameters:
+        content (str): Text message string.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 201: Newly inserted message schema.
+            - 400: Empty content.
+            - 403: User is not a member of the conversation.
+            - 500: Database insertion exceptions.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -353,10 +489,12 @@ def chat_send_message(conv_id):
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # Verify room membership
         cursor.execute("SELECT id FROM conversation_members WHERE conversation_id = %s AND user_id = %s", (conv_id, user["id"]))
         if not cursor.fetchone():
             return jsonify({"error": "You are not a member of this conversation"}), 403
             
+        # Store message record
         cursor.execute(
             "INSERT INTO messages (conversation_id, sender_id, content) VALUES (%s, %s, %s) RETURNING id, sent_at",
             (conv_id, user["id"], content)
@@ -365,6 +503,7 @@ def chat_send_message(conv_id):
         msg_id = res["id"]
         sent_at = res["sent_at"].isoformat()
         
+        # Self-mark as read
         cursor.execute(
             "INSERT INTO message_reads (message_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
             (msg_id, user["id"])
@@ -372,7 +511,7 @@ def chat_send_message(conv_id):
         
         conn.commit()
 
-        # Push message update to all conversation members via SSE
+        # Push message update to all conversation members via SSE queues
         try:
             event_payload = json.dumps({
                 "type": "message",
@@ -394,6 +533,7 @@ def chat_send_message(conv_id):
                 if queues:
                     for q in list(queues):
                         try:
+                            # Non-blocking write to avoid throttling if subscriber queue is full
                             q.put_nowait(event_payload)
                         except queue.Full:
                             pass
@@ -418,6 +558,20 @@ def chat_send_message(conv_id):
 
 @chat_bp.route("/chat/conversations/<int:conv_id>/read", methods=["POST"])
 def chat_mark_read(conv_id):
+    """
+    Marks all received messages in a conversation as read.
+
+    Creates records in the 'message_reads' table for messages where user is not the sender.
+
+    Args:
+        conv_id (int): Primary key ID of the conversation.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success notification.
+            - 401: Unauthorized.
+            - 500: Database insertion errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -425,6 +579,7 @@ def chat_mark_read(conv_id):
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Retrieve all unread counterparty messages in the conversation
         cursor.execute(
             "SELECT id FROM messages WHERE conversation_id = %s AND sender_id != %s",
             (conv_id, user["id"])
@@ -448,6 +603,16 @@ def chat_mark_read(conv_id):
 
 @chat_bp.route("/chat/admin/all", methods=["GET"])
 def chat_admin_all():
+    """
+    Lists all system conversation rooms for security auditing and management.
+    Restricted to admin users.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: List of all chats with message states and active member logs.
+            - 403: Forbidden access.
+            - 500: Database aggregation query exceptions.
+    """
     user = get_current_user()
     if not user or user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
@@ -477,6 +642,7 @@ def chat_admin_all():
         conversations = cursor.fetchall()
         for c in conversations:
             if c["type"] == "dm":
+                # List names and roles for all DM participants
                 cursor.execute(
                     """
                     SELECT u.id, u.name, u.email 
@@ -501,6 +667,16 @@ def chat_admin_all():
 
 @chat_bp.route("/chat/team-leader/groups", methods=["GET"])
 def chat_tl_groups():
+    """
+    Lists group conversations accessible for supervision.
+    Restricted to Team Leaders and Admins.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: List of group conversations.
+            - 403: Forbidden access.
+            - 500: SQL execution errors.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -548,6 +724,24 @@ def chat_tl_groups():
 
 @chat_bp.route("/chat/groups/<int:conv_id>/members", methods=["POST"])
 def chat_group_add_member(conv_id):
+    """
+    Adds a new member to an existing group conversation.
+    Restricted to Team Leaders and Admins.
+
+    Args:
+        conv_id (int): Primary key ID of the group conversation.
+
+    JSON Parameters:
+        user_id (int): The primary key ID of the user to append.
+
+    Returns:
+        tuple: (JSON response, HTTP status code)
+            - 200: Success notification.
+            - 400: Missing user_id.
+            - 404: Group not found.
+            - 403: Forbidden access.
+            - 500: Database insertion failure.
+    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -581,3 +775,4 @@ def chat_group_add_member(conv_id):
     finally:
         cursor.close()
         conn.close()
+

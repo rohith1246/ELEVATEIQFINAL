@@ -1,4 +1,7 @@
-/* Chat Container Layout & Inner Panels */
+/* ==========================================================================
+   CHAT WORKSPACE LAYOUT & INNER PANELS
+   ========================================================================== */
+
 .chat-container {
     display: flex;
     height: 72vh;
@@ -72,7 +75,11 @@
     color: var(--orange);
 }
 
-/* Chat Main View Threads */
+
+/* ==========================================================================
+   CHAT MAIN VIEW THREADS & MESSAGES LIST
+   ========================================================================== */
+
 .chat-main {
     flex: 1;
     display: flex;
@@ -96,7 +103,11 @@
     gap: 16px;
 }
 
-/* Messages Speech Bubbles */
+
+/* ==========================================================================
+   MESSAGE SPEECH BUBBLES
+   ========================================================================== */
+
 .msg-bubble {
     max-width: 65%;
     padding: 12px 18px;
@@ -134,7 +145,11 @@
     color: rgba(255, 255, 255, 0.65);
 }
 
-/* Chat Input Bar */
+
+/* ==========================================================================
+   CHAT INPUT BAR & ACTION BUTTONS
+   ========================================================================== */
+
 .chat-input-area {
     padding: 16px 24px;
     border-top: 1px solid var(--glass-border);
@@ -171,7 +186,11 @@
     box-shadow: 0 4px 12px rgba(255, 138, 61, 0.3);
 }
 
-/* Side Members Panel (Group Chat) */
+
+/* ==========================================================================
+   SIDE MEMBERS PANEL (GROUP CHATS)
+   ========================================================================== */
+
 .group-members-pane {
     width: 250px;
     border-left: 1px solid var(--glass-border);
@@ -201,6 +220,11 @@
     gap: 4px;
 }
 
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT MEDIA QUERIES
+   ========================================================================== */
+
 @media (max-width: 768px) {
     .chat-container {
         flex-direction: column;
@@ -216,3 +240,4 @@
         height: 480px;
     }
 }
+
