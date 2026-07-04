@@ -189,7 +189,7 @@ input,textarea,select{font-family:inherit;}
   border-bottom:1px solid var(--line);
 }
 .nav-inner{ display:flex; align-items:center; justify-content:space-between; }
-.logo{ display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700; font-size:20px; }
+.logo{ display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700; font-size:20px; flex-shrink:0; }
 .logo .dot{ width:10px; height:10px; border-radius:3px; background:var(--grad-primary); box-shadow:0 0 16px var(--primary); }
 .logo .site-logo{
   display:inline-grid; place-items:center; width:34px; height:34px; border-radius:10px;
