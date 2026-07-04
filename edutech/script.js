@@ -456,44 +456,46 @@
 
     // Submits email address to newsletter registry endpoint
     const newsletter = document.getElementById("newsletterForm");
-    newsletter.addEventListener("submit", e=>{
-      e.preventDefault();
-      const input = newsletter.querySelector("input");
-      const btn = newsletter.querySelector("button");
-      const original = btn.innerHTML;
-      const email = input.value.trim();
-      
-      if (!email) return;
-      btn.disabled = true;
-      btn.innerHTML = "Subscribing...";
-      
-      fetch('/api/newsletter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email })
-      })
-      .then(response => response.json().then(json => ({ status: response.status, json })))
-      .then(({ status, json }) => {
-        btn.disabled = false;
-        if (status === 200 || status === 201) {
-          btn.innerHTML = "Subscribed ✓";
-          input.value = "";
+    if (newsletter) {
+      newsletter.addEventListener("submit", e=>{
+        e.preventDefault();
+        const input = newsletter.querySelector("input");
+        const btn = newsletter.querySelector("button");
+        const original = btn.innerHTML;
+        const email = input.value.trim();
+        
+        if (!email) return;
+        btn.disabled = true;
+        btn.innerHTML = "Subscribing...";
+        
+        fetch('/api/newsletter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        })
+        .then(response => response.json().then(json => ({ status: response.status, json })))
+        .then(({ status, json }) => {
+          btn.disabled = false;
+          if (status === 200 || status === 201) {
+            btn.innerHTML = "Subscribed ✓";
+            input.value = "";
+            setTimeout(()=> btn.innerHTML = original, 2400);
+          } else {
+            btn.innerHTML = "Failed ✗";
+            setTimeout(()=> btn.innerHTML = original, 2400);
+            console.error("Newsletter error:", json.error);
+          }
+        })
+        .catch(err => {
+          btn.disabled = false;
+          btn.innerHTML = "Error ✗";
           setTimeout(()=> btn.innerHTML = original, 2400);
-        } else {
-          btn.innerHTML = "Failed ✗";
-          setTimeout(()=> btn.innerHTML = original, 2400);
-          console.error("Newsletter error:", json.error);
-        }
-      })
-      .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = "Error ✗";
-        setTimeout(()=> btn.innerHTML = original, 2400);
-        console.error("Newsletter error:", err);
+          console.error("Newsletter error:", err);
+        });
       });
-    });
+    }
   }
 
 
