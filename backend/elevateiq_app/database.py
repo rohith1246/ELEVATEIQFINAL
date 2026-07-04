@@ -1,4 +1,5 @@
 import os
+import uuid
 from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import RealDictCursor
 from .config import Config
@@ -14,12 +15,13 @@ def init_db(app=None):
         
         try:
             # Initialize thread-safe connection pool
-            db_pool = ThreadedConnectionPool(1, 20, dsn=dsn)
+            db_pool = ThreadedConnectionPool(1, 40, dsn=dsn)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
         # Ensure designations table is created and seeded on startup
-        conn = db_pool.getconn()
+        key = str(uuid.uuid4())
+        conn = db_pool.getconn(key=key)
         try:
             cursor = conn.cursor()
             cursor.execute("""
@@ -55,16 +57,18 @@ def init_db(app=None):
             print("Failed to initialize designations table:", e)
             conn.rollback()
         finally:
-            db_pool.putconn(conn)
+            db_pool.putconn(conn, key=key)
 
 class PooledConnection:
     """
-    A connection wrapper that intercept connection close
-    to return it to the ThreadedConnectionPool instead of closing it.
+    A connection wrapper that intercepts connection close
+    to return it to the ThreadedConnectionPool using a unique key
+    to ensure safety across async greenlets.
     """
-    def __init__(self, pool, conn):
+    def __init__(self, pool, conn, key):
         self._pool = pool
         self._conn = conn
+        self._key = key
 
     def __getattr__(self, name):
         return getattr(self._conn, name)
@@ -80,7 +84,7 @@ class PooledConnection:
 
     def close(self):
         if self._conn and self._pool:
-            self._pool.putconn(self._conn)
+            self._pool.putconn(self._conn, key=self._key)
             self._conn = None
             self._pool = None
 
@@ -88,5 +92,6 @@ def get_connection():
     global db_pool
     if db_pool is None:
         init_db()
-    conn = db_pool.getconn()
-    return PooledConnection(db_pool, conn)
+    key = str(uuid.uuid4())
+    conn = db_pool.getconn(key=key)
+    return PooledConnection(db_pool, conn, key)
