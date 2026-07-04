@@ -176,12 +176,15 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_get_conn.return_value = mock_conn
         mock_conn.cursor.return_value = mock_cursor
         
-        # Mock employee leave balance
-        mock_cursor.fetchone.return_value = {
-            'id': 10,
-            'casual_leave': 10,
-            'sick_leave': 5
-        }
+        # Mock employee leave balance (first fetch) and no overlapping leave request (second fetch)
+        mock_cursor.fetchone.side_effect = [
+            {
+                'id': 10,
+                'casual_leave': 10,
+                'sick_leave': 5
+            },
+            None
+        ]
         
         response = self.client.post('/leaves', json={
             'leave_type': 'Casual',

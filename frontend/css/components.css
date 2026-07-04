@@ -181,12 +181,23 @@ tr:hover td {
         border-right: none; 
         border-bottom: 1px solid var(--glass-border); 
         flex-direction: row;
-        flex-wrap: wrap;
-        padding: 16px;
+        flex-wrap: nowrap; /* Horizontal scroll layout */
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px 16px;
         gap: 8px;
-        justify-content: center;
+        justify-content: flex-start;
+        background: #081222 !important; /* Solid background fallback */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        scrollbar-width: none; /* Hide default scrollbar */
+    }
+    .sidebar::-webkit-scrollbar {
+        display: none;
     }
     .sidebar-link {
+        flex: 0 0 auto; /* Keep links from shrinking */
         padding: 8px 14px;
         font-size: 13px;
         border-radius: 8px;
@@ -195,12 +206,48 @@ tr:hover td {
         border-left: none;
         border-bottom: 2px solid var(--orange);
         padding-left: 14px;
+        background: rgba(255, 255, 255, 0.06);
     }
     .dash-content { margin-left: 0; padding: 20px; }
     .form-grid { grid-template-columns: 1fr; }
+    
+    /* Disable expensive blur effects on mobile for other containers to boost scroll performance */
+    .stat-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+    .table-wrap {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+    }
+    th, td {
+        padding: 12px 14px !important;
+        font-size: 13px !important;
+    }
+
+    /* Wrap double column grids into single stack on mobile */
+    .dash-content div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 @media(max-width:480px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+    .stat-card {
+        padding: 16px !important;
+    }
+    .stat-card h3 {
+        font-size: 11px !important;
+    }
+    .stat-card .val {
+        font-size: 24px !important;
+    }
     .modal-content {
         padding: 20px 16px !important;
     }

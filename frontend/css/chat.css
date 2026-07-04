@@ -229,15 +229,23 @@
     .chat-container {
         flex-direction: column;
         height: auto;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #0c1424 !important;
     }
     .chat-sidebar {
         width: 100%;
         border-right: none;
         border-bottom: 1px solid var(--glass-border);
         max-height: 240px;
+        background: #090e1a !important;
     }
     .chat-main {
-        height: 480px;
+        height: 440px;
+        background: #0b1120 !important;
+    }
+    .msg-bubble {
+        max-width: 85%; /* Make speech bubbles wider on mobile screen */
     }
 }
 

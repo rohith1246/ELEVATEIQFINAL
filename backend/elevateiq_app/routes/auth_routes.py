@@ -360,6 +360,8 @@ def add_employee():
     email = data.get("email")
     password = data.get("password")  # defaults to email username if empty
     employee_id = data.get("employee_id")
+    if employee_id:
+        employee_id = employee_id.strip().upper()
     phone = data.get("phone_number")
     department = data.get("department")
     designation = data.get("designation")
@@ -381,8 +383,8 @@ def add_employee():
         if cursor.fetchone():
             return jsonify({"error": "Email already exists in users"}), 400
 
-        # Check employee ID availability
-        cursor.execute("SELECT id FROM employees WHERE employee_id = %s", (employee_id,))
+        # Check employee ID availability (case-insensitive)
+        cursor.execute("SELECT id FROM employees WHERE UPPER(employee_id) = UPPER(%s)", (employee_id,))
         if cursor.fetchone():
             return jsonify({"error": "Employee ID already exists"}), 400
 

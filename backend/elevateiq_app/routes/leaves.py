@@ -144,6 +144,23 @@ def apply_leave():
         if balance < leave_days:
             return jsonify({"error": f"Insufficient leave balance. Requested {leave_days} days of {leave_type} leave, but only {balance} days remaining."}), 400
 
+        # Prevent overlapping leave requests for the same employee on the same dates
+        cursor.execute(
+            """
+            SELECT id FROM leaves 
+            WHERE employee_id = %s 
+              AND status != 'Rejected'
+              AND (
+                (start_date <= %s AND end_date >= %s) OR
+                (start_date <= %s AND end_date >= %s) OR
+                (start_date >= %s AND end_date <= %s)
+              )
+            """,
+            (user["emp_db_id"], start_date, start_date, end_date, end_date, start_date, end_date)
+        )
+        if cursor.fetchone():
+            return jsonify({"error": "You have already applied for leave during these dates or have an overlapping leave request."}), 400
+
         cursor.execute(
             """
             INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason, status) 
