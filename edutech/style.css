@@ -229,17 +229,6 @@ input,textarea,select{font-family:inherit;}
   .nav-toggle.active span:nth-child(2) { opacity:0; }
   .nav-toggle.active span:nth-child(3) { transform:translateY(-8px) rotate(-45deg); }
   .nav-cta .btn-ghost{ display:none; }
-  
-  /* Make both ElevateIQ and EduTech options visible on mobile */
-  .nav-cta .mobile-corporate-btn {
-    display: inline-block !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    padding: 6px 12px !important;
-    margin-right: 8px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
 }
 
 
