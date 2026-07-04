@@ -79,6 +79,9 @@ def apply_leave():
     if not leave_type or not start_date_str or not end_date_str:
         return jsonify({"error": "Required fields are missing"}), 400
 
+    if leave_type not in ["Casual", "Sick", "Earned", "Emergency"]:
+        return jsonify({"error": "Invalid leave type. Must be Casual, Sick, Earned, or Emergency."}), 400
+
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
