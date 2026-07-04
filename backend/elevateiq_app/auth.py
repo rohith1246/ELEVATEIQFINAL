@@ -88,3 +88,41 @@ def check_is_recruitment_manager(user, cursor):
         if "hr" in designation or "human resource" in designation:
             return True
     return False
+
+import time
+
+# Dictionary to store request logs: {ip: [timestamps]}
+rate_limit_records = {}
+
+def rate_limit(limit=100, period=60):
+    """
+    Simple in-memory rate limiter decorator.
+    limit: Max number of requests allowed in the period.
+    period: Time window in seconds.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # Get client IP address
+            # Support X-Forwarded-For header if behind Nginx or Render proxies
+            ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+            if not ip:
+                ip = "unknown"
+            
+            # Get current timestamp
+            now = time.time()
+            
+            # Clean up old timestamps for this IP
+            timestamps = rate_limit_records.get(ip, [])
+            timestamps = [t for t in timestamps if now - t < period]
+            
+            if len(timestamps) >= limit:
+                return jsonify({"error": f"Too many requests. Please try again in a few moments (limit: {limit} requests per {period} seconds)."}), 429
+            
+            # Record current request
+            timestamps.append(now)
+            rate_limit_records[ip] = timestamps
+            
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
