@@ -92,6 +92,26 @@ def get_connection():
     global db_pool
     if db_pool is None:
         init_db()
+        
+    retries = 3
+    for _ in range(retries):
+        key = str(uuid.uuid4())
+        conn = db_pool.getconn(key=key)
+        
+        # Test if the connection is alive and healthy
+        try:
+            with conn.cursor() as test_cur:
+                test_cur.execute("SELECT 1")
+            # Connection is verified active and safe!
+            return PooledConnection(db_pool, conn, key)
+        except Exception:
+            # Connection is dead (timeout/EOF). Close and discard it from the pool.
+            try:
+                db_pool.putconn(conn, key=key, close=True)
+            except Exception:
+                pass
+                
+    # Fallback: If all retries failed, attempt one final normal checkout
     key = str(uuid.uuid4())
     conn = db_pool.getconn(key=key)
     return PooledConnection(db_pool, conn, key)

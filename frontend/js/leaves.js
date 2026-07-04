@@ -204,7 +204,7 @@ async function loadAdminAttendance() {
                 <td>${r.date}</td>
                 <td>${r.check_in || '-'}</td>
                 <td>${r.check_out || '-'}</td>
-                <td>${r.working_hours ? r.working_hours.toFixed(2) : '0.00'}</td>
+                <td>${r.working_hours ? parseFloat(r.working_hours).toFixed(2) : '0.00'}</td>
                 <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
             </tr>
         `;
@@ -396,7 +396,7 @@ async function loadEmpAttendance() {
                 <td>${r.date}</td>
                 <td>${r.check_in || '-'}</td>
                 <td>${r.check_out || '-'}</td>
-                <td>${r.working_hours ? r.working_hours.toFixed(2) : '0.00'} hours</td>
+                <td>${r.working_hours ? parseFloat(r.working_hours).toFixed(2) : '0.00'} hours</td>
                 <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
             </tr>
         `;
