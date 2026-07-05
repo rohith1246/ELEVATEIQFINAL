@@ -239,5 +239,76 @@ class ElevateIQTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'Systems Engineer', response.data)
 
+    @patch('elevateiq_app.routes.chat.get_connection')
+    @patch('elevateiq_app.routes.chat.get_current_user')
+    def test_client_chat_users_only_returns_admins(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {
+            'id': 2,
+            'name': 'Client User',
+            'email': 'client@example.com',
+            'role': 'client'
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchall.return_value = [
+            {'id': 3, 'name': 'Admin User', 'email': 'admin@example.com', 'role': 'admin'}
+        ]
+        
+        response = self.client.get('/chat/users')
+        self.assertEqual(response.status_code, 200)
+        args = mock_cursor.execute.call_args[0]
+        self.assertIn("role = 'admin'", args[0])
+        self.assertNotIn("role IN", args[0])
+
+    @patch('elevateiq_app.routes.chat.get_connection')
+    @patch('elevateiq_app.routes.chat.get_current_user')
+    def test_client_create_conversation_employee_forbidden(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {
+            'id': 2,
+            'name': 'Client User',
+            'email': 'client@example.com',
+            'role': 'client'
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchone.return_value = {'role': 'employee'}
+        
+        response = self.client.post('/chat/conversations', json={
+            'type': 'dm',
+            'members': [3]
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(b'Clients can only initiate chats with administrators.', response.data)
+
+    @patch('elevateiq_app.routes.chat.get_connection')
+    @patch('elevateiq_app.routes.chat.get_current_user')
+    def test_client_send_message_forbidden(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {
+            'id': 2,
+            'name': 'Client User',
+            'email': 'client@example.com',
+            'role': 'client'
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchone.side_effect = [
+            {'id': 1},
+            {'type': 'group'}
+        ]
+        
+        response = self.client.post('/chat/conversations/1/messages', json={
+            'content': 'hello'
+        })
+        self.assertEqual(response.status_code, 403)
+
 if __name__ == '__main__':
     unittest.main()

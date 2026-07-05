@@ -403,21 +403,45 @@ async function loadEmployeeMeetings() {
  */
 async function submitCreateMeeting(event) {
     event.preventDefault();
-    const title = document.getElementById("meetTitle").value;
-    const platform = document.getElementById("meetPlatform").value;
-    const meeting_link = document.getElementById("meetLink").value;
-    const scheduled_at = document.getElementById("meetTime").value;
+    const form = event.target;
+    
+    const title = form.querySelector("#meetTitle").value;
+    const platform = form.querySelector("#meetPlatform").value;
+    const meeting_link = form.querySelector("#meetLink").value;
+    const scheduled_at = form.querySelector("#meetTime").value;
 
-    const btn = event.target.querySelector('button[type="submit"]');
+    const meetTypeElem = form.querySelector("#meetType");
+    const meetClientElem = form.querySelector("#meetClient");
+    
+    const meeting_type = meetTypeElem ? meetTypeElem.value : 'internal';
+    const client_id = (meetClientElem && meeting_type === 'client') ? meetClientElem.value : null;
+
+    const btn = form.querySelector('button[type="submit"]');
     const original = btn.textContent;
     btn.disabled = true;
     btn.textContent = "Creating...";
 
     try {
-        await apiCall("/dashboard/meetings", "POST", { title, platform, meeting_link, scheduled_at, meeting_type: 'internal' });
-        alert("Employee meeting created and shared successfully!");
-        event.target.reset();
+        await apiCall("/dashboard/meetings", "POST", { 
+            title, 
+            platform, 
+            meeting_link, 
+            scheduled_at, 
+            meeting_type,
+            client_id
+        });
+        alert(meeting_type === 'client' ? "Client meeting scheduled successfully!" : "Employee meeting created and shared successfully!");
+        form.reset();
+        
+        const meetClientField = form.querySelector("#meetClientField");
+        if (meetClientField) {
+            meetClientField.style.display = "none";
+        }
+
         loadAdminMeetings();
+        if (typeof loadCRMMeetings === 'function') {
+            loadCRMMeetings();
+        }
     } catch(e) {
         console.error(e);
     } finally {

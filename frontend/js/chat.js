@@ -290,6 +290,14 @@ function handleChatKey(e, type) {
  * @async
  */
 async function openNewDMModal() {
+    const searchInput = document.getElementById("dmUserSearch");
+    if (searchInput) {
+        if (currentUser && currentUser.role === 'client') {
+            searchInput.placeholder = "Search administrators...";
+        } else {
+            searchInput.placeholder = "Search employees...";
+        }
+    }
     document.getElementById("dmUserSearch").value = "";
     openModal("newDMModal");
     await loadDMUsersList();
@@ -317,7 +325,8 @@ function renderDMUsersList(list) {
     const container = document.getElementById("dmUsersList");
     container.innerHTML = "";
     if (list.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); font-size:13px; padding:10px;">No employees found.</div>`;
+        const msg = (currentUser && currentUser.role === 'client') ? "No administrators found." : "No employees found.";
+        container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); font-size:13px; padding:10px;">${msg}</div>`;
         return;
     }
     list.forEach(u => {

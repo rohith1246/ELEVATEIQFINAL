@@ -167,10 +167,16 @@ def chat_list_users():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Select active employees/admins to prevent displaying guest candidates in corporate chat
-        cursor.execute(
-            "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin') AND id != %s ORDER BY name ASC",
-            (user["id"],)
-        )
+        if user.get("role") == "client":
+            cursor.execute(
+                "SELECT id, name, email, role FROM users WHERE role = 'admin' AND id != %s ORDER BY name ASC",
+                (user["id"],)
+            )
+        else:
+            cursor.execute(
+                "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin') AND id != %s ORDER BY name ASC",
+                (user["id"],)
+            )
         users = cursor.fetchall()
         return jsonify(users), 200
     except Exception as e:
@@ -224,6 +230,15 @@ def chat_create_conversation():
         else:
             if len(members) != 1:
                 return jsonify({"error": "DM requires exactly 1 counterparty user ID."}), 400
+                
+        if user.get("role") == "client":
+            if conv_type != "dm":
+                return jsonify({"error": "Clients are only allowed to start direct messages."}), 403
+            counterparty_id = members[0]
+            cursor.execute("SELECT role FROM users WHERE id = %s", (counterparty_id,))
+            counterparty = cursor.fetchone()
+            if not counterparty or counterparty["role"] != "admin":
+                return jsonify({"error": "Clients can only initiate chats with administrators."}), 403
                 
         # Exclude sender from members array before compiling final participants list
         members = [m_id for m_id in members if m_id != user["id"]]
@@ -309,36 +324,74 @@ def chat_list_conversations():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Select conversation details sorted by activity or creation date
-        cursor.execute(
-            """
-            SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
-                   (
-                       SELECT m.content 
-                       FROM messages m 
-                       WHERE m.conversation_id = c.id 
-                       ORDER BY m.sent_at DESC LIMIT 1
-                   ) as last_message,
-                   (
-                       SELECT m.sent_at 
-                       FROM messages m 
-                       WHERE m.conversation_id = c.id 
-                       ORDER BY m.sent_at DESC LIMIT 1
-                   ) as last_message_time,
-                   (
-                       SELECT COUNT(m.id) 
-                       FROM messages m
-                       LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = %s
-                       WHERE m.conversation_id = c.id AND mr.id IS NULL AND m.sender_id != %s
-                   ) as unread_count
-            FROM conversations c
-            JOIN conversation_members cm ON c.id = cm.conversation_id AND cm.user_id = %s
-            ORDER BY COALESCE(
-                (SELECT m.sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1),
-                c.created_at
-            ) DESC
-            """,
-            (user["id"], user["id"], user["id"])
-        )
+        if user.get("role") == "client":
+            cursor.execute(
+                """
+                SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
+                       (
+                           SELECT m.content 
+                           FROM messages m 
+                           WHERE m.conversation_id = c.id 
+                           ORDER BY m.sent_at DESC LIMIT 1
+                       ) as last_message,
+                       (
+                           SELECT m.sent_at 
+                           FROM messages m 
+                           WHERE m.conversation_id = c.id 
+                           ORDER BY m.sent_at DESC LIMIT 1
+                       ) as last_message_time,
+                       (
+                           SELECT COUNT(m.id) 
+                           FROM messages m
+                           LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = %s
+                           WHERE m.conversation_id = c.id AND mr.id IS NULL AND m.sender_id != %s
+                       ) as unread_count
+                FROM conversations c
+                JOIN conversation_members cm ON c.id = cm.conversation_id AND cm.user_id = %s
+                WHERE c.type = 'dm'
+                  AND EXISTS (
+                      SELECT 1 FROM conversation_members cm2
+                      JOIN users u2 ON cm2.user_id = u2.id
+                      WHERE cm2.conversation_id = c.id AND u2.id != %s AND u2.role = 'admin'
+                  )
+                ORDER BY COALESCE(
+                    (SELECT m.sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1),
+                    c.created_at
+                ) DESC
+                """,
+                (user["id"], user["id"], user["id"], user["id"])
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
+                       (
+                           SELECT m.content 
+                           FROM messages m 
+                           WHERE m.conversation_id = c.id 
+                           ORDER BY m.sent_at DESC LIMIT 1
+                       ) as last_message,
+                       (
+                           SELECT m.sent_at 
+                           FROM messages m 
+                           WHERE m.conversation_id = c.id 
+                           ORDER BY m.sent_at DESC LIMIT 1
+                       ) as last_message_time,
+                       (
+                           SELECT COUNT(m.id) 
+                           FROM messages m
+                           LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = %s
+                           WHERE m.conversation_id = c.id AND mr.id IS NULL AND m.sender_id != %s
+                       ) as unread_count
+                FROM conversations c
+                JOIN conversation_members cm ON c.id = cm.conversation_id AND cm.user_id = %s
+                ORDER BY COALESCE(
+                    (SELECT m.sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1),
+                    c.created_at
+                ) DESC
+                """,
+                (user["id"], user["id"], user["id"])
+            )
         conversations = cursor.fetchall()
         
         # Append DM counterparty user info
@@ -408,6 +461,21 @@ def chat_get_messages(conv_id):
         allowed = is_member or is_admin or (is_tl and conv["type"] == "group")
         if not allowed:
             return jsonify({"error": "Access denied"}), 403
+            
+        if user.get("role") == "client":
+            if conv["type"] != "dm":
+                return jsonify({"error": "Access denied"}), 403
+            cursor.execute(
+                """
+                SELECT u.role FROM conversation_members cm
+                JOIN users u ON cm.user_id = u.id
+                WHERE cm.conversation_id = %s AND u.id != %s
+                """,
+                (conv_id, user["id"])
+            )
+            counterparty = cursor.fetchone()
+            if not counterparty or counterparty["role"] != "admin":
+                return jsonify({"error": "Access denied"}), 403
             
         cursor.execute(
             """
@@ -493,6 +561,23 @@ def chat_send_message(conv_id):
         cursor.execute("SELECT id FROM conversation_members WHERE conversation_id = %s AND user_id = %s", (conv_id, user["id"]))
         if not cursor.fetchone():
             return jsonify({"error": "You are not a member of this conversation"}), 403
+            
+        if user.get("role") == "client":
+            cursor.execute("SELECT type FROM conversations WHERE id = %s", (conv_id,))
+            conv = cursor.fetchone()
+            if not conv or conv["type"] != "dm":
+                return jsonify({"error": "Forbidden"}), 403
+            cursor.execute(
+                """
+                SELECT u.role FROM conversation_members cm
+                JOIN users u ON cm.user_id = u.id
+                WHERE cm.conversation_id = %s AND u.id != %s
+                """,
+                (conv_id, user["id"])
+            )
+            counterparty = cursor.fetchone()
+            if not counterparty or counterparty["role"] != "admin":
+                return jsonify({"error": "Forbidden"}), 403
             
         # Store message record
         cursor.execute(
