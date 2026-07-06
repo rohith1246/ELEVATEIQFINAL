@@ -773,6 +773,90 @@ def get_report(report_type):
         conn.close()
 
 
+@auth_bp.route("/reports/details/<report_type>", methods=["GET"])
+@require_role(["admin"])
+def get_report_details(report_type):
+    """
+    Returns detailed lists of employees or candidates contributing to a report metric.
+    Restricted to admin users.
+    """
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if report_type == "attendance":
+            date_val = request.args.get("date")
+            status_val = request.args.get("status")
+            if not date_val or not status_val:
+                return jsonify({"error": "Parameters 'date' and 'status' are required"}), 400
+            cursor.execute(
+                """
+                SELECT e.employee_id, u.name, e.department, e.designation, 
+                       a.check_in, a.check_out, a.working_hours
+                FROM attendance a
+                JOIN employees e ON a.employee_id = e.id
+                JOIN users u ON e.user_id = u.id
+                WHERE a.date = %s AND UPPER(a.status) = UPPER(%s)
+                ORDER BY u.name
+                """,
+                (date_val, status_val)
+            )
+            rows = cursor.fetchall()
+            for r in rows:
+                if r.get("check_in"):
+                    r["check_in"] = r["check_in"].strftime("%H:%M:%S") if hasattr(r["check_in"], "strftime") else str(r["check_in"])
+                if r.get("check_out"):
+                    r["check_out"] = r["check_out"].strftime("%H:%M:%S") if hasattr(r["check_out"], "strftime") else str(r["check_out"])
+                if r.get("working_hours") is not None:
+                    r["working_hours"] = float(r["working_hours"])
+            return jsonify(rows), 200
+
+        elif report_type == "employee":
+            dept_val = request.args.get("department")
+            if not dept_val:
+                return jsonify({"error": "Parameter 'department' is required"}), 400
+            cursor.execute(
+                """
+                SELECT e.employee_id, u.name, e.designation, e.phone_number, e.status
+                FROM employees e
+                JOIN users u ON e.user_id = u.id
+                WHERE e.department = %s AND e.status = 'Active'
+                ORDER BY u.name
+                """,
+                (dept_val,)
+            )
+            rows = cursor.fetchall()
+            return jsonify(rows), 200
+
+        elif report_type == "recruitment":
+            status_val = request.args.get("status")
+            if not status_val:
+                return jsonify({"error": "Parameter 'status' is required"}), 400
+            cursor.execute(
+                """
+                SELECT a.candidate_name, a.email, a.phone, j.title as job_title, 
+                       j.department, a.applied_at
+                FROM applications a
+                JOIN jobs j ON a.job_id = j.id
+                WHERE a.status = %s
+                ORDER BY a.applied_at DESC
+                """,
+                (status_val,)
+            )
+            rows = cursor.fetchall()
+            for r in rows:
+                if r.get("applied_at"):
+                    r["applied_at"] = r["applied_at"].isoformat()
+            return jsonify(rows), 200
+
+        else:
+            return jsonify({"error": "Invalid report details type"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @auth_bp.route("/edutech")
 def serve_edutech_redirect():
     """

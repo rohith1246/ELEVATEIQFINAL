@@ -278,6 +278,30 @@
     </div>
 </div>
 
+<!-- View Report Details Modal -->
+<div class="modal" id="viewReportDetailsModal">
+    <div class="modal-content" style="max-width: 800px; text-align: left;">
+        <button class="close-modal" onclick="closeModal('viewReportDetailsModal')">&times;</button>
+        <h2 id="reportDetailsModalTitle" style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="file-text" style="color: var(--orange); width: 22px; height: 22px;"></i>
+            <span>Report Breakdown Records</span>
+        </h2>
+        <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead id="reportDetailsTableHeader">
+                    <!-- Dynamic Headers -->
+                </thead>
+                <tbody id="reportDetailsTableBody">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+            <button type="button" onclick="closeModal('viewReportDetailsModal')" class="btn-primary" style="width: auto !important; min-width: 100px; margin-top: 0 !important;">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // Define layouts
 const layouts = {
@@ -395,6 +419,80 @@ const layouts = {
                         <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Create Employee Profile</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- View Employee Details Modal -->
+        <div class="modal" id="viewEmployeeModal">
+            <div class="modal-content" style="max-width: 600px; text-align: left;">
+                <button class="close-modal" onclick="closeModal('viewEmployeeModal')">&times;</button>
+                <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="user" style="color: var(--orange); width: 24px; height: 24px;"></i>
+                    <span>Employee Record File</span>
+                </h2>
+                
+                <div class="glass-card" style="padding: 24px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 20px; backdrop-filter: blur(10px);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px;">
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Employee ID</label>
+                            <span id="viewEmpId" style="font-size: 15px; font-weight: 600; color: #fff;"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Status</label>
+                            <span id="viewEmpStatus" class="badge"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Full Name</label>
+                            <span id="viewEmpName" style="font-size: 15px; font-weight: 600; color: #fff;"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Email Address</label>
+                            <span id="viewEmpEmail" style="font-size: 15px; color: #fff;"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Phone Number</label>
+                            <span id="viewEmpPhone" style="font-size: 15px; color: #fff;">-</span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Date of Joining</label>
+                            <span id="viewEmpJoinDate" style="font-size: 15px; color: #fff;">-</span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Department</label>
+                            <span id="viewEmpDept" style="font-size: 15px; color: #fff;"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Designation</label>
+                            <span id="viewEmpDesg" style="font-size: 15px; color: #fff;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--orange); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Annual Leave Balances</h3>
+                <div class="glass-card" style="padding: 16px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 24px; backdrop-filter: blur(10px);">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 20px; font-weight: 700; color: #fff;" id="viewEmpCasual">0</div>
+                            <div style="font-size: 10px; color: var(--ink-soft); margin-top: 4px;">Casual</div>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 20px; font-weight: 700; color: #fff;" id="viewEmpSick">0</div>
+                            <div style="font-size: 10px; color: var(--ink-soft); margin-top: 4px;">Sick</div>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 20px; font-weight: 700; color: #fff;" id="viewEmpEarned">0</div>
+                            <div style="font-size: 10px; color: var(--ink-soft); margin-top: 4px;">Earned</div>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 20px; font-weight: 700; color: #fff;" id="viewEmpEmergency">0</div>
+                            <div style="font-size: 10px; color: var(--ink-soft); margin-top: 4px;">Emergency</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" onclick="closeModal('viewEmployeeModal')" class="btn-primary" style="width: auto !important; min-width: 100px; margin-top: 0 !important;">Close</button>
+                </div>
             </div>
         </div>
     `,

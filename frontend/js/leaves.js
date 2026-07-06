@@ -154,12 +154,46 @@ function renderEmployeesTable(list) {
                 <td>${emp.designation}</td>
                 <td><span class="badge ${emp.status.toLowerCase()}">${emp.status}</span></td>
                 <td>
+                    <button onclick="viewEmployeeDetails(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-approve" style="background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3);">View</button>
                     <button onclick="editEmployeePopup(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-edit">Edit</button>
                     <button onclick="deleteEmployee(${emp.id})" class="btn-action btn-reject">Delete</button>
                 </td>
             </tr>
         `;
     });
+}
+
+/**
+ * Opens a detailed view modal displaying complete employee record file.
+ * 
+ * @param {Object} emp - The employee record object.
+ */
+function viewEmployeeDetails(emp) {
+    document.getElementById("viewEmpId").textContent = emp.employee_id || "-";
+    document.getElementById("viewEmpName").textContent = emp.name || "-";
+    document.getElementById("viewEmpEmail").textContent = emp.email || "-";
+    document.getElementById("viewEmpPhone").textContent = emp.phone_number || "Not provided";
+    document.getElementById("viewEmpJoinDate").textContent = emp.date_of_joining || "Not provided";
+    document.getElementById("viewEmpDept").textContent = emp.department || "-";
+    document.getElementById("viewEmpDesg").textContent = emp.designation || "-";
+    
+    // Status badge formatting
+    const statusSpan = document.getElementById("viewEmpStatus");
+    statusSpan.textContent = emp.status || "Active";
+    statusSpan.className = `badge ${emp.status ? emp.status.toLowerCase() : "active"}`;
+    
+    // Leave balances
+    document.getElementById("viewEmpCasual").textContent = emp.casual_leave !== undefined ? emp.casual_leave : "0";
+    document.getElementById("viewEmpSick").textContent = emp.sick_leave !== undefined ? emp.sick_leave : "0";
+    document.getElementById("viewEmpEarned").textContent = emp.earned_leave !== undefined ? emp.earned_leave : "0";
+    document.getElementById("viewEmpEmergency").textContent = emp.emergency_leave !== undefined ? emp.emergency_leave : "0";
+    
+    openModal("viewEmployeeModal");
+    
+    // Initialize Lucide icons if any inside the modal
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
 /**
@@ -415,7 +449,13 @@ async function generateReport(type) {
                 <tbody>
         `;
         data.forEach(r => {
-            table += `<tr><td>${r.date}</td><td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td><td>${r.count} Employees</td></tr>`;
+            table += `<tr>
+                <td>${r.date}</td>
+                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td>
+                    <button onclick="viewReportDetails('attendance', '${r.date}', '${r.status}')" class="btn-action btn-edit" style="margin:0; padding:4px 12px; font-size:12px; font-weight:600; border-radius:8px;">${r.count} Employees</button>
+                </td>
+            </tr>`;
         });
         table += `</tbody></table>`;
         container.innerHTML = table;
@@ -429,7 +469,12 @@ async function generateReport(type) {
                 <tbody>
         `;
         data.forEach(r => {
-            table += `<tr><td>${r.department}</td><td><strong>${r.employee_count}</strong> Employees</td></tr>`;
+            table += `<tr>
+                <td>${r.department}</td>
+                <td>
+                    <button onclick="viewReportDetails('employee', '${r.department.replace(/'/g, "\\'")}')" class="btn-action btn-edit" style="margin:0; padding:4px 12px; font-size:12px; font-weight:600; border-radius:8px;">${r.employee_count} Employees</button>
+                </td>
+            </tr>`;
         });
         table += `</tbody></table>`;
         container.innerHTML = table;
@@ -443,10 +488,104 @@ async function generateReport(type) {
                 <tbody>
         `;
         data.forEach(r => {
-            table += `<tr><td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td><td><strong>${r.application_count}</strong> Applications</td></tr>`;
+            table += `<tr>
+                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td>
+                    <button onclick="viewReportDetails('recruitment', '${r.status}')" class="btn-action btn-edit" style="margin:0; padding:4px 12px; font-size:12px; font-weight:600; border-radius:8px;">${r.application_count} Applications</button>
+                </td>
+            </tr>`;
         });
         table += `</tbody></table>`;
         container.innerHTML = table;
+    }
+}
+
+/**
+ * Fetches breakdown detail records contributing to a report metric and opens detail modal.
+ * 
+ * @async
+ * @param {string} type - Report category key.
+ * @param {string} param1 - Query filter parameter 1 (date or department or status).
+ * @param {string} [param2] - Query filter parameter 2 (status for attendance).
+ */
+async function viewReportDetails(type, param1, param2) {
+    let url = `/reports/details/${type}`;
+    let modalTitle = "";
+    let headersHtml = "";
+    
+    if (type === "attendance") {
+        url += `?date=${encodeURIComponent(param1)}&status=${encodeURIComponent(param2)}`;
+        modalTitle = `Attendance Breakdown — ${param1} (${param2.toUpperCase()})`;
+        headersHtml = `<tr><th>Employee ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Check In</th><th>Check Out</th><th>Hours</th></tr>`;
+    } else if (type === "employee") {
+        url += `?department=${encodeURIComponent(param1)}`;
+        modalTitle = `Active Headcount — ${param1}`;
+        headersHtml = `<tr><th>Employee ID</th><th>Name</th><th>Designation</th><th>Phone</th><th>Status</th></tr>`;
+    } else if (type === "recruitment") {
+        url += `?status=${encodeURIComponent(param1)}`;
+        modalTitle = `Applications List — Status: ${param1}`;
+        headersHtml = `<tr><th>Candidate Name</th><th>Email</th><th>Phone</th><th>Job Title</th><th>Department</th><th>Applied On</th></tr>`;
+    }
+
+    try {
+        const data = await apiCall(url);
+        const titleEl = document.getElementById("reportDetailsModalTitle");
+        const headerEl = document.getElementById("reportDetailsTableHeader");
+        const bodyEl = document.getElementById("reportDetailsTableBody");
+
+        titleEl.innerHTML = `<i data-lucide="file-text" style="color: var(--orange); width: 22px; height: 22px;"></i> <span>${modalTitle}</span>`;
+        headerEl.innerHTML = headersHtml;
+        bodyEl.innerHTML = "";
+
+        if (data.length === 0) {
+            const colCount = headerEl.querySelectorAll("th").length;
+            bodyEl.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:var(--ink-soft); padding: 20px;">No matching records found.</td></tr>`;
+        } else {
+            data.forEach(row => {
+                let rowHtml = "<tr>";
+                if (type === "attendance") {
+                    const whRaw = row.working_hours;
+                    const whNum = typeof whRaw === 'number' ? whRaw : parseFloat(whRaw);
+                    const whStr = (!isNaN(whNum) && whNum !== null) ? whNum.toFixed(2) : "0.00";
+                    rowHtml += `
+                        <td>${row.employee_id || "-"}</td>
+                        <td><strong>${row.name || "-"}</strong></td>
+                        <td>${row.department || "-"}</td>
+                        <td>${row.designation || "-"}</td>
+                        <td>${row.check_in || "-"}</td>
+                        <td>${row.check_out || "-"}</td>
+                        <td>${whStr} hrs</td>
+                    `;
+                } else if (type === "employee") {
+                    rowHtml += `
+                        <td>${row.employee_id || "-"}</td>
+                        <td><strong>${row.name || "-"}</strong></td>
+                        <td>${row.designation || "-"}</td>
+                        <td>${row.phone_number || "-"}</td>
+                        <td><span class="badge ${row.status.toLowerCase()}">${row.status}</span></td>
+                    `;
+                } else if (type === "recruitment") {
+                    const appliedDate = row.applied_at ? row.applied_at.split("T")[0] : "-";
+                    rowHtml += `
+                        <td><strong>${row.candidate_name || "-"}</strong></td>
+                        <td>${row.email || "-"}</td>
+                        <td>${row.phone || "-"}</td>
+                        <td>${row.job_title || "-"}</td>
+                        <td>${row.department || "-"}</td>
+                        <td>${appliedDate}</td>
+                    `;
+                }
+                rowHtml += "</tr>";
+                bodyEl.innerHTML += rowHtml;
+            });
+        }
+
+        openModal("viewReportDetailsModal");
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    } catch (e) {
+        alert("Failed to load report detailed data.");
     }
 }
 

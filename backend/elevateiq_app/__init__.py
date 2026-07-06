@@ -69,5 +69,50 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(leaves_bp)
 
+    import gzip
+    import io
+    from flask import request
+
+    @app.after_request
+    def compress_response(response):
+        """
+        Compresses response payloads using gzip to reduce latency.
+        """
+        accept_encoding = request.headers.get("Accept-Encoding", "")
+        if "gzip" not in accept_encoding.lower():
+            return response
+            
+        if response.status_code < 200 or response.status_code >= 300:
+            return response
+            
+        if "Content-Encoding" in response.headers:
+            return response
+            
+        content_type = response.headers.get("Content-Type", "").lower()
+        is_compressible = (
+            "text" in content_type or
+            "javascript" in content_type or
+            "css" in content_type or
+            "json" in content_type
+        )
+        if not is_compressible:
+            return response
+
+        response.direct_passthrough = False
+        data = response.get_data()
+        
+        # Only compress payloads larger than 500 bytes
+        if len(data) < 500:
+            return response
+            
+        gzip_buffer = io.BytesIO()
+        with gzip.GzipFile(mode="wb", fileobj=gzip_buffer) as gzip_file:
+            gzip_file.write(data)
+            
+        response.set_data(gzip_buffer.getvalue())
+        response.headers["Content-Encoding"] = "gzip"
+        response.headers["Content-Length"] = len(response.get_data())
+        return response
+
     return app
 

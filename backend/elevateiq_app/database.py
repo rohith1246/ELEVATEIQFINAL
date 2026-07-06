@@ -167,12 +167,13 @@ def get_connection():
         key = str(uuid.uuid4())
         conn = db_pool.getconn(key=key)
         
-        # Test if the connection is alive and healthy (preventing gevent broken pipe errors)
+        # Test if the connection is alive and healthy locally (avoiding remote network roundtrip latency)
         try:
-            with conn.cursor() as test_cur:
-                test_cur.execute("SELECT 1")
-            # Connection is verified active and safe!
-            return PooledConnection(db_pool, conn, key)
+            if conn.closed == 0:
+                # Connection is verified active and safe!
+                return PooledConnection(db_pool, conn, key)
+            else:
+                raise Exception("Connection is closed")
         except Exception:
             # Connection is dead (timeout/EOF). Close and discard it from the pool.
             try:
