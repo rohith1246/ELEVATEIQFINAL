@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/chat.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -1022,61 +1023,65 @@ function renderSidebar() {
     let list = [];
     if (currentUser.role === 'admin') {
         list = [
-            { id: "overview", label: "Overview", icon: "" },
-            { id: "employees", label: "Employees", icon: "" },
-            { id: "attendance", label: "Attendance Register", icon: "" },
-            { id: "leaves", label: "Leave Requests", icon: "" },
-            { id: "crm", label: "Client CRM", icon: "" },
-            { id: "recruitment", label: "Recruitment Board", icon: "" },
-            { id: "announcements", label: "Announcements", icon: "" },
-            { id: "reports", label: "Reports & Audits", icon: "" },
-            { id: "admin_contacts", label: "Contacts", icon: "" },
-            { id: "messages", label: "Workspace", icon: "" },
-            { id: "groups", label: "Groups", icon: "" },
-            { id: "oversight", label: "Oversight", icon: "" }
+            { id: "overview", label: "Overview", icon: "layout-dashboard" },
+            { id: "employees", label: "Employees", icon: "users" },
+            { id: "attendance", label: "Attendance Register", icon: "calendar-check" },
+            { id: "leaves", label: "Leave Requests", icon: "clipboard-list" },
+            { id: "crm", label: "Client CRM", icon: "briefcase" },
+            { id: "recruitment", label: "Recruitment Board", icon: "user-plus" },
+            { id: "announcements", label: "Announcements", icon: "megaphone" },
+            { id: "reports", label: "Reports & Audits", icon: "file-bar-chart" },
+            { id: "admin_contacts", label: "Contacts", icon: "contact" },
+            { id: "messages", label: "Workspace", icon: "message-square" },
+            { id: "groups", label: "Groups", icon: "users-2" },
+            { id: "oversight", label: "Oversight", icon: "eye" }
         ];
     } else if (currentUser.role === 'employee') {
         list = [
-            { id: "emp_overview", label: "Overview", icon: "📊" },
-            { id: "emp_attendance", label: "My Attendance", icon: "📅" },
-            { id: "emp_leaves", label: "Apply Leave", icon: "✉️" },
-            { id: "emp_announcements", label: "Announcements", icon: "📢" },
-            { id: "profile", label: "My Profile", icon: "👤" },
-            { id: "messages", label: "Workspace", icon: "💬" },
-            { id: "groups", label: "Groups", icon: "👥" }
+            { id: "emp_overview", label: "Overview", icon: "layout-dashboard" },
+            { id: "emp_attendance", label: "My Attendance", icon: "calendar-check" },
+            { id: "emp_leaves", label: "Apply Leave", icon: "mail" },
+            { id: "emp_announcements", label: "Announcements", icon: "megaphone" },
+            { id: "profile", label: "My Profile", icon: "user" },
+            { id: "messages", label: "Workspace", icon: "message-square" },
+            { id: "groups", label: "Groups", icon: "users-2" }
         ];
         if (currentUser.can_approve_leaves) {
-            list.push({ id: "leaves", label: "Leave Requests", icon: "📋" });
-            list.push({ id: "crm", label: "Client CRM", icon: "💼" });
+            list.push({ id: "leaves", label: "Leave Requests", icon: "clipboard-list" });
+            list.push({ id: "crm", label: "Client CRM", icon: "briefcase" });
         }
         if (currentUser.is_hr) {
-            list.push({ id: "recruitment", label: "Recruitment Board", icon: "💼" });
+            list.push({ id: "recruitment", label: "Recruitment Board", icon: "user-plus" });
         }
         if (currentUser.is_team_leader) {
-            list.push({ id: "oversight", label: "Group Oversight", icon: "👁️" });
+            list.push({ id: "oversight", label: "Group Oversight", icon: "eye" });
         }
     } else if (currentUser.role === 'client') {
         list = [
-            { id: "client_overview", label: "Overview", icon: "📊" },
-            { id: "client_meetings", label: "My Meetings", icon: "📅" },
-            { id: "profile", label: "My Profile", icon: "👤" },
-            { id: "messages", label: "Workspace", icon: "💬" }
+            { id: "client_overview", label: "Overview", icon: "layout-dashboard" },
+            { id: "client_meetings", label: "My Meetings", icon: "calendar" },
+            { id: "profile", label: "My Profile", icon: "user" },
+            { id: "messages", label: "Workspace", icon: "message-square" }
         ];
     } else {
         list = [
-            { id: "cand_overview", label: "My Applications", icon: "💼" },
-            { id: "profile", label: "My Profile", icon: "👤" }
+            { id: "cand_overview", label: "My Applications", icon: "file-text" },
+            { id: "profile", label: "My Profile", icon: "user" }
         ];
     }
     
     list.forEach((m, idx) => {
         const a = document.createElement("a");
         a.className = `sidebar-link ${idx === 0 ? "active" : ""}`;
-        const iconHtml = m.icon ? `<span>${m.icon}</span> ` : "";
-        a.innerHTML = `${iconHtml}${m.label}`;
+        const iconHtml = m.icon ? `<i data-lucide="${m.icon}" class="sidebar-icon"></i>` : "";
+        a.innerHTML = `${iconHtml}<span>${m.label}</span>`;
         a.onclick = () => switchTab(m.id, a);
         sidebar.appendChild(a);
     });
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 
     if (list.length > 0) {
         switchTab(list[0].id, sidebar.firstChild);

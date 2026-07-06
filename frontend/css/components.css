@@ -50,6 +50,19 @@
     padding-left: 15px;
 }
 
+.sidebar-icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2px;
+    flex-shrink: 0;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar-link:hover .sidebar-icon,
+.sidebar-link.active .sidebar-icon {
+    color: var(--orange);
+}
+
 .dash-content {
     margin-left: 260px;
     flex: 1;
