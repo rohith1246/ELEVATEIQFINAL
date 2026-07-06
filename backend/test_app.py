@@ -22,7 +22,7 @@ class ElevateIQTestCase(unittest.TestCase):
         response = self.client.post('/register', json={
             'name': 'Test User',
             'email': 'test@example.com',
-            'password': 'password123'
+            'password': 'Password123!'
         })
         
         self.assertEqual(response.status_code, 201)
@@ -41,7 +41,7 @@ class ElevateIQTestCase(unittest.TestCase):
         response = self.client.post('/register', json={
             'name': 'Test User',
             'email': 'test@example.com',
-            'password': 'password123'
+            'password': 'Password123!'
         })
         
         self.assertEqual(response.status_code, 400)
@@ -176,20 +176,20 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_get_conn.return_value = mock_conn
         mock_conn.cursor.return_value = mock_cursor
         
-        # Mock employee leave balance (first fetch) and no overlapping leave request (second fetch)
+        # Mock employee profile (first fetch) and month leaves count (second fetch)
         mock_cursor.fetchone.side_effect = [
             {
-                'id': 10,
-                'casual_leave': 10,
-                'sick_leave': 5
+                'id': 10
             },
-            None
+            {
+                'count': 0
+            }
         ]
         
         response = self.client.post('/leaves', json={
-            'leave_type': 'Casual',
+            'leave_type': 'Leave',
             'start_date': '2026-07-10',
-            'end_date': '2026-07-12',
+            'end_date': '2026-07-10',
             'reason': 'Vacation'
         })
         

@@ -430,7 +430,6 @@ const layouts = {
                         <th>Duration</th>
                         <th>Reason</th>
                         <th>Status</th>
-                        <th>Balances</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -577,11 +576,9 @@ const layouts = {
 
     // === EMPLOYEE PANELS ===
     emp_overview: `
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Casual Leaves Left</h3><div class="val" id="bal_casual">-</div></div>
-            <div class="stat-card"><h3>Sick Leaves Left</h3><div class="val" id="bal_sick">-</div></div>
-            <div class="stat-card"><h3>Earned Leaves Left</h3><div class="val" id="bal_earned">-</div></div>
-            <div class="stat-card"><h3>Emergency Leaves Left</h3><div class="val" id="bal_emergency">-</div></div>
+        <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card"><h3>Total Present Days</h3><div class="val" id="bal_present_days">-</div></div>
+            <div class="stat-card"><h3>Total Leaves Taken</h3><div class="val" id="bal_total_leaves">-</div></div>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-top:20px;">
@@ -634,10 +631,7 @@ const layouts = {
                     <div class="field">
                         <label>Leave Type</label>
                         <select id="leaveType" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;" required>
-                            <option value="Casual">Casual Leave</option>
-                            <option value="Sick">Sick Leave</option>
-                            <option value="Earned">Earned Leave</option>
-                            <option value="Emergency">Emergency Leave</option>
+                            <option value="Leave">Leave</option>
                         </select>
                     </div>
                     <div class="field"><label>Start Date</label><input type="date" id="leaveStart" required></div>

@@ -664,9 +664,6 @@ def get_dashboard_stats():
             }
             return jsonify(stats), 200
         elif user["role"] == "employee":
-            cursor.execute("SELECT * FROM employees WHERE id = %s", (user["emp_db_id"],))
-            emp = cursor.fetchone()
-
             cursor.execute("SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Present'", (user["emp_db_id"],))
             p_count = cursor.fetchone()["count"]
 
@@ -676,13 +673,13 @@ def get_dashboard_stats():
             cursor.execute("SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status = 'Pending'", (user["emp_db_id"],))
             pending_leaves = cursor.fetchone()["count"]
 
+            # Calculate total leaves approved (in days)
+            cursor.execute("SELECT COALESCE(SUM(end_date - start_date + 1), 0) AS total_leaves FROM leaves WHERE employee_id = %s AND status = 'Approved'", (user["emp_db_id"],))
+            total_leaves = cursor.fetchone()["total_leaves"]
+
             stats = {
-                "casual_leave_balance": emp.get("casual_leave", 0) if emp else 0,
-                "sick_leave_balance": emp.get("sick_leave", 0) if emp else 0,
-                "earned_leave_balance": emp.get("earned_leave", 0) if emp else 0,
-                "emergency_leave_balance": emp.get("emergency_leave", 0) if emp else 0,
-                "attendance_present": p_count,
-                "attendance_half_day": h_count,
+                "total_present_days": p_count + h_count,
+                "total_leaves": total_leaves,
                 "pending_leaves": pending_leaves
             }
             return jsonify(stats), 200

@@ -324,10 +324,6 @@ async function loadAdminLeaves() {
                 </td>
                 <td style="max-width:180px; word-break:break-all;">${l.reason || '-'}</td>
                 <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
-                <td style="font-size:12px; line-height:1.4;">
-                    C:${l.casual_leave} | S:${l.sick_leave}<br>
-                    E:${l.earned_leave} | Em:${l.emergency_leave}
-                </td>
                 <td>${actionBtn}</td>
             </tr>
         `;
@@ -466,10 +462,10 @@ async function generateReport(type) {
  */
 async function loadEmpOverview() {
     const stats = await apiCall("/dashboard/stats");
-    document.getElementById("bal_casual").textContent = stats.casual_leave_balance;
-    document.getElementById("bal_sick").textContent = stats.sick_leave_balance;
-    document.getElementById("bal_earned").textContent = stats.earned_leave_balance;
-    document.getElementById("bal_emergency").textContent = stats.emergency_leave_balance;
+    const presentEl = document.getElementById("bal_present_days");
+    if (presentEl) presentEl.textContent = stats.total_present_days;
+    const leavesEl = document.getElementById("bal_total_leaves");
+    if (leavesEl) leavesEl.textContent = stats.total_leaves;
 
     const noticeList = document.getElementById("empNoticeList");
     noticeList.innerHTML = "";

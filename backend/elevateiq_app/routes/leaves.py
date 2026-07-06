@@ -117,8 +117,8 @@ def apply_leave():
     if not leave_type or not start_date_str or not end_date_str:
         return jsonify({"error": "Required fields are missing"}), 400
 
-    if leave_type not in ["Casual", "Sick", "Earned", "Emergency"]:
-        return jsonify({"error": "Invalid leave type. Must be Casual, Sick, Earned, or Emergency."}), 400
+    if leave_type != "Leave":
+        return jsonify({"error": "Invalid leave type. Only 'Leave' is allowed."}), 400
 
     # Parse date strings to Python date objects
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -126,6 +126,10 @@ def apply_leave():
 
     if start_date > end_date:
         return jsonify({"error": "Start date must be before end date"}), 400
+
+    leave_days = (end_date - start_date).days + 1
+    if leave_days != 1:
+        return jsonify({"error": "Leave duration must be exactly 1 day."}), 400
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -136,30 +140,25 @@ def apply_leave():
         if not emp:
             return jsonify({"error": "Employee profile not found. Please contact the administrator."}), 404
 
-        leave_days = (end_date - start_date).days + 1
-        balance_col = f"{leave_type.lower()}_leave"
-        balance = emp.get(balance_col, 0)
+        # Validate that employee has not already applied for/taken leave in this calendar month
+        start_of_month = date(start_date.year, start_date.month, 1)
+        if start_date.month == 12:
+            end_of_month = date(start_date.year + 1, 1, 1)
+        else:
+            end_of_month = date(start_date.year, start_date.month + 1, 1)
 
-        # Enforce balance checking prior to registering the request
-        if balance < leave_days:
-            return jsonify({"error": f"Insufficient leave balance. Requested {leave_days} days of {leave_type} leave, but only {balance} days remaining."}), 400
-
-        # Prevent overlapping leave requests for the same employee on the same dates
         cursor.execute(
             """
-            SELECT id FROM leaves 
+            SELECT COUNT(*) FROM leaves 
             WHERE employee_id = %s 
               AND status != 'Rejected'
-              AND (
-                (start_date <= %s AND end_date >= %s) OR
-                (start_date <= %s AND end_date >= %s) OR
-                (start_date >= %s AND end_date <= %s)
-              )
+              AND start_date >= %s AND start_date < %s
             """,
-            (user["emp_db_id"], start_date, start_date, end_date, end_date, start_date, end_date)
+            (user["emp_db_id"], start_of_month, end_of_month)
         )
-        if cursor.fetchone():
-            return jsonify({"error": "You have already applied for leave during these dates or have an overlapping leave request."}), 400
+        month_leaves_count = cursor.fetchone()["count"]
+        if month_leaves_count >= 1:
+            return jsonify({"error": "You can only take 1 day of leave per calendar month. You already have a pending or approved leave in this calendar month."}), 400
 
         cursor.execute(
             """
@@ -244,22 +243,23 @@ def review_leave(leave_id):
         leave_type = leave["leave_type"]
 
         if action == "Approved":
-            # Retrieve current category balance
-            balance_col = f"{leave_type.lower()}_leave"
-            cursor.execute(f"SELECT {balance_col} FROM employees WHERE id = %s", (emp_id,))
-            emp_row = cursor.fetchone()
-            if not emp_row:
-                return jsonify({"error": "Employee record not found."}), 404
-            balance = emp_row[balance_col]
+            if leave_type != "Leave":
+                # Retrieve current category balance
+                balance_col = f"{leave_type.lower()}_leave"
+                cursor.execute(f"SELECT {balance_col} FROM employees WHERE id = %s", (emp_id,))
+                emp_row = cursor.fetchone()
+                if not emp_row:
+                    return jsonify({"error": "Employee record not found."}), 404
+                balance = emp_row[balance_col]
 
-            if balance < leave_days:
-                return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400
+                if balance < leave_days:
+                    return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400
 
-            # Deduct approved leave days from balance
-            cursor.execute(
-                f"UPDATE employees SET {balance_col} = {balance_col} - %s WHERE id = %s",
-                (leave_days, emp_id)
-            )
+                # Deduct approved leave days from balance
+                cursor.execute(
+                    f"UPDATE employees SET {balance_col} = {balance_col} - %s WHERE id = %s",
+                    (leave_days, emp_id)
+                )
 
             # Insert attendance records marked as 'Leave' for the duration
             curr = leave["start_date"]
