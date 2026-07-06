@@ -11,7 +11,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
-from ..auth import get_current_user, require_role, check_is_crm_manager, rate_limit
+from ..auth import get_current_user, require_role, check_is_crm_manager, rate_limit, validate_email, validate_password_strength
 
 crm_bp = Blueprint("crm", __name__)
 
@@ -227,11 +227,18 @@ def provision_crm_client(client_id):
             return jsonify({"error": "Forbidden"}), 403
         
         data = request.json
-        email = data.get("email")
+        email = data.get("email", "").strip() if data.get("email") else ""
         password = data.get("password")
 
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
+
+        if not validate_email(email):
+            return jsonify({"error": "Invalid email address format"}), 400
+
+        is_strong, pw_msg = validate_password_strength(password)
+        if not is_strong:
+            return jsonify({"error": pw_msg}), 400
 
         cursor.execute("SELECT * FROM clients WHERE id = %s", (client_id,))
         client = cursor.fetchone()
@@ -541,6 +548,16 @@ def save_contact():
     
     if not name or not email or not phone or not track or not message:
         return jsonify({"success": False, "error": "All fields are required"}), 400
+
+    if len(name) < 2 or len(name) > 100:
+        return jsonify({"success": False, "error": "Name must be between 2 and 100 characters long"}), 400
+
+    if not validate_email(email):
+        return jsonify({"success": False, "error": "Invalid email address format"}), 400
+
+    clean_phone = phone.replace("+", "").replace("-", "").replace(" ", "")
+    if len(clean_phone) < 7 or len(clean_phone) > 15 or not clean_phone.isdigit():
+        return jsonify({"success": False, "error": "Invalid phone number format"}), 400
         
     conn = get_connection()
     cursor = conn.cursor()
@@ -592,6 +609,9 @@ def save_newsletter():
     email = data.get("email", "").strip()
     if not email:
         return jsonify({"success": False, "error": "Email is required"}), 400
+
+    if not validate_email(email):
+        return jsonify({"success": False, "error": "Invalid email address format"}), 400
         
     conn = get_connection()
     cursor = conn.cursor()
@@ -652,6 +672,12 @@ def save_elevate_contact():
     
     if not name or not email or not message:
         return jsonify({"success": False, "error": "All fields are required"}), 400
+
+    if len(name) < 2 or len(name) > 100:
+        return jsonify({"success": False, "error": "Name must be between 2 and 100 characters long"}), 400
+
+    if not validate_email(email):
+        return jsonify({"success": False, "error": "Invalid email address format"}), 400
         
     conn = get_connection()
     cursor = conn.cursor()

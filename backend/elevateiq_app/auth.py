@@ -218,3 +218,45 @@ def rate_limit(limit=100, period=60):
         return wrapped
     return decorator
 
+
+import re
+
+# Email regex matching standard RFC 5322
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+def validate_email(email):
+    """
+    Validates the format of an email address.
+    """
+    if not email or len(email) > 150:
+        return False
+    return bool(EMAIL_REGEX.match(email))
+
+def validate_password_strength(password):
+    """
+    Validates if a password meets the strength requirements:
+    - Minimum length of 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character
+    """
+    if not password:
+        return False, "Password cannot be empty"
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    if len(password) > 128:
+        return False, "Password must not exceed 128 characters"
+    if not any(c.isupper() for c in password):
+        return False, "Password must contain at least one uppercase letter"
+    if not any(c.islower() for c in password):
+        return False, "Password must contain at least one lowercase letter"
+    if not any(c.isdigit() for c in password):
+        return False, "Password must contain at least one number"
+    
+    special_chars = "!@#$%^&*()-_=+[]{}|;:',.<>?/`~"
+    if not any(c in special_chars for c in password):
+        return False, "Password must contain at least one special character"
+        
+    return True, ""
+

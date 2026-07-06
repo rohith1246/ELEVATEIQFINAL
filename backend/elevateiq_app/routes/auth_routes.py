@@ -14,7 +14,8 @@ from psycopg2.extras import RealDictCursor
 from ..database import get_connection
 from ..auth import (
     get_current_user, require_role, serializer, 
-    check_is_recruitment_manager, check_is_crm_manager, rate_limit
+    check_is_recruitment_manager, check_is_crm_manager, rate_limit,
+    validate_email, validate_password_strength
 )
 from ..config import Config
 
@@ -46,13 +47,23 @@ def register():
             - 500: Database insertion or bcrypt hashing failure message.
     """
     data = request.json
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
+    name = data.get("name", "").strip() if data.get("name") else ""
+    email = data.get("email", "").strip() if data.get("email") else ""
+    password = data.get("password", "")
     role = "candidate"  # Enforce candidate role for public registration
 
     if not name or not email or not password:
         return jsonify({"error": "All fields are required"}), 400
+
+    if len(name) < 2 or len(name) > 100:
+        return jsonify({"error": "Name must be between 2 and 100 characters long"}), 400
+
+    if not validate_email(email):
+        return jsonify({"error": "Invalid email address format"}), 400
+
+    is_strong, pw_msg = validate_password_strength(password)
+    if not is_strong:
+        return jsonify({"error": pw_msg}), 400
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -356,9 +367,9 @@ def add_employee():
             - 500: Database insertion exceptions.
     """
     data = request.json
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")  # defaults to email username if empty
+    name = data.get("name", "").strip() if data.get("name") else ""
+    email = data.get("email", "").strip() if data.get("email") else ""
+    password = data.get("password")  # defaults to auto-generated if empty
     employee_id = data.get("employee_id")
     if employee_id:
         employee_id = employee_id.strip().upper()
@@ -371,9 +382,22 @@ def add_employee():
     if not name or not email or not employee_id or not department or not designation:
         return jsonify({"error": "Required fields are missing"}), 400
 
+    if len(name) < 2 or len(name) > 100:
+        return jsonify({"error": "Name must be between 2 and 100 characters long"}), 400
+
+    if not validate_email(email):
+        return jsonify({"error": "Invalid email address format"}), 400
+
     # Auto-generate temporary password if not provided explicitly
     if not password:
-        password = email.split("@")[0] + "123"
+        username = email.split("@")[0]
+        if len(username) < 6:
+            username = username + "x" * (6 - len(username))
+        password = username.capitalize() + "!123"
+    else:
+        is_strong, pw_msg = validate_password_strength(password)
+        if not is_strong:
+            return jsonify({"error": pw_msg}), 400
 
     conn = get_connection()
     cursor = conn.cursor()

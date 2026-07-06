@@ -192,3 +192,39 @@ CREATE TABLE IF NOT EXISTS designations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- ==================== PERFORMANCE OPTIMIZATION INDEXES ====================
+
+-- Index for user role queries
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- Index for employees table user_id join keys
+CREATE INDEX IF NOT EXISTS idx_employees_user_id ON employees(user_id);
+
+-- Index for employee attendance records
+CREATE INDEX IF NOT EXISTS idx_attendance_employee_id ON attendance(employee_id);
+
+-- Indexes for employee leaves (by employee and status)
+CREATE INDEX IF NOT EXISTS idx_leaves_employee_id ON leaves(employee_id);
+CREATE INDEX IF NOT EXISTS idx_leaves_status ON leaves(status);
+
+-- Index for job applications
+CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id);
+
+-- Index for conversation membership lookups
+CREATE INDEX IF NOT EXISTS idx_conversation_members_user_id ON conversation_members(user_id);
+
+-- Indexes for chat message history retrievals (single and composite)
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent_at ON messages(conversation_id, sent_at);
+
+-- Index for client table user_id join keys
+CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
+
+-- Index for client interactions
+CREATE INDEX IF NOT EXISTS idx_client_interactions_client_id ON client_interactions(client_id);
+
+-- Indexes for meetings scheduled times and client keys
+CREATE INDEX IF NOT EXISTS idx_meetings_client_id ON meetings(client_id);
+CREATE INDEX IF NOT EXISTS idx_meetings_scheduled_at ON meetings(scheduled_at);
+
