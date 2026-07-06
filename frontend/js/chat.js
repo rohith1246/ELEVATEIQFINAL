@@ -330,13 +330,17 @@ function renderDMUsersList(list) {
         return;
     }
     list.forEach(u => {
+        const initials = u.name ? u.name.charAt(0).toUpperCase() : "?";
         container.innerHTML += `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px 14px; border-radius:10px;">
-                <div>
-                    <div style="font-weight:600; font-size:13.5px; color:#fff;">${u.name}</div>
-                    <div style="font-size:11px; color:var(--ink-soft);">${u.email}</div>
+            <div class="user-row">
+                <div style="display:flex; align-items:center; min-width: 0;">
+                    <div class="user-avatar">${initials}</div>
+                    <div style="min-width: 0; text-align: left;">
+                        <div class="user-name" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${u.name}</div>
+                        <div class="user-email" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${u.email}</div>
+                    </div>
                 </div>
-                <button onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" class="btn-primary" style="padding:6px 12px; font-size:11px;">Chat</button>
+                <button onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" class="btn-chat-action">Chat</button>
             </div>
         `;
     });
