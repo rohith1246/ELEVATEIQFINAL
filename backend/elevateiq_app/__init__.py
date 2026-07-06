@@ -48,6 +48,13 @@ def create_app():
         """
         return send_from_directory(app.static_folder, "index.html")
 
+    @app.route("/favicon.ico")
+    def favicon():
+        """
+        Serves the application favicon from static folder.
+        """
+        return send_from_directory(app.static_folder, "images/logo.png")
+
     # Lazy import and register Blueprints to prevent circular dependency issues
     from .routes.auth_routes import auth_bp
     from .routes.crm_routes import crm_bp
