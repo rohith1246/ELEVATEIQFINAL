@@ -836,10 +836,172 @@ footer{ position:relative; padding-top:120px; border-top:1px solid var(--line); 
   border-color: rgba(37, 99, 235, 0.5) !important;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 
               0 0 40px rgba(37, 99, 235, 0.2) !important;
+}/* ============================================================
+   25. PREMIUM BROWSER MOCKUP DEVICE FRAME
+   ============================================================ */
+.browser-mockup {
+  border: 1px solid var(--glass-border);
+  background: #0b1220;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 150, 255, 0.05);
+  margin-top: 40px;
+}
+.browser-header {
+  height: 44px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+.browser-dots {
+  display: flex;
+  gap: 6px;
+}
+.browser-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.browser-dot.red { background: #ef4444; }
+.browser-dot.yellow { background: #eab308; }
+.browser-dot.green { background: #22c55e; }
+.browser-address {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+}
+.browser-body {
+  position: relative;
+  background: #020617;
+  padding: 0;
+  overflow: hidden;
 }
 
+/* ============================================================
+   26. ENTERPRISE PRICING PLAN DESIGNS
+   ============================================================ */
+.pricing-section {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  align-items: stretch;
+}
+@media (max-width: 960px) {
+  .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+}
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  background: var(--card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  transition: all 0.4s var(--ease);
+  position: relative;
+}
+.pricing-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(0, 150, 255, 0.3);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+}
+.pricing-card.recommended {
+  border-color: var(--primary);
+  background: linear-gradient(180deg, rgba(255, 122, 0, 0.05), rgba(15, 23, 36, 0.7) 350px);
+}
+.pricing-card.recommended::after {
+  content: 'MOST POPULAR';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--primary);
+  background: rgba(255, 122, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+.pricing-card h3 {
+  font-size: 20px;
+  color: white;
+  margin-bottom: 8px;
+}
+.pricing-card .price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: white;
+  margin: 16px 0;
+  display: flex;
+  align-items: baseline;
+}
+.pricing-card .price span {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 6px;
+}
+.pricing-card .features-list {
+  display: grid;
+  gap: 14px;
+  margin: 28px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.pricing-card .features-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pricing-card .features-list li svg {
+  width: 16px;
+  height: 16px;
+  color: var(--success);
+}
+.pricing-card .btn-pricing {
+  margin-top: auto;
+  width: 100%;
+}
 
-
-
-
+/* ============================================================
+   27. INTERACTIVE RADIO MODE SELECTIONS
+   ============================================================ */
+.mode-card {
+  position: relative;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.01);
+  transition: all 0.3s var(--ease);
+}
+.mode-card:hover {
+  border-color: rgba(255,255,255,0.2) !important;
+  background: rgba(255,255,255,0.03) !important;
+}
+.mode-card.selected {
+  border-color: var(--primary) !important;
+  background: rgba(255, 122, 0, 0.05) !important;
+  box-shadow: 0 0 15px rgba(255, 122, 0, 0.1);
+}
+.mode-card input[type="radio"] {
+  cursor: pointer;
+}
 

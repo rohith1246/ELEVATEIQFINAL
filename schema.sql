@@ -215,6 +215,7 @@ CREATE TABLE IF NOT EXISTS course_enrollments (
     price_paid DECIMAL(10,2) NOT NULL,
     enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) DEFAULT 'Active', -- 'Active', 'Completed', 'Cancelled'
+    mode VARCHAR(20) DEFAULT 'Online',
     UNIQUE (user_id, course_id)
 );
 

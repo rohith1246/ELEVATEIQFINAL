@@ -299,11 +299,7 @@
 
     grid.querySelectorAll(".enroll-btn").forEach(b=> b.addEventListener("click", ()=>{
       const courseId = b.getAttribute("data-id");
-      if (localStorage.getItem("edutech_token")) {
-        window.location.href = `payment.html?course_id=${courseId}`;
-      } else {
-        window.location.href = `login.html?redirect=payment.html?course_id=${courseId}`;
-      }
+      window.openCourseDetail(courseId);
     }));
 
     if (hasGSAP && typeof ScrollTrigger !== "undefined") {
@@ -336,6 +332,7 @@
       activeCourses = COURSES;
     }
 
+    window.activeCoursesList = activeCourses;
     renderCourses(activeCourses, true);
 
     const search = document.getElementById("courseSearch");
@@ -835,6 +832,180 @@
     setupReveal();
   }
   initPortal();
+
+
+  /* ============================================================
+     15. COURSE DETAIL MODAL & ONLINE/OFFLINE SELECTIONS
+     ============================================================ */
+
+  const COURSE_DETAILS = {
+    'full stack web development': {
+      desc: 'Master the complete web stack from frontend UI to backend databases. Learn React, Node.js, Express, PostgreSQL, and deploy live production systems.',
+      syllabus: [
+        'Frontend Programming: HTML5, CSS3 Grid, Flexbox, Javascript ES6+',
+        'React UI Applications: Hooks, Context, State Management, Responsive Layouts',
+        'Backend Web Services: Node.js, Express, REST APIs, JSON Web Tokens',
+        'Database Architecture: PostgreSQL schema design, indexing, and connection pools',
+        'Cloud Deployment: AWS EC2 hosting, CI/CD pipelines, Docker containers'
+      ]
+    },
+    'python for backend engineers': {
+      desc: 'Deep dive into server-side engineering with Python. Write clean, scalable scripts, connect to SQL databases, and build enterprise REST APIs.',
+      syllabus: [
+        'Python Basics & OOP: Classes, objects, decorators, generators',
+        'Web APIs: Django REST Framework and FastAPI architectures',
+        'Data Integration: SQL databases, queries, and ORM setups',
+        'Background Task Runners: Celery queues and Redis caches',
+        'Testing: Pytest framework, mock assertions, unit test structures'
+      ]
+    },
+    'java enterprise full stack': {
+      desc: 'Build secure, scalable microservices with Java and Spring Boot. Learn to architecture high-volume backend APIs for global corporations.',
+      syllabus: [
+        'Java Core: Collections, Multi-threading, Streams API, design patterns',
+        'Spring Framework: Spring Boot, Dependency Injection, Spring MVC',
+        'Spring Data & Security: JPA, Hibernate ORM, OAuth2 protection',
+        'Microservices: Spring Cloud Eureka, API Gateway, communication patterns',
+        'Enterprise Tools: Maven, Gradle builds, JUnit unit testing'
+      ]
+    },
+    'ai & machine learning bootcamp': {
+      desc: 'Train predictive algorithms, neural networks, and computer vision models. Master the core mathematics and frameworks behind modern AI systems.',
+      syllabus: [
+        'Mathematics for AI: Linear Algebra, Calculus, Statistics, Probability',
+        'Data Analysis: NumPy, Pandas, Matplotlib visualizations',
+        'Machine Learning: Regression, Clustering, Decision Trees, Scikit-learn',
+        'Deep Learning: Neural Networks, TensorFlow, PyTorch models',
+        'Generative AI: LLM fine-tuning, prompt engineering pipelines'
+      ]
+    },
+    'data science professional': {
+      desc: 'Convert raw information into strategic company insights. Master statistical computing, data scraping, and analytics pipelines.',
+      syllabus: [
+        'Statistical Analysis: Distributions, hypothesis testing, regression models',
+        'Data Wrangling: SQL databases, Pandas pipelines, ETL workflows',
+        'Data Visualization: Tableau dashboards, Seaborn statistical plots',
+        'Predictive Modeling: Forecasting models, time-series projections',
+        'Big Data Tools: Apache Spark engine, Hadoop file systems'
+      ]
+    },
+    'cloud & devops engineering': {
+      desc: 'Deploy, scale, and secure high-availability cloud setups. Automate pipeline testing, builds, and infrastructure deployments.',
+      syllabus: [
+        'Linux Administration: Command-line utilities, bash scripting, permission rules',
+        'Infrastructure as Code (IaC): Terraform schema design, AWS cloud setup',
+        'Containerization: Docker container packaging, Kubernetes clusters',
+        'CI/CD Pipelines: GitHub Actions automation, Jenkins workflows',
+        'Monitoring: Prometheus logs, Grafana visualization dashboards'
+      ]
+    },
+    'aws solutions architect prep': {
+      desc: 'Comprehensive training for the AWS Solutions Architect Associate exam. Architect secure, resilient, and cost-effective cloud services.',
+      syllabus: [
+        'AWS Infrastructure: VPC setups, subnets, routing tables, security groups',
+        'Compute & Storage: EC2 instances, S3 buckets, EBS storage systems',
+        'Databases: RDS setups, DynamoDB nosql configurations',
+        'High Availability: Auto-scaling, Elastic Load Balancer (ELB)',
+        'Security: IAM policies, KMS encryption keys, CloudTrail audits'
+      ]
+    },
+    'cyber security fundamentals': {
+      desc: 'Inspect network protocols, identify vulnerability vectors, and build defensive shielding blocks against modern cyber threats.',
+      syllabus: [
+        'Networking Core: TCP/IP configurations, subnet routing, DNS security',
+        'Ethical Hacking: Port scanning, Wireshark packet capture analysis',
+        'Defensive Architectures: Firewalls, IDS/IPS tools, VPN shielding',
+        'App Security: OWASP Top 10 web vulnerabilities, SQL injections',
+        'Compliance: ISO 27001 models, GDPR rules, security audit checklists'
+      ]
+    },
+    'ui/ux design professional': {
+      desc: 'Design beautiful, user-centered application prototypes. Research candidate user behaviors and structure high-fidelity components.',
+      syllabus: [
+        'Design Foundations: Grid guidelines, visual hierarchy, typography pairings',
+        'Prototyping Tools: Figma vector editor, components, auto-layout lists',
+        'User Research: User persona blueprints, interviews, journey maps',
+        'Wireframing: Low-fidelity sketches, high-fidelity UI components',
+        'Design Systems: Reusable assets, tokens, developer handoff assets'
+      ]
+    }
+  };
+
+  let currentlySelectedCourseId = null;
+
+  window.openCourseDetail = function(courseId) {
+    const course = window.activeCoursesList ? window.activeCoursesList.find(c => c.id === Number(courseId)) : null;
+    if (!course) return;
+
+    currentlySelectedCourseId = courseId;
+    document.getElementById("modalCourseTitle").textContent = course.title;
+    document.getElementById("modalCourseLevel").textContent = course.level;
+    document.getElementById("modalCoursePrice").textContent = "₹" + course.price.toLocaleString("en-IN");
+    
+    // Set custom icon SVG
+    const iconBox = document.getElementById("modalCourseIcon");
+    if (iconBox) {
+      iconBox.innerHTML = svgIcon(ICONS[course.icon] || ICONS['layers']);
+    }
+
+    // Lookup descriptions & details
+    const key = course.title.toLowerCase().trim();
+    const details = COURSE_DETAILS[key] || {
+      desc: 'Accelerated technical career path with hands-on labs, 1:1 mentor code reviews, and direct hiring pipelines.',
+      syllabus: [
+        'Module 1: Fundamental Concepts & Tools',
+        'Module 2: Advanced Projects & Frameworks',
+        'Module 3: Placement Prep & Mock Interviews'
+      ]
+    };
+
+    document.getElementById("modalCourseDesc").textContent = details.desc;
+    document.getElementById("modalCourseSyllabus").innerHTML = details.syllabus.map(s => `<li>${s}</li>`).join("");
+
+    // Reset radio option visual check class states
+    const onlineRadio = document.querySelector('input[name="enrollMode"][value="Online"]');
+    if (onlineRadio) {
+      onlineRadio.checked = true;
+    }
+    toggleModeSelection('Online');
+
+    if (typeof openModal === "function") openModal("courseDetailModal");
+  };
+
+  window.toggleModeSelection = function(mode) {
+    const onlineLbl = document.getElementById("lblModeOnline");
+    const offlineLbl = document.getElementById("lblModeOffline");
+    if (!onlineLbl || !offlineLbl) return;
+    
+    if (mode === 'Online') {
+      onlineLbl.classList.add("selected");
+      onlineLbl.style.borderColor = "var(--primary)";
+      onlineLbl.style.background = "rgba(255, 122, 0, 0.05)";
+      
+      offlineLbl.classList.remove("selected");
+      offlineLbl.style.borderColor = "var(--line)";
+      offlineLbl.style.background = "rgba(255,255,255,0.01)";
+    } else {
+      offlineLbl.classList.add("selected");
+      offlineLbl.style.borderColor = "var(--primary)";
+      offlineLbl.style.background = "rgba(255, 122, 0, 0.05)";
+      
+      onlineLbl.classList.remove("selected");
+      onlineLbl.style.borderColor = "var(--line)";
+      onlineLbl.style.background = "rgba(255,255,255,0.01)";
+    }
+  };
+
+  window.proceedToEnroll = function() {
+    if (!currentlySelectedCourseId) return;
+    const selectedMode = document.querySelector('input[name="enrollMode"]:checked').value;
+    
+    if (localStorage.getItem("edutech_token")) {
+      window.location.href = `payment.html?course_id=${currentlySelectedCourseId}&mode=${selectedMode}`;
+    } else {
+      window.location.href = `login.html?redirect=payment.html?course_id=${currentlySelectedCourseId}%26mode=${selectedMode}`;
+    }
+  };
 
 
   /* ============================================================

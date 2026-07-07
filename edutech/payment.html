@@ -278,7 +278,11 @@
         <span>Tax (18% GST inclusive)</span>
         <span id="priceTax">₹0</span>
       </div>
-      <div class="summary-row total">
+      <div class="summary-row" style="border-top:1px dashed var(--line); padding-top:14px; margin-top:14px;">
+        <span>Learning Mode</span>
+        <span id="selectedModeText" style="color:var(--primary); font-weight:600;">Online</span>
+      </div>
+      <div class="summary-row total" style="margin-top:12px; padding-top:12px;">
         <span>Total Payable</span>
         <span id="priceTotal">₹0</span>
       </div>
@@ -347,7 +351,7 @@
     </div>
     <h1 style="border:none; padding:0; margin-bottom:12px;">Payment Approved</h1>
     <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:24px;">
-      You have successfully enrolled in <strong id="successCourseTitle" style="color:white;"></strong>. A tax invoice receipt has been compiled for your transaction.
+      You have successfully enrolled in <strong id="successCourseTitle" style="color:white;"></strong> (<strong id="successCourseMode" style="color:var(--primary);"></strong>). A tax invoice receipt has been compiled for your transaction.
     </p>
     
     <div style="display:flex; flex-direction:column; gap:12px;">
@@ -375,9 +379,14 @@
     window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.href);
   }
 
-  // Parse course ID from query parameters
+  // Parse course ID & learning mode from query parameters
   const params = new URLSearchParams(window.location.search);
   const courseId = Number(params.get("course_id"));
+  const selectedMode = params.get("mode") || "Online";
+
+  if (document.getElementById("selectedModeText")) {
+    document.getElementById("selectedModeText").textContent = selectedMode;
+  }
 
   if (!courseId) {
     alert("Error: No course ID provided.");
@@ -474,7 +483,7 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ course_id: courseId })
+        body: JSON.stringify({ course_id: courseId, mode: selectedMode })
       });
       const data = await response.json();
 
@@ -484,6 +493,9 @@
 
       // Step 2: Display Success Animation & dynamic Invoice print link
       document.getElementById("successCourseTitle").textContent = selectedCourse.title;
+      if (document.getElementById("successCourseMode")) {
+        document.getElementById("successCourseMode").textContent = selectedMode;
+      }
       document.getElementById("btnInvoiceLink").href = `invoice.html?enrollment_id=${data.enrollment_id}`;
       document.getElementById("successOverlay").classList.add("show");
     } catch(err) {

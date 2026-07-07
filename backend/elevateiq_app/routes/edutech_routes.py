@@ -56,7 +56,7 @@ def get_my_courses():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
-            SELECT c.*, e.price_paid, e.enrolled_at, e.status as enrollment_status, e.id as enrollment_id
+            SELECT c.*, e.price_paid, e.enrolled_at, e.status as enrollment_status, e.id as enrollment_id, e.mode
             FROM courses c
             JOIN course_enrollments e ON c.id = e.course_id
             WHERE e.user_id = %s
@@ -92,9 +92,13 @@ def enroll_in_course():
     
     data = request.json or {}
     course_id = data.get("course_id")
+    mode = data.get("mode", "Online").strip()
     if not course_id:
         return jsonify({"error": "course_id is required"}), 400
     
+    if mode not in ["Online", "Offline"]:
+        mode = "Online"
+        
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -115,9 +119,9 @@ def enroll_in_course():
         
         # Insert enrollment
         cursor.execute("""
-            INSERT INTO course_enrollments (user_id, course_id, price_paid)
-            VALUES (%s, %s, %s) RETURNING id
-        """, (user['id'], course_id, price))
+            INSERT INTO course_enrollments (user_id, course_id, price_paid, mode)
+            VALUES (%s, %s, %s, %s) RETURNING id
+        """, (user['id'], course_id, price, mode))
         enrollment_id = cursor.fetchone()[0]
         conn.commit()
         return jsonify({"message": "Enrolled successfully", "price_paid": price, "enrollment_id": enrollment_id}), 201
@@ -428,7 +432,7 @@ def get_invoice(enrollment_id):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
-            SELECT e.id, e.price_paid, e.enrolled_at, e.status,
+            SELECT e.id, e.price_paid, e.enrolled_at, e.status, e.mode,
                    u.name as student_name, u.email as student_email,
                    c.title as course_title, c.duration as course_duration
             FROM course_enrollments e
