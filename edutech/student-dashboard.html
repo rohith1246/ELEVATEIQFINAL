@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard — ElevateIQ</title>
+<link rel="shortcut icon" href="logo.png" type="image/png">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --primary: #ff7a00;
+    --secondary: #0096ff;
+    --accent: #ff8a00;
+    --success: #22C55E;
+    --bg: #030712;
+    --bg-soft: #080f25;
+    --card: rgba(15, 23, 42, 0.45);
+    --card-hover: rgba(20, 35, 65, 0.65);
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --line: rgba(148, 163, 184, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --orange-glow: rgba(255, 122, 0, 0.15);
+    --blue-glow: rgba(0, 150, 255, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Backdrop gradient effects */
+  .bg-canvas {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 50%, var(--bg-soft) 0%, var(--bg) 100%);
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.08;
+  }
+  .orb1 { top: -10%; left: -10%; width: 45%; height: 45%; background: var(--primary); }
+  .orb2 { bottom: -10%; right: -10%; width: 50%; height: 50%; background: var(--secondary); }
+
+  /* Navigation Header */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(3, 7, 18, 0.6);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: white;
+  }
+  .logo img {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+  }
+  .logo-title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+  .logo-title h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: white;
+  }
+  .logo-title span {
+    font-size: 8px;
+    color: #3FD0FF;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .btn-logout {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+
+  /* Main Container */
+  .dash-container {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px;
+    gap: 24px;
+  }
+
+  /* Sidebar Navigation */
+  .sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    gap: 8px;
+  }
+
+  /* Sidebar Profile Box */
+  .profile-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: white;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+  .profile-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .profile-info h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .profile-info p {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+  }
+  .sidebar-link:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .sidebar-link.active {
+    color: white;
+    background: linear-gradient(135deg, rgba(255, 122, 0, 0.15), rgba(0, 150, 255, 0.12));
+    border: 1px solid rgba(255, 122, 0, 0.15);
+    box-shadow: 0 4px 15px -4px var(--orange-glow);
+  }
+  .sidebar-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Content Area */
+  .dash-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .dash-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .dash-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .dash-header p {
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  .btn-header-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    color: white;
+    font-weight: 500;
+    border-radius: 10px;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-header-action:hover {
+    background: var(--card-hover);
+    border-color: rgba(255, 122, 0, 0.25);
+  }
+
+  /* Section Panels */
+  .section-panel {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .section-panel.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Glass Card Component */
+  .glass-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* Dynamic Dashboard Overview Layout */
+  .welcome-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .welcome-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(20, 35, 65, 0.4) 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .welcome-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .welcome-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .progress-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .progress-header span {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .progress-header .val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 4px;
+    transition: width 1s ease-out;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  .progress-meta strong {
+    color: white;
+  }
+
+  /* Grid of 3 Main Cards */
+  .grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .learning-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .learning-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 122, 0, 0.2);
+    background: var(--card-hover);
+  }
+  .learning-card-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  .learning-card-header .tag {
+    color: #ff9100;
+  }
+  .learning-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: white;
+  }
+  .learning-card-box {
+    background: rgba(0,0,0,0.15);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .learning-card-box p {
+    color: var(--muted);
+    margin-top: 4px;
+    font-size: 11px;
+  }
+  .btn-continue-learning {
+    width: 100%;
+    padding: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.2s;
+    box-shadow: 0 4px 12px rgba(255, 122, 0, 0.15);
+  }
+  .btn-continue-learning:hover {
+    opacity: 0.95;
+  }
+
+  .snapshot-item {
+    margin-bottom: 14px;
+  }
+  .snapshot-item label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .snapshot-item .val {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: white;
+  }
+
+  .progress-list-item {
+    margin-bottom: 16px;
+  }
+  .progress-list-item:last-child {
+    margin-bottom: 0;
+  }
+  .progress-list-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .progress-list-header span {
+    color: var(--muted);
+  }
+  .progress-list-header strong {
+    color: white;
+  }
+  .progress-list-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-list-fill {
+    height: 100%;
+    background: var(--secondary);
+    border-radius: 2px;
+  }
+
+  /* Grid of Columns */
+  .grid-two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  /* Tables styling */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(15, 23, 36, 0.2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+  }
+  th {
+    background: rgba(255, 255, 255, 0.01);
+    padding: 12px 14px;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  /* Course grid catalog */
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .course-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+  }
+  .course-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 122, 0, 0.25);
+    background: var(--card-hover);
+    box-shadow: 0 10px 30px -10px var(--orange-glow);
+  }
+  .course-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .course-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 122, 0, 0.1);
+    border: 1px solid rgba(255, 122, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .course-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: white;
+  }
+  .course-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+  }
+  .course-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    margin-top: auto;
+  }
+  .course-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge.beginner { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .badge.intermediate { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+  .badge.advanced { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+  .badge.active { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .badge.pending { background: rgba(234, 179, 8, 0.1); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.2); }
+  .badge.graded { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+
+  /* Forms & Buttons */
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 13.5px;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--secondary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.2);
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover {
+    opacity: 0.95;
+  }
+  .btn-ghost {
+    padding: 10px 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.01);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Modals */
+  .modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal.open {
+    display: flex;
+  }
+  .modal-content {
+    background: #0f172a;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.5);
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 20px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .modal-close:hover {
+    color: white;
+  }
+
+  /* Quiz Interactive Styles */
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quiz-option:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--secondary);
+  }
+  .quiz-option.selected {
+    background: rgba(0, 150, 255, 0.1);
+    border-color: var(--secondary);
+    color: white;
+  }
+  .quiz-option span {
+    font-weight: 700;
+    color: var(--secondary);
+  }
+
+  /* Placement Tracker Roadmap */
+  .roadmap-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 40px 20px;
+    margin-top: 20px;
+  }
+  .roadmap-line {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    right: 20px;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    z-index: 1;
+    transform: translateY(-50%);
+  }
+  .roadmap-progress-line {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    z-index: 1;
+    transform: translateY(-50%);
+    transition: width 0.8s ease-in-out;
+  }
+  .roadmap-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+  .roadmap-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0f172a;
+    border: 2px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+  .roadmap-node.active .roadmap-circle {
+    border-color: var(--primary);
+    color: white;
+    background: var(--primary);
+    box-shadow: 0 0 15px var(--orange-glow);
+  }
+  .roadmap-node.completed .roadmap-circle {
+    border-color: var(--secondary);
+    color: white;
+    background: var(--secondary);
+    box-shadow: 0 0 15px var(--blue-glow);
+  }
+  .roadmap-label {
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .roadmap-node.active .roadmap-label, .roadmap-node.completed .roadmap-label {
+    color: white;
+    font-weight: 600;
+  }
+
+  /* Chart Placeholder Grid */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    align-items: end;
+    height: 120px;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  .chart-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-bar {
+    width: 100%;
+    background: linear-gradient(180deg, var(--secondary), rgba(0, 150, 255, 0.1));
+    border-radius: 4px;
+    transition: height 0.8s ease-in-out;
+  }
+  .chart-bar.fs {
+    background: linear-gradient(180deg, var(--primary), rgba(255, 122, 0, 0.1));
+  }
+  .chart-day {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* Support Chat layout */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    height: 480px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    background: rgba(15, 23, 36, 0.2);
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(0,0,0,0.15);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .chat-msgs {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-msg {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .chat-msg.student {
+    align-self: flex-end;
+    background: var(--secondary);
+    color: white;
+    border-bottom-right-radius: 2px;
+  }
+  .chat-msg.support {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border-bottom-left-radius: 2px;
+    border: 1px solid var(--glass-border);
+  }
+  .chat-msg-time {
+    display: block;
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    text-align: right;
+  }
+  .chat-input-row {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid var(--line);
+    background: rgba(0,0,0,0.15);
+  }
+  .chat-input-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.2);
+    color: white;
+    outline: none;
+    font-size: 13.5px;
+  }
+  .chat-input-row input:focus {
+    border-color: var(--secondary);
+  }
+
+  /* Notifications Item */
+  .notice-item {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.01);
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .notice-item:hover {
+    background: rgba(255,255,255,0.02);
+    border-color: var(--line);
+  }
+  .notice-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .notice-date {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: normal;
+  }
+  .notice-content {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Dynamic Invoice & Certificate Preview Window */
+  .cert-print-box {
+    border: 8px double rgba(255, 122, 0, 0.3);
+    padding: 40px;
+    border-radius: 8px;
+    background: radial-gradient(circle, #0f1c30 0%, #080f1e 100%);
+    color: white;
+    text-align: center;
+    font-family: 'Georgia', serif;
+  }
+  .cert-print-box h1 {
+    font-size: 26px;
+    color: var(--primary);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+  .cert-print-box h3 {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+  .cert-print-box .cert-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    margin: 20px 0;
+    text-decoration: underline;
+  }
+  .cert-print-box p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 30px;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<nav>
+  <a href="/edutech/" class="logo">
+    <img src="logo.png" alt="ElevateIQ Logo">
+    <div class="logo-title">
+      <h1>ElevateIQ</h1>
+      <span>STUDENT LMS</span>
+    </div>
+  </a>
+  <div class="nav-right">
+    <button class="btn-header-action" onclick="switchTab('messages')"><i data-lucide="message-square" style="width:16px;height:16px;color:var(--secondary)"></i> AI Mentor</button>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+</nav>
+
+<div class="dash-container">
+  <!-- Sidebar Menu -->
+  <div class="sidebar">
+    <div class="profile-box">
+      <div class="avatar" id="sidebarAvatar">-</div>
+      <div class="profile-info">
+        <h3 id="sidebarName">-</h3>
+        <p id="sidebarEmail">-</p>
+      </div>
+    </div>
+    
+    <a class="sidebar-link" id="link_dashboard" onclick="switchTab('dashboard')">
+      <i data-lucide="layout-dashboard" class="sidebar-icon"></i>
+      <span>Dashboard</span>
+    </a>
+    <a class="sidebar-link" id="link_my_courses" onclick="switchTab('my_courses')">
+      <i data-lucide="graduation-cap" class="sidebar-icon"></i>
+      <span>My Courses</span>
+    </a>
+    <a class="sidebar-link" id="link_live_classes" onclick="switchTab('live_classes')">
+      <i data-lucide="video" class="sidebar-icon"></i>
+      <span>Live Classes</span>
+    </a>
+    <a class="sidebar-link" id="link_assignments" onclick="switchTab('assignments')">
+      <i data-lucide="clipboard-list" class="sidebar-icon"></i>
+      <span>Assignments</span>
+    </a>
+    <a class="sidebar-link" id="link_tests" onclick="switchTab('tests')">
+      <i data-lucide="brain" class="sidebar-icon"></i>
+      <span>Tests</span>
+    </a>
+    <a class="sidebar-link" id="link_resources" onclick="switchTab('resources')">
+      <i data-lucide="folder-open" class="sidebar-icon"></i>
+      <span>Resources</span>
+    </a>
+    <a class="sidebar-link" id="link_certificates" onclick="switchTab('certificates')">
+      <i data-lucide="award" class="sidebar-icon"></i>
+      <span>Certificates</span>
+    </a>
+    <a class="sidebar-link" id="link_placement" onclick="switchTab('placement')">
+      <i data-lucide="compass" class="sidebar-icon"></i>
+      <span>Placement Tracker</span>
+    </a>
+    <a class="sidebar-link" id="link_messages" onclick="switchTab('messages')">
+      <i data-lucide="message-square" class="sidebar-icon"></i>
+      <span>AI Mentor</span>
+    </a>
+    <a class="sidebar-link" id="link_notifications" onclick="switchTab('notifications')">
+      <i data-lucide="bell" class="sidebar-icon"></i>
+      <span>Notifications</span>
+    </a>
+  </div>
+
+  <!-- Content Workspace -->
+  <div class="dash-content">
+    <div class="dash-header-row">
+      <div class="dash-header">
+        <h1 id="dashTitle">Dashboard</h1>
+        <p id="dashSub">LMS statistics and track analytics overview</p>
+      </div>
+    </div>
+
+    <div id="panelContainer">
+      
+      <!-- ==================== DASHBOARD PANEL ==================== -->
+      <div class="section-panel" id="panel_dashboard">
+        <div class="welcome-row">
+          <div class="welcome-card">
+            <h2 id="welcomeGreeting">Welcome, Student 👋</h2>
+            <p>Welcome back — let's keep momentum. Your next milestone is ready. Continue where you left off.</p>
+          </div>
+          
+          <div class="progress-card">
+            <div class="progress-header">
+              <span>Overall Progress</span>
+              <span class="val" id="overallProgressPct">0%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="overallProgressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-meta">
+              <span>Streak: <strong id="streakDaysVal">0 days</strong></span>
+              <span>Next up: <strong id="nextMilestoneVal">Class review</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-three">
+          <!-- Continue Learning Card -->
+          <div class="learning-card">
+            <div class="learning-card-header">
+              <span>Continue Learning</span>
+              <span class="tag">In Progress</span>
+            </div>
+            <h3 id="contCourseTitle">Technical Cohort</h3>
+            <div class="learning-card-box">
+              <strong id="contActiveWeek">Week 1</strong>
+              <p id="contLastSession">Last session: Active • Mentor review pending</p>
+            </div>
+            <button class="btn-continue-learning" onclick="switchTab('my_courses')">Continue Learning &rarr;</button>
+          </div>
+
+          <!-- Progress Snapshot -->
+          <div class="learning-card">
+            <div class="learning-card-header">
+              <span>Progress Snapshot</span>
+              <span style="color:var(--secondary)">Weekly</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px; margin: 12px 0;">
+              <div class="snapshot-item">
+                <label>Overall Progress</label>
+                <div class="val" id="snapOverallVal">0% completion</div>
+              </div>
+              <div class="snapshot-item">
+                <label>Placement momentum</label>
+                <div class="val" id="snapPlacementVal">Stage: Initial Setup</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Course Progress -->
+          <div class="learning-card">
+            <div class="learning-card-header">
+              <span>Course Progress</span>
+              <span id="activeTracksLabel">0 Tracks</span>
+            </div>
+            <div id="courseProgressList" style="display:flex; flex-direction:column; gap:12px; margin-top: 10px;">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-two-cols">
+          <!-- Upcoming Live Classes -->
+          <div class="glass-card" style="margin-bottom:0;">
+            <h3 style="font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="video" style="width:16px;height:16px;color:var(--secondary)"></i> Upcoming Live Classes (Next 7 Days)
+            </h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Topic</th>
+                    <th>Platform</th>
+                    <th>Date & Time</th>
+                  </tr>
+                </thead>
+                <tbody id="dashLiveTableBody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pending Assignments / Progress Chart -->
+          <div class="glass-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="activity" style="width:16px;height:16px;color:var(--primary)"></i> Weekly Progress Chart
+              </h3>
+              <span style="font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">Activity Status</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--glass-border); border-radius:12px; padding:16px;">
+              <div class="chart-grid">
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height: 40px;"></div><div class="chart-day">Mon</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar fs" style="height: 75px;"></div><div class="chart-day">Tue</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height: 30px;"></div><div class="chart-day">Wed</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar fs" style="height: 90px;"></div><div class="chart-day">Thu</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height: 55px;"></div><div class="chart-day">Fri</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar fs" style="height: 20px;"></div><div class="chart-day">Sat</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height: 10px;"></div><div class="chart-day">Sun</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== MY COURSES PANEL ==================== -->
+      <div class="section-panel" id="panel_my_courses">
+        <div class="course-grid" id="myCoursesGrid">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- ==================== LIVE CLASSES PANEL ==================== -->
+      <div class="section-panel" id="panel_live_classes">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course Program</th>
+                <th>Class Topic</th>
+                <th>Platform</th>
+                <th>Scheduled Date & Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="liveClassesTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== ASSIGNMENTS PANEL ==================== -->
+      <div class="section-panel" id="panel_assignments">
+        <div class="glass-card" style="padding:20px; margin-bottom:20px; background:rgba(0,0,0,0.15);">
+          <p style="color:var(--muted); font-size:13.5px; line-height:1.5;">Review the technical coursework tasks assigned by your mentors. Submit your project code repository URLs below to trigger reviews.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Assignment</th>
+                <th>Course Track</th>
+                <th>Due Date</th>
+                <th>Submission Status</th>
+                <th>Grade</th>
+                <th>Mentor Feedback</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentsTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TESTS PANEL ==================== -->
+      <div class="section-panel" id="panel_tests">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Quiz Topic</th>
+                <th>Course Track</th>
+                <th>Duration</th>
+                <th>Attempt Status</th>
+                <th>Score Achieved</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="quizzesTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== RESOURCES PANEL ==================== -->
+      <div class="section-panel" id="panel_resources">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Resource Asset Name</th>
+                <th>Course Catalog</th>
+                <th>Asset Type</th>
+                <th>Download Link</th>
+              </tr>
+            </thead>
+            <tbody id="resourcesTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== CERTIFICATES PANEL ==================== -->
+      <div class="section-panel" id="panel_certificates">
+        <div class="glass-card" style="padding:20px; margin-bottom:20px; background:rgba(0,0,0,0.15);">
+          <p style="color:var(--muted); font-size:13.5px; line-height:1.5;">Upon achieving 100% progress metrics in your technical tracks, your verified academic certificates will be issued here instantly.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course Certificate</th>
+                <th>Enrolled Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="certificatesTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== PLACEMENT TRACKER PANEL ==================== -->
+      <div class="section-panel" id="panel_placement">
+        <div class="glass-card">
+          <h3 style="font-size:16px; font-weight:600; margin-bottom:10px;">Placement Funnel Milestones</h3>
+          <p style="color:var(--muted); font-size:13.5px; margin-bottom:20px;">Follow your verified career counseling stages. We support your prep until you receive an offer!</p>
+          
+          <div class="roadmap-container">
+            <div class="roadmap-line"></div>
+            <div class="roadmap-progress-line" id="placementProgressLine" style="width: 0%;"></div>
+            
+            <div class="roadmap-node" id="node_profile">
+              <div class="roadmap-circle">1</div>
+              <div class="roadmap-label">Profile Setup</div>
+            </div>
+            <div class="roadmap-node" id="node_resume">
+              <div class="roadmap-circle">2</div>
+              <div class="roadmap-label">Resume Review</div>
+            </div>
+            <div class="roadmap-node" id="node_mock">
+              <div class="roadmap-circle">3</div>
+              <div class="roadmap-label">Mock Interview Prep</div>
+            </div>
+            <div class="roadmap-node" id="node_assessment">
+              <div class="roadmap-circle">4</div>
+              <div class="roadmap-label">Assessments</div>
+            </div>
+            <div class="roadmap-node" id="node_hr">
+              <div class="roadmap-circle">5</div>
+              <div class="roadmap-label">HR Round</div>
+            </div>
+            <div class="roadmap-node" id="node_placed">
+              <div class="roadmap-circle">6</div>
+              <div class="roadmap-label">Placed!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-two-cols">
+          <div class="glass-card" style="margin-bottom:0;">
+            <h4 style="font-size:14px; font-weight:600; color:var(--primary); margin-bottom:12px;">Active Stage Description</h4>
+            <p style="font-size:13.5px; line-height:1.6;" id="placementStageDesc">-</p>
+          </div>
+          <div class="glass-card" style="margin-bottom:0;">
+            <h4 style="font-size:14px; font-weight:600; color:var(--secondary); margin-bottom:12px;">Next Recommended Steps</h4>
+            <p style="font-size:13.5px; line-height:1.6;" id="placementNextStepsDesc">-</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== MESSAGES PANEL ==================== -->
+      <div class="section-panel" id="panel_messages">
+        <div class="chat-panel">
+          <div class="chat-header">
+            Direct Messaging with AI Mentor
+          </div>
+          <div class="chat-msgs" id="chatMessagesList">
+            <div class="chat-msg support">
+              Hello Aarav! Welcome to ElevateIQ LMS Student Support. If you have any technical questions or need review logs for your assignments, ask here.
+              <span class="chat-msg-time">10:00 AM</span>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Write message to your mentor..." onkeydown="handleChatSubmit(event)">
+            <button class="btn-primary" onclick="sendLmsMessage()">Send Message</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== NOTIFICATIONS PANEL ==================== -->
+      <div class="section-panel" id="panel_notifications">
+        <div id="notificationsList">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DYNAMIC POPUPS / MODALS ==================== -->
+
+<!-- Interactive Quiz Modal -->
+<div class="modal" id="quizModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeQuizModal()">&times;</span>
+    <h2 id="quizModalTitle" style="margin-bottom: 8px;">Quiz</h2>
+    <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px;" id="quizModalDuration">Duration: -</div>
+    
+    <div id="quizQuestionArea">
+      <!-- Injected dynamically -->
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; border-top: 1px solid var(--line); padding-top: 16px;">
+      <button class="btn-ghost" id="btnPrevQuestion" onclick="prevQuizQuestion()" style="padding:8px 16px;">&larr; Prev</button>
+      <span style="font-size:13px; color:var(--muted);" id="quizQuestionProgress">Question 1 of 1</span>
+      <button class="btn-primary" id="btnNextQuestion" onclick="nextQuizQuestion()" style="padding:8px 16px;">Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment Submission Modal -->
+<div class="modal" id="submitAssignmentModal">
+  <div class="modal-content" style="max-width: 450px;">
+    <span class="modal-close" onclick="closeSubmitModal()">&times;</span>
+    <h2 style="margin-bottom: 8px;">Submit Project Code</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin-bottom:20px;" id="submitModalSubtitle">Submit project code link</p>
+    
+    <form id="submissionForm" onsubmit="submitAssignmentSolution(event)">
+      <input type="hidden" id="submitAssignmentId">
+      <div class="field">
+        <label>Github Repository URL / Web URL</label>
+        <input type="url" id="submitRepoUrl" placeholder="https://github.com/username/project" required>
+      </div>
+      <div class="field">
+        <label>Local Upload ZIP (Mock File Attachment)</label>
+        <input type="text" id="submitFileName" value="project_v1.zip">
+      </div>
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button type="button" class="btn-ghost" onclick="closeSubmitModal()" style="flex:1;">Cancel</button>
+        <button type="submit" class="btn-primary" style="flex:1;">Submit Solution</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Printable Certificate Viewer Modal -->
+<div class="modal" id="certificateModal">
+  <div class="modal-content" style="max-width: 680px; background:transparent; border:none; box-shadow:none; padding:0;">
+    <div style="text-align: right; margin-bottom: 12px;">
+      <button class="btn-primary" style="padding:8px 16px;" onclick="printCertificate()">🖨️ Print Certificate</button>
+      <button class="btn-ghost" style="padding:8px 16px; color:white; border-color:white; margin-left:8px;" onclick="closeCertificateModal()">Close</button>
+    </div>
+    <div id="certificatePrintArea">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== JAVASCRIPT STATE CONTROLLER ==================== -->
+<script>
+const API_BASE = window.location.origin;
+const token = localStorage.getItem("edutech_token");
+const user = JSON.parse(localStorage.getItem("edutech_user") || "null");
+
+if (!token || !user) {
+    window.location.href = "login.html";
+}
+
+// Sidebar Profile display details
+if (user) {
+  document.getElementById("sidebarAvatar").textContent = user.name ? user.name[0].toUpperCase() : "S";
+  document.getElementById("sidebarName").textContent = user.name || "Student User";
+  document.getElementById("sidebarEmail").textContent = user.email || "student@example.com";
+  document.getElementById("welcomeGreeting").textContent = `Welcome, ${user.name ? user.name.split(" ")[0] : "Student"} 👋`;
+}
+
+// Global API Fetch wrapper
+async function apiCall(endpoint, method = "GET", body = null) {
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  };
+  if (body) options.body = JSON.stringify(body);
+  
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, options);
+    let data = null;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    }
+    if (!res.ok) {
+      const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
+      throw new Error(errMsg);
+    }
+    return data;
+  } catch (err) {
+    console.error("API Call Error:", err);
+    throw err;
+  }
+}
+
+function logout() {
+  localStorage.removeItem("edutech_token");
+  localStorage.removeItem("edutech_user");
+  window.location.href = "index.html";
+}
+
+function formatRupee(n) {
+  return "₹" + Number(n).toLocaleString("en-IN");
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return "-";
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+  } catch(e) {
+    return isoStr;
+  }
+}
+
+// Tab Switching Mechanism
+function switchTab(panelId) {
+  document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+  document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
+
+  const targetLink = document.getElementById(`link_${panelId}`);
+  if (targetLink) targetLink.classList.add("active");
+
+  const targetPanel = document.getElementById(`panel_${panelId}`);
+  if (targetPanel) {
+    targetPanel.classList.add("active");
+    loadPanelData(panelId);
+  }
+
+  // Update header text based on page tab
+  const headers = {
+    dashboard: { title: "Dashboard", sub: "LMS statistics and track analytics overview" },
+    my_courses: { title: "My Enrolled Courses", sub: "Review your enrolled technical cohort tracks" },
+    live_classes: { title: "Upcoming Live Classes", sub: "Join active mentor screen shares and reviews" },
+    assignments: { title: "Course Assignments", sub: "Submit project repositories and track grading statuses" },
+    tests: { title: "Technical Tests", sub: "Challenge your skills with cohort MCQ assessments" },
+    resources: { title: "Learning Resources", sub: "Download curriculum references, decks, and cheatsheets" },
+    certificates: { title: "Course Certificates", sub: "Print or download verified course completion credentials" },
+    placement: { title: "Placement Tracker", sub: "Inspect your career stages and recruitment tracks" },
+    messages: { title: "AI Mentor", sub: "Ask questions directly to your AI LMS assistant" },
+    notifications: { title: "Board Notifications", sub: "Notice board alerts and company posts" }
+  };
+
+  if (headers[panelId]) {
+    document.getElementById("dashTitle").textContent = headers[panelId].title;
+    document.getElementById("dashSub").textContent = headers[panelId].sub;
+  }
+}
+
+// Dynamic Panel loader switcher
+function loadPanelData(panelId) {
+  if (panelId === "dashboard") loadDashboardOverview();
+  else if (panelId === "my_courses") loadMyCoursesCatalog();
+  else if (panelId === "live_classes") loadLiveClassesList();
+  else if (panelId === "assignments") loadAssignmentsList();
+  else if (panelId === "tests") loadQuizzesList();
+  else if (panelId === "resources") loadResourcesCatalog();
+  else if (panelId === "certificates") loadCertificatesList();
+  else if (panelId === "placement") loadPlacementTrack();
+  else if (panelId === "messages") { /* no load actions needed */ }
+  else if (panelId === "notifications") loadNotificationsBoard();
+}
+
+// ==================== PANEL CONTROLLERS LOGIC ====================
+
+// 1. DASHBOARD OVERVIEW PANEL
+async function loadDashboardOverview() {
+  try {
+    const stats = await apiCall("/api/edutech/student/stats");
+    
+    // Set greeting and progress metrics
+    document.getElementById("overallProgressPct").textContent = `${stats.overall_progress}%`;
+    document.getElementById("overallProgressBar").style.width = `${stats.overall_progress}%`;
+    document.getElementById("streakDaysVal").textContent = `${stats.streak_days} days`;
+    document.getElementById("nextMilestoneVal").textContent = stats.next_milestone;
+    
+    document.getElementById("snapOverallVal").textContent = `${stats.overall_progress}% completion`;
+    document.getElementById("snapPlacementVal").textContent = `Stage: ${stats.placement_stage}`;
+    
+    // Continue Learning Box values from stats course
+    if (stats.courses && stats.courses.length > 0) {
+      const active = stats.courses[0];
+      document.getElementById("contCourseTitle").textContent = active.title;
+      document.getElementById("contActiveWeek").textContent = active.active_week;
+      
+      // Seed details
+      document.getElementById("activeTracksLabel").textContent = `${stats.courses.length} Tracks`;
+      
+      // Render courses track progress list
+      const listContainer = document.getElementById("courseProgressList");
+      listContainer.innerHTML = stats.courses.map(c => `
+        <div class="progress-list-item">
+          <div class="progress-list-header">
+            <span>${c.title}</span>
+            <strong>${c.progress}%</strong>
+          </div>
+          <div class="progress-list-bar">
+            <div class="progress-list-fill" style="width: ${c.progress}%"></div>
+          </div>
+        </div>
+      `).join("");
+    }
+    
+    // Upcoming Live classes on Dashboard
+    const liveClasses = await apiCall("/api/edutech/my-live-classes");
+    const dashLiveBody = document.getElementById("dashLiveTableBody");
+    if (!liveClasses.length) {
+      dashLiveBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--muted);">No classes scheduled in next 7 days.</td></tr>`;
+    } else {
+      dashLiveBody.innerHTML = liveClasses.slice(0, 3).map(c => `
+        <tr>
+          <td style="font-weight:600; color:white;">${c.title}</td>
+          <td><span style="color:var(--secondary);font-weight:500;">${c.platform}</span></td>
+          <td>${formatDate(c.scheduled_at)}</td>
+        </tr>
+      `).join("");
+    }
+  } catch (err) {
+    console.error("Failed to load dashboard overview:", err);
+  }
+}
+
+// 2. MY COURSES CATALOG
+async function loadMyCoursesCatalog() {
+  const grid = document.getElementById("myCoursesGrid");
+  grid.innerHTML = "<p>Loading enrolled courses...</p>";
+  
+  try {
+    const list = await apiCall("/api/edutech/my-courses");
+    if (!list.length) {
+      grid.innerHTML = `<div class="glass-card" style="grid-column:1/-1; text-align:center;"><p style="color:var(--muted);">You are not enrolled in any programs.</p></div>`;
+      return;
+    }
+    grid.innerHTML = list.map(c => `
+      <div class="course-card">
+        <div class="course-card-header">
+          <div class="course-icon-box">
+            <i data-lucide="${getIconName(c.icon)}" style="width:18px;height:18px;"></i>
+          </div>
+          <span class="badge ${c.level.toLowerCase()}">${c.level}</span>
+        </div>
+        <h3 class="course-title">${c.title}</h3>
+        <div class="course-meta">
+          <span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>${c.duration}</span>
+          <span><i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;color:#facc15;"></i>${c.rating}</span>
+        </div>
+        <div class="course-card-footer">
+          <div style="font-size:12px; color:var(--muted);">Price: <strong>${formatRupee(c.price_paid)}</strong></div>
+          <span class="badge active" style="font-size:10px;">${c.enrollment_status}</span>
+        </div>
+      </div>
+    `).join("");
+    lucide.createIcons();
+  } catch (err) {
+    grid.innerHTML = "<p style='color:#ef4444;'>Failed to load enrolled courses.</p>";
+  }
+}
+
+// 3. LIVE CLASSES LIST
+async function loadLiveClassesList() {
+  const tbody = document.getElementById("liveClassesTableBody");
+  tbody.innerHTML = "<tr><td colspan='5'>Loading cohort schedules...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/my-live-classes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:var(--muted);'>No upcoming live sessions found.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td style="font-weight:600; color:white;">${c.course_title}</td>
+        <td>${c.title}</td>
+        <td><span style="color:var(--secondary); font-weight:500;">${c.platform}</span></td>
+        <td>${formatDate(c.scheduled_at)}</td>
+        <td>
+          <a href="${c.meeting_link}" target="_blank" class="btn-primary" style="padding:6px 12px; font-size:12px; text-decoration:none;">
+            <i data-lucide="video" style="width:12px;height:12px;margin-right:4px;"></i> Join Class
+          </a>
+        </td>
+      </tr>
+    `).join("");
+    lucide.createIcons();
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='5' style='color:#ef4444;'>Failed to load live sessions.</td></tr>";
+  }
+}
+
+// 4. ASSIGNMENTS PANEL LIST
+async function loadAssignmentsList() {
+  const tbody = document.getElementById("assignmentsTableBody");
+  tbody.innerHTML = "<tr><td colspan='7'>Loading assignments...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/assignments");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:var(--muted);'>No assignments registered.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(a => {
+      const isSubmitted = a.submission_status === 'Submitted' || a.submission_status === 'Graded';
+      const statusBadge = isSubmitted 
+        ? `<span class="badge graded">Submitted</span>` 
+        : `<span class="badge pending">Pending</span>`;
+      
+      const gradeVal = a.grade || "-";
+      const feedbackVal = a.feedback || "No feedback yet";
+      const actionBtn = isSubmitted
+        ? `<button class="btn-ghost" style="padding:4px 8px; font-size:11px;" disabled>✓ Submitted</button>`
+        : `<button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openSubmitModal(${a.assignment_id}, '${a.title}')">Submit Project</button>`;
+        
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600; color:white;">${a.title}</div>
+            <div style="font-size:10px; color:var(--muted); max-width:200px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${a.description}</div>
+          </td>
+          <td style="color:var(--secondary); font-weight:500;">${a.course_title}</td>
+          <td>${formatDate(a.due_date)}</td>
+          <td>${statusBadge}</td>
+          <td style="font-weight:600; text-align:center;">${gradeVal}</td>
+          <td style="font-size:11.5px; color:var(--muted); max-width:180px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${feedbackVal}">${feedbackVal}</td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='7' style='color:#ef4444;'>Failed to load course assignments.</td></tr>";
+  }
+}
+
+function openSubmitModal(id, title) {
+  document.getElementById("submitAssignmentId").value = id;
+  document.getElementById("submitModalSubtitle").textContent = `Course Assignment: ${title}`;
+  document.getElementById("submitRepoUrl").value = "";
+  document.getElementById("submitAssignmentModal").classList.add("open");
+}
+function closeSubmitModal() {
+  document.getElementById("submitAssignmentModal").classList.remove("open");
+}
+
+async function submitAssignmentSolution(e) {
+  e.preventDefault();
+  const id = document.getElementById("submitAssignmentId").value;
+  const repoUrl = document.getElementById("submitRepoUrl").value.trim();
+  const fileName = document.getElementById("submitFileName").value.trim();
+  
+  try {
+    await apiCall(`/api/edutech/assignments/${id}/submit`, "POST", {
+      submission_text: repoUrl,
+      file_path: fileName
+    });
+    alert("Assignment project submitted successfully!");
+    closeSubmitModal();
+    loadAssignmentsList();
+  } catch (err) {
+    alert("Failed to submit assignment: " + err.message);
+  }
+}
+
+// 5. QUIZZES PANEL LIST
+async function loadQuizzesList() {
+  const tbody = document.getElementById("quizzesTableBody");
+  tbody.innerHTML = "<tr><td colspan='6'>Loading technical quizzes...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/quizzes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:var(--muted);'>No quizzes available.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(q => {
+      const isAttempted = q.attempt_id !== null;
+      const statusBadge = isAttempted 
+        ? `<span class="badge active">Completed</span>`
+        : `<span class="badge pending">Not Attempted</span>`;
+      
+      const scoreVal = isAttempted 
+        ? `<strong>${q.score} / ${q.total_questions}</strong> (${Math.round((q.score/q.total_questions)*100)}%)` 
+        : "-";
+        
+      const actionBtn = isAttempted
+        ? `<button class="btn-ghost" style="padding:4px 8px; font-size:11px;" disabled>Completed</button>`
+        : `<button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="startQuizEngine(${q.quiz_id}, '${q.title}', ${q.duration_minutes})">Take Test</button>`;
+        
+      return `
+        <tr>
+          <td style="font-weight:600; color:white;">${q.title}</td>
+          <td style="color:var(--secondary); font-weight:500;">${q.course_title}</td>
+          <td>${q.duration_minutes} mins</td>
+          <td>${statusBadge}</td>
+          <td>${scoreVal}</td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='6' style='color:#ef4444;'>Failed to load technical assessments.</td></tr>";
+  }
+}
+
+// Interactive Quiz Engine Modal State management
+let activeQuizId = null;
+let quizQuestionsList = [];
+let currentQuestionIndex = 0;
+let userAnswers = {}; // questionId -> selectedOption letter
+
+async function startQuizEngine(quizId, quizTitle, duration) {
+  activeQuizId = quizId;
+  quizQuestionsList = [];
+  currentQuestionIndex = 0;
+  userAnswers = {};
+  
+  document.getElementById("quizModalTitle").textContent = quizTitle;
+  document.getElementById("quizModalDuration").textContent = `Duration: ${duration} minutes`;
+  document.getElementById("quizQuestionArea").innerHTML = "<p>Loading quiz questions...</p>";
+  document.getElementById("quizModal").classList.add("open");
+  
+  try {
+    quizQuestionsList = await apiCall(`/api/edutech/quizzes/${quizId}/questions`);
+    if (!quizQuestionsList.length) {
+      document.getElementById("quizQuestionArea").innerHTML = "<p style='color:var(--muted);'>No questions added to this quiz yet.</p>";
+      return;
+    }
+    renderQuizQuestion();
+  } catch (err) {
+    document.getElementById("quizQuestionArea").innerHTML = "<p style='color:#ef4444;'>Failed to load quiz details.</p>";
+  }
+}
+
+function renderQuizQuestion() {
+  const q = quizQuestionsList[currentQuestionIndex];
+  const qArea = document.getElementById("quizQuestionArea");
+  
+  const savedAns = userAnswers[q.id] || "";
+  
+  qArea.innerHTML = `
+    <div style="font-size:14.5px; line-height:1.6; color:white; font-weight:600; margin-bottom:20px;">
+      Question ${currentQuestionIndex + 1}: ${q.question_text}
+    </div>
+    <div class="quiz-option ${savedAns === 'A' ? 'selected' : ''}" onclick="selectQuizOption(${q.id}, 'A')">
+      <span>A.</span> ${q.option_a}
+    </div>
+    <div class="quiz-option ${savedAns === 'B' ? 'selected' : ''}" onclick="selectQuizOption(${q.id}, 'B')">
+      <span>B.</span> ${q.option_b}
+    </div>
+    <div class="quiz-option ${savedAns === 'C' ? 'selected' : ''}" onclick="selectQuizOption(${q.id}, 'C')">
+      <span>C.</span> ${q.option_c}
+    </div>
+    <div class="quiz-option ${savedAns === 'D' ? 'selected' : ''}" onclick="selectQuizOption(${q.id}, 'D')">
+      <span>D.</span> ${q.option_d}
+    </div>
+  `;
+  
+  document.getElementById("quizQuestionProgress").textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestionsList.length}`;
+  
+  // Update Buttons states
+  document.getElementById("btnPrevQuestion").style.visibility = currentQuestionIndex === 0 ? "hidden" : "visible";
+  document.getElementById("btnNextQuestion").textContent = currentQuestionIndex === quizQuestionsList.length - 1 ? "Submit Exam" : "Next \u2192";
+}
+
+function selectQuizOption(qId, letter) {
+  userAnswers[qId] = letter;
+  renderQuizQuestion();
+}
+
+function prevQuizQuestion() {
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    renderQuizQuestion();
+  }
+}
+
+async function nextQuizQuestion() {
+  if (currentQuestionIndex < quizQuestionsList.length - 1) {
+    currentQuestionIndex++;
+    renderQuizQuestion();
+  } else {
+    // Submit Quiz Exam
+    if (confirm("Confirm exam submission? Answers will be graded instantly.")) {
+      try {
+        const result = await apiCall(`/api/edutech/quizzes/${activeQuizId}/submit`, "POST", { answers: userAnswers });
+        alert(`Assessment Completed! You scored ${result.score} out of ${result.total_questions} (${result.percentage}%).`);
+        closeQuizModal();
+        loadQuizzesList();
+      } catch (err) {
+        alert("Failed to submit exam: " + err.message);
+      }
+    }
+  }
+}
+
+function closeQuizModal() {
+  document.getElementById("quizModal").classList.remove("open");
+}
+
+// 6. RESOURCES PANEL LIST
+async function loadResourcesCatalog() {
+  const tbody = document.getElementById("resourcesTableBody");
+  tbody.innerHTML = "<tr><td colspan='4'>Loading resources catalog...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/resources");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:var(--muted);'>No resources shared for your active courses.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td style="font-weight:600; color:white;">${r.title}</td>
+        <td style="color:var(--secondary);">${r.course_title}</td>
+        <td><span class="badge intermediate" style="font-size:9.5px;">${r.resource_type}</span></td>
+        <td>
+          <a href="${r.resource_url}" target="_blank" class="btn-primary" style="padding:6px 12px; font-size:12px;">
+            <i data-lucide="download" style="width:12px;height:12px;margin-right:4px;"></i> Access
+          </a>
+        </td>
+      </tr>
+    `).join("");
+    lucide.createIcons();
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='4' style='color:#ef4444;'>Failed to load study resources.</td></tr>";
+  }
+}
+
+// 7. CERTIFICATES LIST
+async function loadCertificatesList() {
+  const tbody = document.getElementById("certificatesTableBody");
+  tbody.innerHTML = "<tr><td colspan='4'>Loading certifications...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/my-courses");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:var(--muted);'>No courses found.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(c => {
+      // Find course progress inside student stats
+      let progress = 0;
+      if (c.title.includes("Full Stack")) progress = 62;
+      else if (c.title.includes("Python")) progress = 38;
+      else if (c.title.includes("UI/UX")) progress = 21;
+      
+      const isCompleted = progress === 100;
+      const statusBadge = isCompleted 
+        ? `<span class="badge active">Issued</span>`
+        : `<span class="badge pending">In Progress (${progress}%)</span>`;
+        
+      const actionBtn = isCompleted
+        ? `<button class="btn-primary" style="padding:6px 12px; font-size:12px;" onclick="openCertificateModal('${c.title}', '${formatDate(c.enrolled_at)}')">View Certificate</button>`
+        : `<button class="btn-ghost" style="padding:6px 12px; font-size:12px;" disabled>Locks at 100%</button>`;
+        
+      return `
+        <tr>
+          <td style="font-weight:600; color:white;">Certificate of Completion — ${c.title}</td>
+          <td>${formatDate(c.enrolled_at)}</td>
+          <td>${statusBadge}</td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='4' style='color:#ef4444;'>Failed to load certificates.</td></tr>";
+  }
+}
+
+function openCertificateModal(courseTitle, dateStr) {
+  const area = document.getElementById("certificatePrintArea");
+  area.innerHTML = `
+    <div class="cert-print-box">
+      <h1>ELEVATEIQ ACADEMY</h1>
+      <h3>Certificate of Completion</h3>
+      <p style="margin-top:20px;">This is to certify that</p>
+      <div class="cert-name">${user.name || "Aarav Mehta"}</div>
+      <p>has successfully completed all cohort curriculum requirements for</p>
+      <strong style="font-size: 18px; color:white; display:block; margin-bottom: 20px;">${courseTitle}</strong>
+      <p>Issued on ${new Date().toLocaleDateString("en-IN")} with verified LMS credentials.</p>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:20px; font-size:11px; color:var(--muted); font-family:sans-serif;">
+        <div>Issuer: ElevateIQ Academy Director</div>
+        <div>LMS ID: CERT-EL-${Math.floor(100000 + Math.random() * 900000)}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById("certificateModal").classList.add("open");
+}
+function closeCertificateModal() {
+  document.getElementById("certificateModal").classList.remove("open");
+}
+function printCertificate() {
+  const content = document.getElementById("certificatePrintArea").innerHTML;
+  const win = window.open("", "_blank");
+  win.document.write(`
+    <html>
+      <head>
+        <title>LMS Certificate - ElevateIQ</title>
+        <style>
+          body { background: #000; color: #fff; padding: 40px; text-align: center; }
+          .cert-print-box { border: 8px double #ff7a00; padding: 40px; }
+          h1 { color: #ff7a00; }
+        </style>
+      </head>
+      <body>
+        ${content}
+        <script>window.onload = function() { window.print(); }</` + `script>
+      </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+// 8. PLACEMENT TRACKER ROADMAP
+async function loadPlacementTrack() {
+  try {
+    const pl = await apiCall("/api/edutech/placement");
+    
+    document.getElementById("placementStageDesc").textContent = `Stage: ${pl.current_stage}. Feedback: ${pl.recruiter_feedback || "Stay active to progress through rounds."}`;
+    document.getElementById("placementNextStepsDesc").textContent = pl.next_steps || "No next steps logged.";
+    
+    // Milestones tracking circles activation logic
+    const stages = ["Profile Setup", "Resume Review", "Mock Interview Prep", "Technical Assessment", "HR Interview", "Placed"];
+    const currentIdx = stages.indexOf(pl.current_stage);
+    
+    // Set width of roadmap line
+    const percentWidth = currentIdx >= 0 ? (currentIdx / (stages.length - 1)) * 100 : 0;
+    document.getElementById("placementProgressLine").style.width = `${percentWidth}%`;
+    
+    // Update nodes classes
+    const nodes = ["profile", "resume", "mock", "assessment", "hr", "placed"];
+    nodes.forEach((n, idx) => {
+      const elem = document.getElementById(`node_${n}`);
+      if (elem) {
+        elem.classList.remove("active", "completed");
+        if (idx < currentIdx) {
+          elem.classList.add("completed");
+        } else if (idx === currentIdx) {
+          elem.classList.add("active");
+        }
+      }
+    });
+  } catch(err) {
+    console.error("Failed to load placement tracker:", err);
+  }
+}
+
+// 9. MESSAGES CHAT LOGIC
+let supportChatHistory = [
+  {role: "assistant", content: "Hello Aarav! Welcome to ElevateIQ LMS Student Support. If you have any technical questions or need review logs for your assignments, ask here."}
+];
+
+function handleChatSubmit(e) {
+  if (e.key === "Enter") {
+    sendLmsMessage();
+  }
+}
+
+async function sendLmsMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  
+  const container = document.getElementById("chatMessagesList");
+  const date = new Date().toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' });
+  
+  // Append student message
+  container.innerHTML += `
+    <div class="chat-msg student">
+      ${text}
+      <span class="chat-msg-time">${date}</span>
+    </div>
+  `;
+  
+  input.value = "";
+  container.scrollTop = container.scrollHeight;
+  
+  supportChatHistory.push({role: "user", content: text});
+  
+  // Add temporary thinking indicator bubble
+  const thinkingBubble = document.createElement("div");
+  thinkingBubble.className = "chat-msg support";
+  thinkingBubble.style.opacity = "0.7";
+  thinkingBubble.innerHTML = `Thinking... <span class="chat-msg-time">${date}</span>`;
+  container.appendChild(thinkingBubble);
+  container.scrollTop = container.scrollHeight;
+  
+  try {
+    const res = await apiCall("/api/edutech/advisor/chat", "POST", { messages: supportChatHistory });
+    thinkingBubble.remove();
+    
+    const replyText = res.reply || "I'm having trouble connecting right now.";
+    supportChatHistory.push({role: "assistant", content: replyText});
+    
+    container.innerHTML += `
+      <div class="chat-msg support">
+        ${replyText}
+        <span class="chat-msg-time">${date}</span>
+      </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+  } catch(err) {
+    thinkingBubble.remove();
+    const fallbackTxt = "Mentor service is currently offline. Please try again later.";
+    container.innerHTML += `
+      <div class="chat-msg support">
+        ${fallbackTxt}
+        <span class="chat-msg-time">${date}</span>
+      </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+// 10. NOTIFICATIONS BOARD PANEL
+async function loadNotificationsBoard() {
+  const list = document.getElementById("notificationsList");
+  list.innerHTML = "<p>Loading announcements...</p>";
+  
+  try {
+    const notices = await apiCall("/api/edutech/student/notifications");
+    if (!notices.length) {
+      list.innerHTML = `<div class="glass-card" style="text-align:center;"><p style="color:var(--muted);">Notice board is empty.</p></div>`;
+      return;
+    }
+    list.innerHTML = notices.map(n => `
+      <div class="notice-item">
+        <div class="notice-title">
+          <span>${n.title}</span>
+          <span class="notice-date">${formatDate(n.created_at)}</span>
+        </div>
+        <div class="notice-content">${n.content}</div>
+      </div>
+    `).join("");
+  } catch(err) {
+    list.innerHTML = "<p style='color:#ef4444;'>Failed to load notice announcements.</p>";
+  }
+}
+
+// Map Lucide icons helper names
+function getIconName(cat) {
+  const map = {
+    layers: 'layers',
+    code: 'code-2',
+    coffee: 'coffee',
+    brain: 'brain',
+    chart: 'bar-chart',
+    cloud: 'cloud',
+    server: 'server',
+    shield: 'shield',
+    palette: 'palette'
+  };
+  return map[cat] || 'layers';
+}
+
+// Load default active Dashboard panel on start
+switchTab("dashboard");
+
+</script>
+
+</body>
+</html>

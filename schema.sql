@@ -269,4 +269,90 @@ CREATE INDEX IF NOT EXISTS idx_meetings_scheduled_at ON meetings(scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_course_enrollments_user ON course_enrollments(user_id);
 CREATE INDEX IF NOT EXISTS idx_live_classes_course ON live_classes(course_id);
 
+-- 22. Assignments Table
+CREATE TABLE IF NOT EXISTS assignments (
+    id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    due_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 23. Assignment Submissions
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+    id SERIAL PRIMARY KEY,
+    assignment_id INT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    submission_text TEXT,
+    file_path VARCHAR(255),
+    grade VARCHAR(10), -- e.g., 'A', 'B', 'Pass', 'Pending'
+    feedback TEXT,
+    status VARCHAR(20) DEFAULT 'Pending', -- 'Pending', 'Graded', 'Submitted'
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (assignment_id, user_id)
+);
+
+-- 24. Quizzes
+CREATE TABLE IF NOT EXISTS quizzes (
+    id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    duration_minutes INT DEFAULT 30,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 25. Quiz Questions
+CREATE TABLE IF NOT EXISTS quiz_questions (
+    id SERIAL PRIMARY KEY,
+    quiz_id INT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    option_a VARCHAR(255) NOT NULL,
+    option_b VARCHAR(255) NOT NULL,
+    option_c VARCHAR(255) NOT NULL,
+    option_d VARCHAR(255) NOT NULL,
+    correct_option CHAR(1) NOT NULL -- 'A', 'B', 'C', 'D'
+);
+
+-- 26. Quiz Attempts
+CREATE TABLE IF NOT EXISTS quiz_attempts (
+    id SERIAL PRIMARY KEY,
+    quiz_id INT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    score INT NOT NULL,
+    total_questions INT NOT NULL,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 27. Course Resources
+CREATE TABLE IF NOT EXISTS course_resources (
+    id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    resource_type VARCHAR(50) DEFAULT 'PDF', -- 'PDF', 'Link', 'Repo', 'Slides'
+    resource_url VARCHAR(500) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 28. Placement Tracks
+CREATE TABLE IF NOT EXISTS placement_tracks (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+    current_stage VARCHAR(50) DEFAULT 'Profile Setup', -- 'Profile Setup', 'Resume Review', 'Mock Interview Prep', 'Technical Assessment', 'HR Interview', 'Placed'
+    next_steps TEXT,
+    resume_approved BOOLEAN DEFAULT FALSE,
+    mock_interview_score INT DEFAULT 0,
+    recruiter_feedback TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for student dashboard extensions
+CREATE INDEX IF NOT EXISTS idx_assignments_course ON assignments(course_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_user ON assignment_submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_course ON quizzes(course_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_resources_course ON course_resources(course_id);
+CREATE INDEX IF NOT EXISTS idx_placement_user ON placement_tracks(user_id);
+
+
 

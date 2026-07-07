@@ -322,6 +322,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const redir = params.get("redirect");
         if (redir) {
           window.location.href = redir;
+        } else if (data.user && (data.user.role === 'candidate' || data.user.role === 'student')) {
+          window.location.href = 'student-dashboard.html';
         } else {
           window.location.href = 'dashboard.html';
         }

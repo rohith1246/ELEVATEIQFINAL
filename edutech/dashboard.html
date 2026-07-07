@@ -1093,6 +1093,178 @@ const layouts = {
             </div>
         </div>
     </div>
+  `,
+  admin_assignments: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Create Course Assignment</h3>
+        <form id="adminAssignmentForm" onsubmit="submitAdminAssignment(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="assignCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Assignment Title</label>
+            <input type="text" id="assignTitle" placeholder="e.g. Build REST API" required>
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea id="assignDesc" rows="4" placeholder="Assignment details..." required></textarea>
+          </div>
+          <div class="field">
+            <label>Due Date</label>
+            <input type="datetime-local" id="assignDueDate" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Create Assignment</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Active Assignments</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Title</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody id="adminAssignmentsTableBody">
+              <tr><td colspan="3">Loading assignments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `,
+  admin_quizzes: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Create Technical Quiz</h3>
+        <form id="adminQuizForm" onsubmit="submitAdminQuiz(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="quizCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Quiz Title</label>
+            <input type="text" id="quizTitle" placeholder="e.g. Javascript Loops" required>
+          </div>
+          <div class="field">
+            <label>Duration (Minutes)</label>
+            <input type="number" id="quizDuration" value="15" min="1" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Create Quiz</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Active Quizzes Database</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Quiz Title</th>
+                <th>Duration</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminQuizzesTableBody">
+              <tr><td colspan="4">Loading quizzes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Question Builder Modal -->
+    <div class="modal" id="adminQuestionModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="modal-content" style="max-width:480px;">
+        <span class="modal-close" onclick="closeModal('adminQuestionModal')">&times;</span>
+        <h2 style="font-size:18px; margin-bottom:15px;">Add Quiz Question</h2>
+        <form id="adminQuestionForm" onsubmit="submitAdminQuestion(event)">
+          <input type="hidden" id="qQuizId">
+          <div class="field">
+            <label>Question Text</label>
+            <input type="text" id="qText" placeholder="e.g. What is the scope of 'const'?" required>
+          </div>
+          <div class="field">
+            <label>Option A</label>
+            <input type="text" id="qOptA" required>
+          </div>
+          <div class="field">
+            <label>Option B</label>
+            <input type="text" id="qOptB" required>
+          </div>
+          <div class="field">
+            <label>Option C</label>
+            <input type="text" id="qOptC" required>
+          </div>
+          <div class="field">
+            <label>Option D</label>
+            <input type="text" id="qOptD" required>
+          </div>
+          <div class="field">
+            <label>Correct Option</label>
+            <select id="qCorrect" required>
+              <option value="A">Option A</option>
+              <option value="B">Option B</option>
+              <option value="C">Option C</option>
+              <option value="D">Option D</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Add Question</button>
+        </form>
+      </div>
+    </div>
+  `,
+  admin_resources: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Publish Cohort Resource</h3>
+        <form id="adminResourceForm" onsubmit="submitAdminResource(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="resCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Resource Title</label>
+            <input type="text" id="resTitle" placeholder="e.g. React lifecycle chart" required>
+          </div>
+          <div class="field">
+            <label>Resource Type</label>
+            <select id="resType" required>
+              <option value="PDF">PDF Document</option>
+              <option value="Slides">Slides / Presentation</option>
+              <option value="Video">Video Tutorial Link</option>
+              <option value="Cheatsheet">Cheat Sheet / Reference</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Resource Asset Link / URL</label>
+            <input type="url" id="resUrl" placeholder="https://drive.google.com/..." required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Publish Resource</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Published Resources</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Resource Name</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="adminResourcesTableBody">
+              <tr><td colspan="3">Loading resources...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   `
 };
 
@@ -1131,7 +1303,10 @@ function switchTab(panelId) {
     admin_live: { title: "Live Cohort Classes", sub: "Manage and broadcast platform screen-share sessions." },
     admin_employees: { title: "Manage Staff/Trainers", sub: "Register and manage academy staff profiles." },
     admin_designations: { title: "Designations Registry", sub: "Configure custom designation roles for employees." },
-    admin_payroll: { title: "Payroll Suite", sub: "Review live accrued staff payroll, process pay runs, and generate printable statements." }
+    admin_payroll: { title: "Payroll Suite", sub: "Review live accrued staff payroll, process pay runs, and generate printable statements." },
+    admin_assignments: { title: "Manage Assignments", sub: "Configure technical cohort assignments coursework." },
+    admin_quizzes: { title: "Manage Quizzes", sub: "Create assessments and quiz question databases." },
+    admin_resources: { title: "Manage Resources", sub: "Publish decks, slides, and syllabus guides." }
   };
 
   if (headers[panelId]) {
@@ -1153,6 +1328,9 @@ function renderSidebar() {
       { id: "admin_courses", label: "Manage Courses", icon: "book-open" },
       { id: "admin_enrollments", label: "Enrollments Manager", icon: "users" },
       { id: "admin_live", label: "Live Classes Mgmt", icon: "video" },
+      { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
+      { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
+      { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
       { id: "admin_employees", label: "Manage Staff/Trainers", icon: "users-2" },
       { id: "admin_designations", label: "Designations Registry", icon: "briefcase" },
       { id: "admin_payroll", label: "Payroll Suite", icon: "wallet" },
@@ -1163,6 +1341,9 @@ function renderSidebar() {
       { id: "admin_courses", label: "Manage Courses", icon: "book-open" },
       { id: "admin_enrollments", label: "Enrollments Manager", icon: "users" },
       { id: "admin_live", label: "Live Classes Mgmt", icon: "video" },
+      { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
+      { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
+      { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
       { id: "student_profile", label: "My Profile", icon: "user" }
     ];
   } else {
@@ -1204,6 +1385,9 @@ function loadPanelData(panelId) {
   else if (panelId === "admin_employees") loadAdminEmployees();
   else if (panelId === "admin_designations") loadAdminDesignations();
   else if (panelId === "admin_payroll") loadEdutechPayroll();
+  else if (panelId === "admin_assignments") loadAdminAssignments();
+  else if (panelId === "admin_quizzes") loadAdminQuizzes();
+  else if (panelId === "admin_resources") loadAdminResources();
 }
 
 // ==================== PANEL METHODS ====================
@@ -2140,6 +2324,187 @@ function getDaysInMonthString(monthStr) {
     return new Date(parts[0], parts[1], 0).getDate();
   } catch(e) {
     return 30;
+  }
+}
+
+// ==================== ADMIN: ACADEMICS MANAGEMENT (ASSIGNMENTS, QUIZZES, RESOURCES) ====================
+
+// 1. MANAGE ASSIGNMENTS
+async function loadAdminAssignments() {
+  const tbody = document.getElementById("adminAssignmentsTableBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading assignments...</td></tr>";
+  
+  // Populate course selector
+  const select = document.getElementById("assignCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/assignments");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No assignments created yet.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(a => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${a.course_title}</td>
+        <td style="font-weight:600; color:white;">${a.title}</td>
+        <td>${formatDate(a.due_date)}</td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='3' style='color:#ef4444;'>Failed to load assignments listings.</td></tr>";
+  }
+}
+
+async function submitAdminAssignment(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("assignCourseSelect").value);
+  const title = document.getElementById("assignTitle").value.trim();
+  const description = document.getElementById("assignDesc").value.trim();
+  const due_date = document.getElementById("assignDueDate").value;
+  
+  try {
+    await apiCall("/api/edutech/assignments", "POST", { course_id, title, description, due_date });
+    alert("Assignment successfully assigned to cohort!");
+    document.getElementById("assignTitle").value = "";
+    document.getElementById("assignDesc").value = "";
+    document.getElementById("assignDueDate").value = "";
+    loadAdminAssignments();
+  } catch(err) {
+    alert("Failed to create assignment: " + err.message);
+  }
+}
+
+// 2. MANAGE QUIZZES
+async function loadAdminQuizzes() {
+  const tbody = document.getElementById("adminQuizzesTableBody");
+  tbody.innerHTML = "<tr><td colspan='4'>Loading technical quizzes...</td></tr>";
+  
+  const select = document.getElementById("quizCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/quizzes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No technical quizzes registered.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(q => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${q.course_title}</td>
+        <td style="font-weight:600; color:white;">${q.title}</td>
+        <td>${q.duration_minutes} mins</td>
+        <td>
+          <button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openQuestionBuilderModal(${q.quiz_id}, '${q.title.replace(/'/g, "\\'")}')">+ Question</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='4' style='color:#ef4444;'>Failed to load technical quizzes.</td></tr>";
+  }
+}
+
+async function submitAdminQuiz(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("quizCourseSelect").value);
+  const title = document.getElementById("quizTitle").value.trim();
+  const duration_minutes = Number(document.getElementById("quizDuration").value);
+  
+  try {
+    await apiCall("/api/edutech/quizzes", "POST", { course_id, title, duration_minutes });
+    alert("Quiz successfully created!");
+    document.getElementById("quizTitle").value = "";
+    loadAdminQuizzes();
+  } catch(err) {
+    alert("Failed to create quiz: " + err.message);
+  }
+}
+
+function openQuestionBuilderModal(quizId, quizTitle) {
+  document.getElementById("qQuizId").value = quizId;
+  document.getElementById("qText").value = "";
+  document.getElementById("qOptA").value = "";
+  document.getElementById("qOptB").value = "";
+  document.getElementById("qOptC").value = "";
+  document.getElementById("qOptD").value = "";
+  document.getElementById("qCorrect").value = "A";
+  openModal("adminQuestionModal");
+}
+
+async function submitAdminQuestion(e) {
+  e.preventDefault();
+  const quizId = document.getElementById("qQuizId").value;
+  const question_text = document.getElementById("qText").value.trim();
+  const option_a = document.getElementById("qOptA").value.trim();
+  const option_b = document.getElementById("qOptB").value.trim();
+  const option_c = document.getElementById("qOptC").value.trim();
+  const option_d = document.getElementById("qOptD").value.trim();
+  const correct_option = document.getElementById("qCorrect").value;
+  
+  try {
+    await apiCall(`/api/edutech/quizzes/${quizId}/questions`, "POST", {
+      question_text, option_a, option_b, option_c, option_d, correct_option
+    });
+    alert("Question added to quiz database successfully!");
+    closeModal("adminQuestionModal");
+  } catch(err) {
+    alert("Failed to add question: " + err.message);
+  }
+}
+
+// 3. MANAGE RESOURCES
+async function loadAdminResources() {
+  const tbody = document.getElementById("adminResourcesTableBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading curriculum materials...</td></tr>";
+  
+  const select = document.getElementById("resCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/resources");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No study resources cataloged.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${r.course_title}</td>
+        <td style="font-weight:600; color:white;">${r.title}</td>
+        <td><span class="badge intermediate" style="font-size:9.5px;">${r.resource_type}</span></td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='3' style='color:#ef4444;'>Failed to load resources listings.</td></tr>";
+  }
+}
+
+async function submitAdminResource(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("resCourseSelect").value);
+  const title = document.getElementById("resTitle").value.trim();
+  const resource_type = document.getElementById("resType").value;
+  const resource_url = document.getElementById("resUrl").value.trim();
+  
+  try {
+    await apiCall("/api/edutech/resources", "POST", { course_id, title, resource_type, resource_url });
+    alert("Curriculum reference resources published successfully!");
+    document.getElementById("resTitle").value = "";
+    document.getElementById("resUrl").value = "";
+    loadAdminResources();
+  } catch(err) {
+    alert("Failed to publish resource: " + err.message);
   }
 }
 

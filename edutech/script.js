@@ -644,6 +644,12 @@
 
     toggle.addEventListener("click", ()=> panel.classList.toggle("open"));
 
+    const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
+
+    let chatbotHistory = [
+      {role: "assistant", content: "Hi! I'm Ascend, your AI guide. Ask me anything about our technical cohorts or career placement support!"}
+    ];
+
     const responses = [
       { k:["beginner","start","new","zero"], r:"If you're starting from zero, Full Stack Web Development or Python for Backend Engineers are the best entry points — both assume no prior coding experience." },
       { k:["long","duration","weeks","time"], r:"Most programs run 12–22 weeks depending on the track. AI & Machine Learning is our longest at 22 weeks; UI/UX Design is our shortest at 12." },
@@ -667,14 +673,41 @@
       el.textContent = text;
       body.appendChild(el);
       body.scrollTop = body.scrollHeight;
+      return el;
     }
 
     /** Handles parsing dispatch commands */
-    function handleSend(text){
+    async function handleSend(text){
       if (!text.trim()) return;
       addMsg(text, "user");
+      chatbotHistory.push({role: "user", content: text});
       input.value = "";
-      setTimeout(()=> addMsg(reply(text), "bot"), 500);
+
+      // Add temporary thinking indicator
+      const thinkingBubble = addMsg("Thinking...", "bot");
+      thinkingBubble.style.opacity = "0.7";
+
+      try {
+        const res = await fetch(`${API_BASE}/api/edutech/advisor/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: chatbotHistory })
+        });
+        
+        thinkingBubble.remove();
+        if (!res.ok) throw new Error("HTTP error");
+        const data = await res.json();
+        const replyText = data.reply || reply(text);
+        
+        chatbotHistory.push({role: "assistant", content: replyText});
+        addMsg(replyText, "bot");
+      } catch(err) {
+        thinkingBubble.remove();
+        // Fallback to local rule match if server offline or api error
+        const fallbackTxt = reply(text);
+        chatbotHistory.push({role: "assistant", content: fallbackTxt});
+        addMsg(fallbackTxt, "bot");
+      }
     }
 
     send.addEventListener("click", ()=> handleSend(input.value));
