@@ -368,8 +368,8 @@
 
 <script>
   const API_BASE = window.location.origin;
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const token = localStorage.getItem("edutech_token");
+  const user = JSON.parse(localStorage.getItem("edutech_user") || "null");
 
   if (!token || !user) {
     window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.href);

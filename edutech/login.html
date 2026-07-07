@@ -280,7 +280,7 @@
 const API_BASE = window.location.origin;
 
 // Redirect if session token exists
-if (localStorage.getItem("token")) {
+if (localStorage.getItem("edutech_token")) {
   const params = new URLSearchParams(window.location.search);
   const redir = params.get("redirect");
   if (redir) {
@@ -299,7 +299,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
   const payload = {
     email: document.getElementById('email').value,
-    password: document.getElementById('password').value
+    password: document.getElementById('password').value,
+    portal: "edutech"
   };
 
   try {
@@ -313,8 +314,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if (res.ok) {
       successMsg.textContent = data.message || 'Login successful.';
       successMsg.style.display = 'block';
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("edutech_token", data.token);
+      localStorage.setItem("edutech_user", JSON.stringify(data.user));
       
       setTimeout(() => {
         const params = new URLSearchParams(window.location.search);

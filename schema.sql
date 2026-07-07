@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'candidate', -- 'admin', 'employee', 'candidate'
+    portal VARCHAR(20) NOT NULL DEFAULT 'elevateiq', -- 'elevateiq', 'edutech'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

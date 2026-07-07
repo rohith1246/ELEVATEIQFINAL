@@ -248,7 +248,7 @@
 
     grid.querySelectorAll(".enroll-btn").forEach(b=> b.addEventListener("click", ()=>{
       const courseId = b.getAttribute("data-id");
-      if (localStorage.getItem("token")) {
+      if (localStorage.getItem("edutech_token")) {
         window.location.href = `payment.html?course_id=${courseId}`;
       } else {
         window.location.href = `login.html?redirect=payment.html?course_id=${courseId}`;
@@ -264,7 +264,7 @@
 
     // Dynamically update Login/Dashboard navbar link based on session state
     const navLogin = document.getElementById("navLoginLink");
-    if (navLogin && localStorage.getItem("token")) {
+    if (navLogin && localStorage.getItem("edutech_token")) {
       navLogin.textContent = "Dashboard";
       navLogin.href = "dashboard.html";
     }

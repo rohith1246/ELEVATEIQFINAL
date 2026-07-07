@@ -157,6 +157,15 @@ def login():
 
         # Verify hashed password with input password
         if bcrypt.checkpw(password.encode("utf-8"), user_record["password"].encode("utf-8")):
+            # Validate portal boundaries: Admins are allowed everywhere.
+            # Otherwise, the user's portal column must match the requested portal.
+            requested_portal = data.get("portal", "elevateiq")
+            user_portal = user_record.get("portal") or "elevateiq"
+            user_role = user_record["role"]
+            
+            if user_role != "admin" and user_portal != requested_portal:
+                return jsonify({"error": f"Unauthorized: This account is registered for the {user_portal.upper()} portal only"}), 403
+
             # Build user data payload for security token
             payload = {
                 "id": user_record["id"],
@@ -319,17 +328,30 @@ def list_employees():
             - 401/403: Security errors.
             - 500: SQL query issues.
     """
+    portal = request.args.get("portal")
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cursor.execute(
-            """
-            SELECT u.name, u.email, e.* 
-            FROM employees e 
-            JOIN users u ON e.user_id = u.id 
-            ORDER BY e.employee_id
-            """
-        )
+        if portal:
+            cursor.execute(
+                """
+                SELECT u.name, u.email, e.* 
+                FROM employees e 
+                JOIN users u ON e.user_id = u.id 
+                WHERE u.portal = %s
+                ORDER BY e.employee_id
+                """,
+                (portal,)
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT u.name, u.email, e.* 
+                FROM employees e 
+                JOIN users u ON e.user_id = u.id 
+                ORDER BY e.employee_id
+                """
+            )
         employees = cursor.fetchall()
         for emp in employees:
             if emp.get("date_of_joining"):
@@ -415,9 +437,10 @@ def add_employee():
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         
         # Insert user login credentials
+        portal = data.get("portal", "elevateiq")
         cursor.execute(
-            "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, 'employee') RETURNING id",
-            (name, email, hashed_password)
+            "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, 'employee', %s) RETURNING id",
+            (name, email, hashed_password, portal)
         )
         user_id = cursor.fetchone()[0]
 

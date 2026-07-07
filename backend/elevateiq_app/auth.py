@@ -20,19 +20,22 @@ def get_current_user():
     """
     Retrieves and validates the current user's session token.
 
-    Checks the 'token' cookie first, and falls back to checking the 'Authorization' header 
-    for 'Bearer <token>' format. Decodes and verifies the token integrity using the 
-    URLSafeTimedSerializer. The token is valid for a maximum duration of 7 days (604800 seconds).
+    Checks the 'Authorization' header for 'Bearer <token>' format first, 
+    and falls back to checking the 'token' cookie. Decodes and verifies 
+    the token integrity using the URLSafeTimedSerializer. The token is valid for 
+    a maximum duration of 7 days (604800 seconds).
 
     Returns:
         dict: A dictionary containing the user's details (id, email, role, name, employee_id) if valid.
         None: If no token is provided, or the token is expired or has an invalid signature.
     """
-    token = request.cookies.get("token")
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        
     if not token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
+        token = request.cookies.get("token")
             
     if not token:
         return None

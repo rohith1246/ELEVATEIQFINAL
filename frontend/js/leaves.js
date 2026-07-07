@@ -132,7 +132,7 @@ async function submitCustomDesignation(mode) {
  */
 async function loadAdminEmployees() {
     await loadDesignations();
-    allEmployees = await apiCall("/employees");
+    allEmployees = await apiCall("/employees?portal=elevateiq");
     renderEmployeesTable(allEmployees);
 }
 
