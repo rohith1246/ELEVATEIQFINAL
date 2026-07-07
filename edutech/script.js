@@ -1007,6 +1007,15 @@
     }
   };
 
+  window.openModal = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("open");
+  };
+  window.closeModal = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("open");
+  };
+
 
   /* ============================================================
      16. ACTIVE VIEWPORT SCROLL NAVIGATION STYLES

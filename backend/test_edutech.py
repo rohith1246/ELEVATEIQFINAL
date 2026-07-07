@@ -401,5 +401,69 @@ class EduTechTestCase(unittest.TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['id'], 88)
 
+    @patch('elevateiq_app.routes.edutech_routes.get_connection')
+    @patch('elevateiq_app.routes.edutech_routes.get_current_user')
+    def test_apply_student_leave_success(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {'id': 10, 'name': 'Student User', 'role': 'candidate'}
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        mock_cursor.fetchone.return_value = {'id': 1}
+        
+        response = self.client.post('/api/edutech/student/leaves', json={
+            'leave_type': 'Sick',
+            'start_date': '2026-08-01',
+            'end_date': '2026-08-03',
+            'reason': 'Medical checkup'
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertIn(b'submitted successfully', response.data)
+
+    @patch('elevateiq_app.routes.edutech_routes.get_connection')
+    @patch('elevateiq_app.routes.edutech_routes.get_current_user')
+    def test_get_student_leaves(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {'id': 10, 'name': 'Student User', 'role': 'candidate'}
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        import datetime
+        mock_cursor.fetchall.return_value = [
+            {
+                'id': 1,
+                'user_id': 10,
+                'leave_type': 'Sick',
+                'start_date': datetime.date(2026, 8, 1),
+                'end_date': datetime.date(2026, 8, 3),
+                'reason': 'Medical checkup',
+                'status': 'Pending',
+                'approved_by': None,
+                'approved_by_name': None,
+                'created_at': datetime.datetime(2026, 7, 7, 12, 0, 0)
+            }
+        ]
+        
+        response = self.client.get('/api/edutech/student/leaves')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Sick', response.data)
+
+    @patch('elevateiq_app.routes.edutech_routes.get_connection')
+    @patch('elevateiq_app.routes.edutech_routes.get_current_user')
+    def test_review_student_leave_success(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {'id': 2, 'name': 'Trainer User', 'role': 'employee'}
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        mock_cursor.fetchone.return_value = (1,)
+        
+        response = self.client.put('/api/edutech/trainer/leaves/1', json={
+            'status': 'Approved'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'status updated to Approved', response.data)
+
 if __name__ == '__main__':
     unittest.main()

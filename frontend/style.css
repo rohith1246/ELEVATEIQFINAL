@@ -764,4 +764,9 @@ nav .menu-toggle:active {
               0 0 40px rgba(255, 107, 0, 0.18),
               inset 0 1px rgba(255,255,255,0.15) !important;
 }
+
+select option {
+  background-color: #0c1928 !important;
+  color: #ffffff !important;
+}
 

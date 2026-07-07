@@ -58,6 +58,20 @@ def init_db(app=None):
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # Create student_leaves table if it doesn't already exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS student_leaves (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    leave_type VARCHAR(50) NOT NULL,
+                    start_date DATE NOT NULL,
+                    end_date DATE NOT NULL,
+                    reason TEXT,
+                    status VARCHAR(20) DEFAULT 'Pending',
+                    approved_by INT REFERENCES users(id) ON DELETE SET NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             conn.commit()
             
             # Seed default designations if table is empty

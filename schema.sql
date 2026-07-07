@@ -347,6 +347,19 @@ CREATE TABLE IF NOT EXISTS placement_tracks (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 29. Student Leaves
+CREATE TABLE IF NOT EXISTS student_leaves (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    leave_type VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT,
+    status VARCHAR(20) DEFAULT 'Pending', -- 'Pending', 'Approved', 'Rejected'
+    approved_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for student dashboard extensions
 CREATE INDEX IF NOT EXISTS idx_assignments_course ON assignments(course_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON assignment_submissions(user_id);
@@ -354,6 +367,9 @@ CREATE INDEX IF NOT EXISTS idx_quizzes_course ON quizzes(course_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_resources_course ON course_resources(course_id);
 CREATE INDEX IF NOT EXISTS idx_placement_user ON placement_tracks(user_id);
+CREATE INDEX IF NOT EXISTS idx_student_leaves_user ON student_leaves(user_id);
+CREATE INDEX IF NOT EXISTS idx_student_leaves_status ON student_leaves(status);
+
 
 
 

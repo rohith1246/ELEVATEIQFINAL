@@ -1005,3 +1005,40 @@ footer{ position:relative; padding-top:120px; border-top:1px solid var(--line); 
   cursor: pointer;
 }
 
+select option {
+  background-color: #0c1928 !important;
+  color: #ffffff !important;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s var(--ease);
+  z-index: 1005;
+}
+.modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-content {
+  background: #0c1222;
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 30px;
+  width: 90%;
+  max-width: 580px;
+  position: relative;
+  transform: translateY(20px);
+  transition: all 0.4s var(--ease);
+}
+.modal.open .modal-content {
+  transform: translateY(0);
+}
+

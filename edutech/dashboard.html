@@ -350,6 +350,10 @@
     font-size: 14px;
     outline: none;
   }
+  .field select option {
+    background: #0f172a;
+    color: #ffffff;
+  }
   .field input:focus, .field select:focus, .field textarea:focus {
     border-color: var(--secondary);
     background: rgba(255, 255, 255, 0.05);
@@ -1264,6 +1268,28 @@ const layouts = {
           </table>
         </div>
       </div>
+  `,
+  admin_student_leaves: `
+    <div class="glass-card" style="padding:20px;">
+      <h3 style="font-size:16px; margin-bottom:15px;">Pending Student Leave Applications</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Email</th>
+              <th>Leave Type</th>
+              <th>Duration</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action / Reviewer</th>
+            </tr>
+          </thead>
+          <tbody id="adminStudentLeavesTableBody">
+            <tr><td colspan="7" style="text-align:center;">Loading leave records...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   `
 };
@@ -1306,7 +1332,8 @@ function switchTab(panelId) {
     admin_payroll: { title: "Payroll Suite", sub: "Review live accrued staff payroll, process pay runs, and generate printable statements." },
     admin_assignments: { title: "Manage Assignments", sub: "Configure technical cohort assignments coursework." },
     admin_quizzes: { title: "Manage Quizzes", sub: "Create assessments and quiz question databases." },
-    admin_resources: { title: "Manage Resources", sub: "Publish decks, slides, and syllabus guides." }
+    admin_resources: { title: "Manage Resources", sub: "Publish decks, slides, and syllabus guides." },
+    admin_student_leaves: { title: "Student Leaves Review", sub: "Inspect, approve, or reject student leave requests." }
   };
 
   if (headers[panelId]) {
@@ -1331,6 +1358,7 @@ function renderSidebar() {
       { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
       { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
       { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
+      { id: "admin_student_leaves", label: "Student Leaves", icon: "calendar" },
       { id: "admin_employees", label: "Manage Staff/Trainers", icon: "users-2" },
       { id: "admin_designations", label: "Designations Registry", icon: "briefcase" },
       { id: "admin_payroll", label: "Payroll Suite", icon: "wallet" },
@@ -1344,6 +1372,7 @@ function renderSidebar() {
       { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
       { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
       { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
+      { id: "admin_student_leaves", label: "Student Leaves", icon: "calendar" },
       { id: "student_profile", label: "My Profile", icon: "user" }
     ];
   } else {
@@ -1388,6 +1417,7 @@ function loadPanelData(panelId) {
   else if (panelId === "admin_assignments") loadAdminAssignments();
   else if (panelId === "admin_quizzes") loadAdminQuizzes();
   else if (panelId === "admin_resources") loadAdminResources();
+  else if (panelId === "admin_student_leaves") loadAdminStudentLeaves();
 }
 
 // ==================== PANEL METHODS ====================
@@ -2505,6 +2535,69 @@ async function submitAdminResource(e) {
     loadAdminResources();
   } catch(err) {
     alert("Failed to publish resource: " + err.message);
+  }
+}
+
+function escapeHTML(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// 4. STUDENT LEAVES REVIEW
+async function loadAdminStudentLeaves() {
+  const tbody = document.getElementById("adminStudentLeavesTableBody");
+  tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>Loading student leave records...</td></tr>";
+  try {
+    const list = await apiCall("/api/edutech/trainer/leaves");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:var(--muted);'>No student leave applications registered.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(l => {
+      const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+      const start = new Date(l.start_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const end = new Date(l.end_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const reviewer = l.approved_by_name || "-";
+      
+      let actionBtn = "";
+      if (l.status === "Pending") {
+        actionBtn = `
+          <button onclick="reviewStudentLeave(${l.id}, 'Approved')" class="btn-primary" style="padding:4px 8px; font-size:11px; background:var(--success); box-shadow:none;">Approve</button>
+          <button onclick="reviewStudentLeave(${l.id}, 'Rejected')" class="btn-ghost" style="padding:4px 8px; font-size:11px; border-color:#ef4444; color:#ef4444;">Reject</button>
+        `;
+      } else {
+        actionBtn = `<span style="font-size:12px; color:var(--muted);">${reviewer}</span>`;
+      }
+      
+      return `
+        <tr>
+          <td><strong>${escapeHTML(l.student_name)}</strong></td>
+          <td>${escapeHTML(l.student_email)}</td>
+          <td>${l.leave_type}</td>
+          <td>
+            <div style="font-weight:600; color:white;">${leaveDays} Days</div>
+            <div style="font-size:10px; color:var(--muted);">${start} to ${end}</div>
+          </td>
+          <td style="max-width:200px; word-break:break-word;">${escapeHTML(l.reason || "-")}</td>
+          <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='7' style='color:#ef4444; text-align:center;'>Failed to load student leaves.</td></tr>";
+  }
+}
+
+async function reviewStudentLeave(id, action) {
+  if (confirm(`Are you sure you want to set this leave application to ${action}?`)) {
+    try {
+      await apiCall(`/api/edutech/trainer/leaves/${id}`, "PUT", { status: action });
+      alert(`Leave request ${action.toLowerCase()} successfully.`);
+      loadAdminStudentLeaves();
+    } catch(err) {
+      alert("Failed to update status: " + err.message);
+    }
   }
 }
 

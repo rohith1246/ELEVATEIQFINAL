@@ -630,6 +630,10 @@
     font-size: 13.5px;
     outline: none;
   }
+  .field select option {
+    background: #0f172a;
+    color: #ffffff;
+  }
   .field input:focus, .field select:focus, .field textarea:focus {
     border-color: var(--secondary);
     background: rgba(255, 255, 255, 0.05);
@@ -1017,6 +1021,10 @@
       <i data-lucide="graduation-cap" class="sidebar-icon"></i>
       <span>My Courses</span>
     </a>
+    <a class="sidebar-link" id="link_explore_courses" onclick="switchTab('explore_courses')">
+      <i data-lucide="compass" class="sidebar-icon"></i>
+      <span>Explore Courses</span>
+    </a>
     <a class="sidebar-link" id="link_live_classes" onclick="switchTab('live_classes')">
       <i data-lucide="video" class="sidebar-icon"></i>
       <span>Live Classes</span>
@@ -1044,6 +1052,10 @@
     <a class="sidebar-link" id="link_messages" onclick="switchTab('messages')">
       <i data-lucide="message-square" class="sidebar-icon"></i>
       <span>AI Mentor</span>
+    </a>
+    <a class="sidebar-link" id="link_leaves" onclick="switchTab('leaves')">
+      <i data-lucide="calendar" class="sidebar-icon"></i>
+      <span>Apply Leave</span>
     </a>
     <a class="sidebar-link" id="link_notifications" onclick="switchTab('notifications')">
       <i data-lucide="bell" class="sidebar-icon"></i>
@@ -1178,6 +1190,13 @@
       <!-- ==================== MY COURSES PANEL ==================== -->
       <div class="section-panel" id="panel_my_courses">
         <div class="course-grid" id="myCoursesGrid">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- ==================== EXPLORE COURSES PANEL ==================== -->
+      <div class="section-panel" id="panel_explore_courses">
+        <div class="course-grid" id="exploreCoursesGrid">
           <!-- Loaded dynamically -->
         </div>
       </div>
@@ -1364,6 +1383,62 @@
         </div>
       </div>
 
+      <!-- ==================== LEAVES PANEL ==================== -->
+      <div class="section-panel" id="panel_leaves">
+        <div class="grid-two-cols">
+          <!-- Apply Leave Form -->
+          <div class="glass-card" style="margin-bottom:0;">
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:16px;">New Leave Application</h3>
+            <form id="applyLeaveForm" onsubmit="submitStudentLeave(event)">
+              <div class="field">
+                <label for="studentLeaveType">Leave Type</label>
+                <select id="studentLeaveType" required>
+                  <option value="Casual">Casual Leave</option>
+                  <option value="Sick">Sick Leave</option>
+                  <option value="Personal">Personal Leave</option>
+                  <option value="Emergency">Emergency Leave</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="studentLeaveStart">Start Date</label>
+                <input type="date" id="studentLeaveStart" required>
+              </div>
+              <div class="field">
+                <label for="studentLeaveEnd">End Date</label>
+                <input type="date" id="studentLeaveEnd" required>
+              </div>
+              <div class="field">
+                <label for="studentLeaveReason">Reason</label>
+                <textarea id="studentLeaveReason" rows="4" placeholder="Brief explanation for leave request..." required></textarea>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%;">Submit Request</button>
+            </form>
+          </div>
+
+          <!-- Leave History Table -->
+          <div class="glass-card" style="margin-bottom:0; display:flex; flex-direction:column;">
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:16px;">Leave History</h3>
+            <div class="table-wrap" style="flex:1;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Leave Type</th>
+                    <th>Duration</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Reviewed By</th>
+                  </tr>
+                </thead>
+                <tbody id="studentLeavesTableBody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </div>
 </div>
@@ -1512,6 +1587,7 @@ function switchTab(panelId) {
   const headers = {
     dashboard: { title: "Dashboard", sub: "LMS statistics and track analytics overview" },
     my_courses: { title: "My Enrolled Courses", sub: "Review your enrolled technical cohort tracks" },
+    explore_courses: { title: "Explore Course Catalog", sub: "Browse and enroll in active technical academy programs" },
     live_classes: { title: "Upcoming Live Classes", sub: "Join active mentor screen shares and reviews" },
     assignments: { title: "Course Assignments", sub: "Submit project repositories and track grading statuses" },
     tests: { title: "Technical Tests", sub: "Challenge your skills with cohort MCQ assessments" },
@@ -1519,6 +1595,7 @@ function switchTab(panelId) {
     certificates: { title: "Course Certificates", sub: "Print or download verified course completion credentials" },
     placement: { title: "Placement Tracker", sub: "Inspect your career stages and recruitment tracks" },
     messages: { title: "AI Mentor", sub: "Ask questions directly to your AI LMS assistant" },
+    leaves: { title: "Apply Leave", sub: "Request leaves and track approval status from trainers and admin" },
     notifications: { title: "Board Notifications", sub: "Notice board alerts and company posts" }
   };
 
@@ -1532,6 +1609,7 @@ function switchTab(panelId) {
 function loadPanelData(panelId) {
   if (panelId === "dashboard") loadDashboardOverview();
   else if (panelId === "my_courses") loadMyCoursesCatalog();
+  else if (panelId === "explore_courses") loadExploreCourses();
   else if (panelId === "live_classes") loadLiveClassesList();
   else if (panelId === "assignments") loadAssignmentsList();
   else if (panelId === "tests") loadQuizzesList();
@@ -1539,6 +1617,7 @@ function loadPanelData(panelId) {
   else if (panelId === "certificates") loadCertificatesList();
   else if (panelId === "placement") loadPlacementTrack();
   else if (panelId === "messages") { /* no load actions needed */ }
+  else if (panelId === "leaves") loadStudentLeaves();
   else if (panelId === "notifications") loadNotificationsBoard();
 }
 
@@ -1634,6 +1713,55 @@ async function loadMyCoursesCatalog() {
     lucide.createIcons();
   } catch (err) {
     grid.innerHTML = "<p style='color:#ef4444;'>Failed to load enrolled courses.</p>";
+  }
+}
+
+// 2b. EXPLORE COURSES CATALOG
+async function loadExploreCourses() {
+  const grid = document.getElementById("exploreCoursesGrid");
+  grid.innerHTML = "<p style='text-align:center;'>Loading program catalog...</p>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    const enrolledList = await apiCall("/api/edutech/my-courses");
+    const enrolledIds = enrolledList.map(e => e.id);
+ 
+    if (!courses.length) {
+      grid.innerHTML = "<div class='glass-card' style='grid-column: 1/-1; text-align:center;'><p style='color:var(--muted);'>No active programs found in catalog.</p></div>";
+      return;
+    }
+ 
+    grid.innerHTML = courses.map(c => {
+      const isEnrolled = enrolledIds.includes(c.id);
+      return `
+        <div class="course-card">
+          <div class="course-card-header">
+            <div class="course-icon-box">
+              <i data-lucide="${getIconName(c.icon)}" style="width:18px;height:18px;"></i>
+            </div>
+            <span class="badge ${c.level.toLowerCase()}">${c.level}</span>
+          </div>
+          <h3 class="course-title">${c.title}</h3>
+          <div class="course-meta">
+            <span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>${c.duration}</span>
+            <span><i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;color:#facc15;"></i>${c.rating}</span>
+          </div>
+          <div class="course-card-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:14px; margin-top:10px;">
+            <div>
+              <span class="course-price" style="font-size: 16px; font-weight: 700; color: white;">${formatRupee(c.price)}</span>
+              ${c.old_price ? `<span class="course-price-old" style="font-size:11.5px; text-decoration:line-through; color:var(--muted); margin-left:6px;">${formatRupee(c.old_price)}</span>` : ''}
+            </div>
+            ${isEnrolled 
+              ? `<button class="btn-ghost" style="padding:6px 12px; font-size:12px; color:var(--success); border-color:rgba(34,197,94,0.3)" disabled>✓ Enrolled</button>`
+              : `<button class="btn-primary" style="padding:6px 12px; font-size:12px;" onclick="window.location.href='payment.html?course_id=${c.id}'">Enroll Now</button>`
+            }
+          </div>
+        </div>
+      `;
+    }).join("");
+    lucide.createIcons();
+  } catch (err) {
+    grid.innerHTML = "<p style='color:#ef4444; text-align:center;'>Failed to load program catalog.</p>";
   }
 }
 
@@ -2132,8 +2260,61 @@ function getIconName(cat) {
   return map[cat] || 'layers';
 }
 
+// Student Leaves Functions
+async function loadStudentLeaves() {
+  const tbody = document.getElementById("studentLeavesTableBody");
+  tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Loading leave records...</td></tr>";
+  try {
+    const list = await apiCall("/api/edutech/student/leaves");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:var(--muted);'>No leave requests submitted.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(l => {
+      const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+      const start = new Date(l.start_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const end = new Date(l.end_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const reviewer = l.approved_by_name || "-";
+      return `
+        <tr>
+          <td><strong>${l.leave_type}</strong></td>
+          <td>
+            <div style="font-weight:600; color:white;">${leaveDays} Days</div>
+            <div style="font-size:10px; color:var(--muted);">${start} to ${end}</div>
+          </td>
+          <td style="max-width:150px; word-break:break-word;">${l.reason || "-"}</td>
+          <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+          <td>${reviewer}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='5' style='color:#ef4444; text-align:center;'>Failed to load leaves.</td></tr>";
+  }
+}
+
+async function submitStudentLeave(e) {
+  e.preventDefault();
+  const payload = {
+    leave_type: document.getElementById("studentLeaveType").value,
+    start_date: document.getElementById("studentLeaveStart").value,
+    end_date: document.getElementById("studentLeaveEnd").value,
+    reason: document.getElementById("studentLeaveReason").value.trim()
+  };
+
+  try {
+    await apiCall("/api/edutech/student/leaves", "POST", payload);
+    alert("Leave request submitted successfully!");
+    document.getElementById("applyLeaveForm").reset();
+    loadStudentLeaves();
+  } catch (err) {
+    alert("Failed to submit leave request: " + err.message);
+  }
+}
+
 // Load default active Dashboard panel on start
 switchTab("dashboard");
+
 
 </script>
 

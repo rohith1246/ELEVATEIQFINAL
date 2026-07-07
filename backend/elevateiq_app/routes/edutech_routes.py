@@ -1134,4 +1134,151 @@ def create_resource():
         conn.close()
 
 
+# ==================== STUDENT LEAVES ENDPOINTS ====================
+
+@edutech_bp.route("/api/edutech/student/leaves", methods=["POST"])
+def apply_student_leave():
+    """
+    Apply for a student leave in the edutech portal.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    leave_type = data.get("leave_type", "").strip()
+    start_date = data.get("start_date", "").strip()
+    end_date = data.get("end_date", "").strip()
+    reason = data.get("reason", "").strip()
+
+    if not leave_type or not start_date or not end_date:
+        return jsonify({"error": "Leave type, start date, and end date are required"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("""
+            INSERT INTO student_leaves (user_id, leave_type, start_date, end_date, reason)
+            VALUES (%s, %s, %s, %s, %s) RETURNING id
+        """, (user["id"], leave_type, start_date, end_date, reason))
+        leave_id = cursor.fetchone()["id"]
+        conn.commit()
+        return jsonify({"message": "Student leave application submitted successfully", "id": leave_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@edutech_bp.route("/api/edutech/student/leaves", methods=["GET"])
+def get_student_leaves():
+    """
+    Get personal student leave requests.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("""
+            SELECT l.*, u.name as approved_by_name
+            FROM student_leaves l
+            LEFT JOIN users u ON l.approved_by = u.id
+            WHERE l.user_id = %s
+            ORDER BY l.created_at DESC
+        """, (user["id"],))
+        records = cursor.fetchall()
+        for rec in records:
+            if rec.get("start_date"):
+                rec["start_date"] = rec["start_date"].isoformat()
+            if rec.get("end_date"):
+                rec["end_date"] = rec["end_date"].isoformat()
+            if rec.get("created_at"):
+                rec["created_at"] = rec["created_at"].isoformat()
+        return jsonify(records), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@edutech_bp.route("/api/edutech/trainer/leaves", methods=["GET"])
+def get_all_student_leaves():
+    """
+    Retrieve all student leave applications (for trainers and admins).
+    """
+    user = get_current_user()
+    if not user or user.get("role") not in ["admin", "employee"]:
+        return jsonify({"error": "Forbidden"}), 403
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("""
+            SELECT l.*, s.name as student_name, s.email as student_email, u.name as approved_by_name
+            FROM student_leaves l
+            JOIN users s ON l.user_id = s.id
+            LEFT JOIN users u ON l.approved_by = u.id
+            ORDER BY l.status DESC, l.created_at DESC
+        """)
+        records = cursor.fetchall()
+        for rec in records:
+            if rec.get("start_date"):
+                rec["start_date"] = rec["start_date"].isoformat()
+            if rec.get("end_date"):
+                rec["end_date"] = rec["end_date"].isoformat()
+            if rec.get("created_at"):
+                rec["created_at"] = rec["created_at"].isoformat()
+        return jsonify(records), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@edutech_bp.route("/api/edutech/trainer/leaves/<int:leave_id>", methods=["PUT"])
+def review_student_leave(leave_id):
+    """
+    Approve or reject a student leave request.
+    """
+    user = get_current_user()
+    if not user or user.get("role") not in ["admin", "employee"]:
+        return jsonify({"error": "Forbidden"}), 403
+
+    data = request.json or {}
+    status = data.get("status", "").strip()
+
+    if status not in ["Approved", "Rejected"]:
+        return jsonify({"error": "Invalid status. Must be 'Approved' or 'Rejected'"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # Check if the student leave request exists
+        cursor.execute("SELECT id FROM student_leaves WHERE id = %s", (leave_id,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Student leave application not found"}), 404
+
+        cursor.execute("""
+            UPDATE student_leaves
+            SET status = %s, approved_by = %s
+            WHERE id = %s
+        """, (status, user["id"], leave_id))
+        conn.commit()
+        return jsonify({"message": f"Student leave status updated to {status}"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
 
