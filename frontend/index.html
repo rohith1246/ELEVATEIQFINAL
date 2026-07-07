@@ -35,7 +35,7 @@
 
 <!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
-    <a href="index.html" class="logo">
+    <a href="/edutech/" class="logo">
       <img src="images/logo.png" alt="Elevate IQ Logo">
     </a>
       <div class="menu-toggle" id="mobile-menu-btn" onclick="this.classList.toggle('active'); document.getElementById('navLinks').classList.toggle('active')">
@@ -103,17 +103,19 @@
             opacity:0;
             animation:fadeUp .9s ease forwards .15s;
         ">
-            <img src="images/logo.png" alt="ElevateIQ Soft Tech Private Limited"
-                 style="
-                 width:auto;
-                 height: clamp(90px, 14vw, 140px);
-                 object-fit:contain;
-                 filter: drop-shadow(0 0 20px rgba(63,208,255,0.25));
-                 transition:.3s;
-                 cursor:pointer;
-                 "
-                 onmouseover="this.style.transform='scale(1.03)'"
-                 onmouseout="this.style.transform='scale(1)'">
+            <a href="/edutech/" style="display:inline-block; text-decoration:none;">
+              <img src="images/logo.png" alt="ElevateIQ Soft Tech Private Limited"
+                   style="
+                   width:auto;
+                   height: clamp(90px, 14vw, 140px);
+                   object-fit:contain;
+                   filter: drop-shadow(0 0 20px rgba(63,208,255,0.25));
+                   transition:.3s;
+                   cursor:pointer;
+                   "
+                   onmouseover="this.style.transform='scale(1.03)'"
+                   onmouseout="this.style.transform='scale(1)'">
+            </a>
             
             <div class="hero-separator" style="
                 width: 1px;
@@ -221,14 +223,20 @@
       <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(63,208,255,0.18); color:var(--blue);">⚡</div>
       <h3 style="font-size:20px; font-weight:600; margin-bottom:15px; color:#fff;">IT Services</h3>
       <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--orange);">✔</span> Python
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Software Engineering:</strong> Enterprise solutions built in Python, Java, and Go.</span>
         </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--orange);">✔</span> Java
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Web Development:</strong> Modern, responsive applications using React, Node.js, and Next.js.</span>
         </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--orange);">✔</span> MySQL
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Cloud & DevOps:</strong> Multi-cloud architecture, Docker, Kubernetes, and CI/CD pipelines.</span>
+        </li>
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Database Systems:</strong> Scale-ready database design in PostgreSQL, MySQL, and MongoDB.</span>
+        </li>
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>API & Microservices:</strong> Secure backend architecture and service integrations.</span>
         </li>
       </ul>
     </div>
@@ -238,17 +246,20 @@
       <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(255,138,61,0.18); color:var(--orange);">👥</div>
       <h3 style="font-size:20px; font-weight:600; margin-bottom:15px; color:#fff;">Non-IT Services</h3>
       <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--blue);">✔</span> Telecalling
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Customer Support:</strong> 24/7 dedicated inbound/outbound telecalling operations.</span>
         </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--blue);">✔</span> Medical Coding
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Medical Coding:</strong> HIPAA-compliant medical coding and healthcare audit operations.</span>
         </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--blue);">✔</span> HR Support
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>HR Support:</strong> Payroll management, benefits administration, and recruitment sourcing.</span>
         </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:center; gap:8px;">
-          <span style="color:var(--blue);">✔</span> Business Support
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Business Operations:</strong> Back-office data handling, transcription, and BPM support.</span>
+        </li>
+        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Finance Outsourcing:</strong> Bookkeeping, corporate accounting, and financial reporting.</span>
         </li>
       </ul>
     </div>
