@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Checkout — EduTech Academy</title>
+<link rel="shortcut icon" href="logo.png" type="image/png">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --primary: #ff7a00;
+    --secondary: #0096ff;
+    --accent: #ff8a00;
+    --success: #22C55E;
+    --bg: #020617;
+    --bg-soft: #050b1f;
+    --card: rgba(15, 23, 36, 0.7);
+    --card-hover: #122034;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --line: rgba(148, 163, 184, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --orange-glow: rgba(255, 122, 0, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Ambient Blur Orbs */
+  .bg-canvas {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 50%, var(--bg-soft) 0%, var(--bg) 100%);
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.12;
+  }
+  .orb1 { top: -10%; left: -10%; width: 45%; height: 45%; background: var(--primary); }
+  .orb2 { bottom: -10%; right: -10%; width: 50%; height: 50%; background: var(--secondary); }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(2, 6, 23, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  .logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .logo img { height: 32px; width: auto; object-fit: contain; }
+  .logo span { font-size: 9px; color: #3FD0FF; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+  .checkout-container {
+    flex: 1;
+    max-width: 1000px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 30px;
+    align-items: start;
+    z-index: 5;
+  }
+
+  .glass-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 36px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  h1, h2 { font-weight: 700; margin-bottom: 24px; }
+  h1 { font-size: 26px; color: white; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  h2 { font-size: 20px; color: white; display: flex; align-items: center; gap: 8px; }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .summary-row.total {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .course-badge-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .course-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 122, 0, 0.1);
+    border: 1px solid rgba(255, 122, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .course-badge-info h3 { font-size: 16px; color: white; margin-bottom: 4px; }
+
+  /* Credit Card Graphic */
+  .card-graphic {
+    background: linear-gradient(135deg, #1e1e38 0%, #0c0f20 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-graphic::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255, 122, 0, 0.15) 0%, transparent 70%);
+    z-index: 1;
+  }
+  .card-chip {
+    width: 40px; height: 30px;
+    background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+    border-radius: 6px;
+  }
+  .card-number { font-size: 18px; font-weight: 600; letter-spacing: 2px; color: white; margin: 15px 0; font-family: monospace; }
+  .card-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .card-holder { font-weight: 600; text-transform: uppercase; color: white; }
+
+  /* Form Fields */
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+  .field input:focus { border-color: var(--secondary); background: rgba(255,255,255,0.06); box-shadow: 0 0 10px rgba(0,150,255,0.2); }
+  
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .btn-pay {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    margin-top: 10px;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 8px 20px -6px rgba(0, 150, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+  .btn-pay:hover { transform: translateY(-2px); opacity: 0.95; }
+  .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Success Dialog Overlay */
+  .overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(2, 6, 23, 0.9);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+  .overlay.show { display: flex; }
+  .success-card {
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+  }
+  .success-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px auto;
+  }
+
+  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: rgba(2, 6, 23, 0.3); }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="EduTech Logo">
+    <span>EduTech</span>
+  </a>
+</nav>
+
+<div class="checkout-container">
+  <!-- Left Side: Order summary -->
+  <div class="glass-card">
+    <h1>Confirm Enrollment</h1>
+    
+    <div id="loadingSummary">Loading program details...</div>
+    <div id="summaryBlock" style="display:none;">
+      <div class="course-badge-info">
+        <div class="course-icon-box">
+          <i data-lucide="layers" id="courseIcon"></i>
+        </div>
+        <div>
+          <h3 id="courseTitle">Program Title</h3>
+          <span style="font-size:12px; color:var(--muted);" id="courseDuration">-</span>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <span>Tuition Subtotal</span>
+        <span id="priceSubtotal">₹0</span>
+      </div>
+      <div class="summary-row">
+        <span>Tax (18% GST inclusive)</span>
+        <span id="priceTax">₹0</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total Payable</span>
+        <span id="priceTotal">₹0</span>
+      </div>
+      
+      <p style="font-size:12px; color:var(--muted); line-height:1.5; margin-top:24px;">
+        * This transaction is processed securely through simulated gateways. No real currency will be charged to your card.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side: Credit Card Details Form -->
+  <div class="glass-card">
+    <h2><i data-lucide="lock" style="width:18px;height:18px;color:var(--secondary)"></i> Secure Payment Details</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Card details (Enter any dummy numbers to test)</p>
+    
+    <div class="card-graphic">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="card-chip"></div>
+        <span style="font-size:14px; font-weight:700; color:white; letter-spacing:1px;">SECURE PAY</span>
+      </div>
+      <div class="card-number" id="previewNumber">•••• •••• •••• ••••</div>
+      <div class="card-meta">
+        <div>
+          <div style="font-size:8px; text-transform:uppercase; margin-bottom:2px;">Cardholder</div>
+          <div class="card-holder" id="previewHolder">Your Name</div>
+        </div>
+        <div>
+          <div style="font-size:8px; text-transform:uppercase; margin-bottom:2px;">Expiry</div>
+          <div style="font-weight:600; color:white;" id="previewExpiry">MM/YY</div>
+        </div>
+      </div>
+    </div>
+
+    <form id="paymentForm">
+      <div class="field">
+        <label>Cardholder Name</label>
+        <input type="text" id="cardName" placeholder="e.g. John Doe" required>
+      </div>
+      <div class="field">
+        <label>Card Number</label>
+        <input type="text" id="cardNumber" placeholder="16-digit card number" maxlength="19" required>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Expiry Date</label>
+          <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+        </div>
+        <div class="field">
+          <label>CVV / CVC</label>
+          <input type="password" id="cardCvv" placeholder="•••" maxlength="3" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-pay" id="payBtn">
+        <i data-lucide="shield-check" style="width:18px;height:18px;"></i>
+        <span>Pay & Register</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Success Modal Overlay -->
+<div class="overlay" id="successOverlay">
+  <div class="glass-card success-card">
+    <div class="success-icon">
+      <i data-lucide="check-circle" style="width:40px;height:40px;"></i>
+    </div>
+    <h1 style="border:none; padding:0; margin-bottom:12px;">Payment Approved</h1>
+    <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:24px;">
+      You have successfully enrolled in <strong id="successCourseTitle" style="color:white;"></strong>. A tax invoice receipt has been compiled for your transaction.
+    </p>
+    
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <a id="btnInvoiceLink" target="_blank" class="btn-pay" style="text-decoration:none; margin:0;">
+        <i data-lucide="file-text" style="width:18px;height:18px;"></i>
+        <span>View & Print Tax Invoice</span>
+      </a>
+      <a href="dashboard.html" class="btn-pay" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); box-shadow:none; text-decoration:none; margin:0;">
+        Go to Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 ElevateIQ EduTech Academy. All rights reserved.
+</footer>
+
+<script>
+  const API_BASE = window.location.origin;
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  if (!token || !user) {
+    window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.href);
+  }
+
+  // Parse course ID from query parameters
+  const params = new URLSearchParams(window.location.search);
+  const courseId = Number(params.get("course_id"));
+
+  if (!courseId) {
+    alert("Error: No course ID provided.");
+    window.location.href = "index.html";
+  }
+
+  let selectedCourse = null;
+
+  async function loadCourseDetails() {
+    try {
+      const res = await fetch(`${API_BASE}/api/edutech/courses`);
+      if (!res.ok) throw new Error();
+      const list = await res.json();
+      selectedCourse = list.find(c => c.id === courseId);
+
+      if (!selectedCourse) {
+        alert("Course not found in database.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      document.getElementById("loadingSummary").style.display = "none";
+      document.getElementById("summaryBlock").style.display = "block";
+
+      // Render summary fields
+      document.getElementById("courseTitle").textContent = selectedCourse.title;
+      document.getElementById("courseDuration").textContent = selectedCourse.duration;
+      
+      const price = selectedCourse.price;
+      const subtotal = price;
+      // Tax is inclusive 18% GST (Calculated as Total * 18 / 118)
+      const tax = (price * 18) / 118;
+      
+      document.getElementById("priceSubtotal").textContent = "₹" + (subtotal - tax).toLocaleString("en-IN", {maximumFractionDigits:2});
+      document.getElementById("priceTax").textContent = "₹" + tax.toLocaleString("en-IN", {maximumFractionDigits:2});
+      document.getElementById("priceTotal").textContent = "₹" + price.toLocaleString("en-IN");
+      
+      document.getElementById("courseIcon").setAttribute("data-lucide", getIconName(selectedCourse.icon));
+      lucide.createIcons();
+    } catch(e) {
+      document.getElementById("loadingSummary").textContent = "Failed to load order summary.";
+    }
+  }
+
+  // Format Card Number input with spaces
+  document.getElementById("cardNumber").addEventListener("input", function(e) {
+    let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    let matches = v.match(/\d{4,16}/g);
+    let match = matches && matches[0] || '';
+    let parts = [];
+
+    for (let i=0, len=match.length; i<len; i+=4) {
+      parts.push(match.substring(i, i+4));
+    }
+
+    if (parts.length > 0) {
+      e.target.value = parts.join(' ');
+      document.getElementById("previewNumber").textContent = parts.join(' ');
+    } else {
+      e.target.value = v;
+      document.getElementById("previewNumber").textContent = v || "•••• •••• •••• ••••";
+    }
+  });
+
+  // Dynamic Holder Preview update
+  document.getElementById("cardName").addEventListener("input", function(e) {
+    document.getElementById("previewHolder").textContent = e.target.value || "Your Name";
+  });
+
+  // Expiry input formatter (MM/YY)
+  document.getElementById("cardExpiry").addEventListener("input", function(e) {
+    let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      e.target.value = v.substring(0, 2) + '/' + v.substring(2, 4);
+      document.getElementById("previewExpiry").textContent = e.target.value;
+    } else {
+      e.target.value = v;
+      document.getElementById("previewExpiry").textContent = v || "MM/YY";
+    }
+  });
+
+  // Submit mock transaction payment
+  document.getElementById("paymentForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = true;
+    payBtn.innerHTML = '<span>Processing Securely...</span>';
+
+    try {
+      // Step 1: Request enrollment registration with authentication token
+      const response = await fetch(`${API_BASE}/api/edutech/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ course_id: courseId })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Enrollment failed.");
+      }
+
+      // Step 2: Display Success Animation & dynamic Invoice print link
+      document.getElementById("successCourseTitle").textContent = selectedCourse.title;
+      document.getElementById("btnInvoiceLink").href = `invoice.html?enrollment_id=${data.enrollment_id}`;
+      document.getElementById("successOverlay").classList.add("show");
+    } catch(err) {
+      alert(err.message || "An error occurred during payment checkout.");
+      payBtn.disabled = false;
+      payBtn.innerHTML = '<i data-lucide="shield-check" style="width:18px;height:18px;"></i><span>Pay & Register</span>';
+      lucide.createIcons();
+    }
+  });
+
+  function getIconName(cat) {
+    const map = {
+      layers: 'layers',
+      code: 'code-2',
+      coffee: 'coffee',
+      brain: 'brain',
+      chart: 'bar-chart',
+      cloud: 'cloud',
+      server: 'server',
+      shield: 'shield',
+      palette: 'palette'
+    };
+    return map[cat] || 'layers';
+  }
+
+  loadCourseDetails();
+</script>
+</body>
+</html>

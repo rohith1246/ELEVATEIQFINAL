@@ -16,12 +16,12 @@
   --success:#22C55E;
   --bg:#020617;
   --bg-soft:#050b1f;
-  --card:#0f1724;
-  --card-hover:#122034;
+  --card: rgba(15, 23, 36, 0.65);
+  --card-hover: rgba(20, 35, 60, 0.85);
   --text:#F8FAFC;
   --muted:#94A3B8;
   --line: rgba(148,163,184,0.12);
-  --glass: rgba(15,23,36,0.55);
+  --glass: rgba(15,23,36,0.65);
   --radius: 20px;
   --radius-sm: 12px;
   --ease: cubic-bezier(.16,.8,.24,1);
@@ -206,7 +206,30 @@ input,textarea,select{font-family:inherit;}
 .nav-links a:hover::after{ width:100%; }
 .nav-cta{ display:flex; align-items:center; gap:14px; }
 .nav-toggle{ display:none; flex-direction:column; justify-content:space-between; width:24px; height:18px; cursor:pointer; }
-.nav-toggle span{ height:2px; width:100%; background:var(--text); border-radius:2px; transition:all 0.3s; }
+.nav-links a.nav-login-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s var(--ease);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  display: inline-block;
+}
+.nav-links a.nav-login-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--secondary);
+  box-shadow: 0 0 15px rgba(0, 150, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+  color: white;
+}
+.nav-links a.nav-login-btn::after {
+  display: none !important;
+}
 
 /* Floating WhatsApp Link FAB styling */
 .whatsapp-fab{ position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%;
@@ -317,6 +340,9 @@ input,textarea,select{font-family:inherit;}
   border-radius:var(--radius);
   position:relative;
   overflow:hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 .glass-card::before{
   content:''; position:absolute; inset:0; opacity:0; transition:opacity .4s;
@@ -383,6 +409,8 @@ input,textarea,select{font-family:inherit;}
 .search-box{
   display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:100px;
   background:var(--card); border:1px solid var(--line); flex:1; min-width:220px; max-width:340px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .search-box svg{ width:16px; height:16px; color:var(--muted); }
 .search-box input{ background:none; border:none; outline:none; color:var(--text); width:100%; font-size:14px; }
@@ -390,6 +418,8 @@ input,textarea,select{font-family:inherit;}
 .pill{
   padding:9px 18px; border-radius:100px; font-size:13px; font-weight:500; color:var(--muted);
   border:1px solid var(--line); background:var(--card); transition:all .3s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .pill.active, .pill:hover{ color:#fff; background:var(--grad-primary); border-color:transparent; }
 

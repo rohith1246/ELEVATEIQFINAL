@@ -220,7 +220,10 @@
   function renderCourses(list){
     const grid = document.getElementById("coursesGrid");
     if (!list.length){ grid.innerHTML = `<p style="color:var(--muted); grid-column:1/-1; text-align:center; padding:40px 0;">No programs match that search.</p>`; return; }
-    grid.innerHTML = list.map(c => `
+    grid.innerHTML = list.map(c => {
+      const priceVal = c.price;
+      const oldPriceVal = c.oldPrice || c.old_price;
+      return `
       <div class="glass-card course-card reveal" style="opacity:1; transform:none;">
         <div class="course-thumb">
           ${svgIcon(ICONS[c.icon]||ICONS.layers)}
@@ -232,22 +235,54 @@
             <span>${svgIcon('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>')}${c.duration}</span>
             <span class="rating">${svgIcon('<polygon points="12 2 15 8.5 22 9.5 17 14.5 18.5 21.5 12 18 5.5 21.5 7 14.5 2 9.5 9 8.5 12 2"/>')}${c.rating}</span>
           </div>
+          <div style="margin: 10px 0 16px 0; display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 18px; font-weight: 700; color: white;">${money(priceVal)}</span>
+            ${oldPriceVal ? `<span style="font-size: 13px; text-decoration: line-through; color: var(--muted);">${money(oldPriceVal)}</span>` : ''}
+          </div>
           <div class="course-foot">
-            <button class="btn btn-primary btn-sm magnetic enroll-btn">Enroll</button>
+            <button class="btn btn-primary btn-sm magnetic enroll-btn" data-id="${c.id}">Enroll</button>
           </div>
         </div>
-      </div>`).join("");
+      </div>`;
+    }).join("");
 
     grid.querySelectorAll(".enroll-btn").forEach(b=> b.addEventListener("click", ()=>{
-      document.getElementById("contact").scrollIntoView({behavior:"smooth"});
+      const courseId = b.getAttribute("data-id");
+      if (localStorage.getItem("token")) {
+        window.location.href = `payment.html?course_id=${courseId}`;
+      } else {
+        window.location.href = `login.html?redirect=payment.html?course_id=${courseId}`;
+      }
     }));
   }
 
   /**
    * Binds listeners to course search inputs and filter pills.
    */
-  function setupCourses(){
-    renderCourses(COURSES);
+  async function setupCourses(){
+    let activeCourses = [];
+
+    // Dynamically update Login/Dashboard navbar link based on session state
+    const navLogin = document.getElementById("navLoginLink");
+    if (navLogin && localStorage.getItem("token")) {
+      navLogin.textContent = "Dashboard";
+      navLogin.href = "dashboard.html";
+    }
+
+    try {
+      const res = await fetch("/api/edutech/courses");
+      if (res.ok) {
+        activeCourses = await res.json();
+      } else {
+        throw new Error("API failed");
+      }
+    } catch(err) {
+      console.warn("Could not load backend courses. Falling back to static data.");
+      activeCourses = COURSES;
+    }
+
+    renderCourses(activeCourses);
+
     const search = document.getElementById("courseSearch");
     const pills = document.querySelectorAll(".pill");
     let activeFilter = "all";
@@ -255,7 +290,7 @@
     /** Applies search and level filtering tags */
     function apply(){
       const q = search.value.trim().toLowerCase();
-      const filtered = COURSES.filter(c=>{
+      const filtered = activeCourses.filter(c=>{
         const matchesFilter = activeFilter==="all" || c.level===activeFilter;
         const matchesSearch = !q || c.title.toLowerCase().includes(q);
         return matchesFilter && matchesSearch;

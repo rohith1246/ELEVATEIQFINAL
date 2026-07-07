@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Invoice Receipt — EduTech Academy</title>
+<link rel="shortcut icon" href="logo.png" type="image/png">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f1f5f9;
+    color: #1e293b;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  /* Printable invoice sheet */
+  .invoice-card {
+    background: white;
+    width: 100%;
+    max-width: 800px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+  }
+
+  /* Vector Logos layout */
+  .logos-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .divider-line {
+    width: 1px;
+    height: 40px;
+    background: #cbd5e1;
+  }
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: sans-serif;
+    font-weight: 700;
+  }
+
+  .invoice-title {
+    text-align: right;
+  }
+  .invoice-title h1 {
+    font-size: 24px;
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .badge-paid {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #bbf7d0;
+  }
+
+  /* Details Grid */
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+  }
+  .details-block h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .details-block p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #334155;
+  }
+
+  /* Invoice Items Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+  th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  td {
+    padding: 16px;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  /* Summary Block */
+  .summary-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 40px;
+  }
+  .summary-table {
+    width: 300px;
+  }
+  .summary-table tr td {
+    padding: 8px 12px;
+    border: none;
+    font-size: 13px;
+    color: #475569;
+  }
+  .summary-table tr td:last-child {
+    text-align: right;
+  }
+  .summary-table tr.total-row td {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+  }
+
+  .meta-receipt-info {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.6;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 20px;
+  }
+
+  /* Actions floating bar */
+  .action-bar {
+    margin-top: 30px;
+    display: flex;
+    gap: 16px;
+    z-index: 10;
+  }
+  .btn-print {
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    background: #ff7a00;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255,122,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+  .btn-print:hover { background: #e06c00; }
+  .btn-print.secondary {
+    background: white;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    box-shadow: none;
+  }
+  .btn-print.secondary:hover { background: #f8fafc; color: #0f172a; }
+
+  /* Print Media Overrides */
+  @media print {
+    body { background: white; padding: 0; }
+    .invoice-card { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; }
+    .action-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingBlock">
+  <p style="color:#64748b;">Generating dynamic tax receipt...</p>
+</div>
+
+<div class="invoice-card" id="invoiceCard" style="display:none;">
+  <!-- Invoice Header -->
+  <div class="invoice-header">
+    <div class="logos-container">
+      <!-- EduTech Academy Orange Logo -->
+      <div class="brand-logo" style="color:#ff7a00; font-size:18px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+        </svg>
+        <span>EduTech</span>
+      </div>
+      <div class="divider-line"></div>
+      <!-- ElevateIQ Blue Logo -->
+      <div class="brand-logo" style="color:#0096ff; font-size:16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="9" y1="9" x2="15" y2="9"/>
+          <line x1="9" y1="13" x2="15" y2="13"/>
+          <line x1="9" y1="17" x2="13" y2="17"/>
+        </svg>
+        <span>ElevateIQ</span>
+      </div>
+    </div>
+    
+    <div class="invoice-title">
+      <h1>TAX INVOICE</h1>
+      <span class="badge-paid">Paid</span>
+    </div>
+  </div>
+
+  <!-- Bill details section -->
+  <div class="details-grid">
+    <div class="details-block">
+      <h3>Billed From</h3>
+      <p><strong>EduTech Academy</strong></p>
+      <p>A Division of ElevateIQ Solutions Inc.</p>
+      <p>Outer Ring Road, Bellandur</p>
+      <p>Bangalore, KA 560103</p>
+      <p>GSTIN: 29AAFCE8889R1ZX</p>
+    </div>
+    <div class="details-block" style="text-align: right;">
+      <h3>Billed To</h3>
+      <p><strong id="studentName">-</strong></p>
+      <p id="studentEmail">-</p>
+      <p style="margin-top: 15px; font-size: 12px; color:#64748b;">
+        Invoice Serial: <strong style="color:#1e293b;" id="invoiceSerial">-</strong><br>
+        Transaction Date: <strong style="color:#1e293b;" id="invoiceDate">-</strong><br>
+        Payment Method: <strong>Mock Credit Card</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Cohort Duration</th>
+        <th style="text-align: right;">Tax Rate</th>
+        <th style="text-align: right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <p><strong id="itemTitle">Product Tuition</strong></p>
+          <span style="font-size:12px; color:#64748b;">Standard Admissions cohort program access</span>
+        </td>
+        <td id="itemDuration">-</td>
+        <td style="text-align: right;">18% GST (incl.)</td>
+        <td style="text-align: right;" id="itemAmount">₹0.00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Summary Total block -->
+  <div class="summary-container">
+    <table class="summary-table">
+      <tr>
+        <td>Subtotal</td>
+        <td id="summarySubtotal">₹0.00</td>
+      </tr>
+      <tr>
+        <td>Inclusive GST (18%)</td>
+        <td id="summaryTax">₹0.00</td>
+      </tr>
+      <tr class="total-row">
+        <td>Total Paid</td>
+        <td id="summaryTotal">₹0.00</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Meta terms info -->
+  <div class="meta-receipt-info">
+    <p><strong>Terms & Declarations:</strong></p>
+    <p>1. This invoice serves as an official confirmation of admission registry and payment receipt for the course specified above.</p>
+    <p>2. Fees paid are subject to institutional admissions cancellation policy guidelines.</p>
+    <p>3. This is a computer-generated tax document compiled on behalf of ElevateIQ group solutions and requires no physical signature.</p>
+  </div>
+</div>
+
+<div class="action-bar" id="actionBar" style="display:none;">
+  <button class="btn-print" onclick="window.print()">
+    <i data-lucide="printer" style="width:16px;height:16px;"></i>
+    <span>Print Invoice / Save PDF</span>
+  </button>
+  <a href="dashboard.html" class="btn-print secondary" style="text-decoration:none;">
+    Back to Dashboard
+  </a>
+</div>
+
+<script>
+  const API_BASE = window.location.origin;
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "login.html";
+  }
+
+  // Parse enrollment ID from url query parameters
+  const params = new URLSearchParams(window.location.search);
+  const enrollmentId = Number(params.get("enrollment_id"));
+
+  if (!enrollmentId) {
+    alert("Error: No enrollment ID specified.");
+    window.location.href = "dashboard.html";
+  }
+
+  async function loadInvoiceDetails() {
+    try {
+      const res = await fetch(`${API_BASE}/api/edutech/invoice/${enrollmentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("API retrieval failed");
+      const data = await res.json();
+
+      document.getElementById("loadingBlock").style.display = "none";
+      document.getElementById("invoiceCard").style.display = "block";
+      document.getElementById("actionBar").style.display = "flex";
+
+      // Render details
+      document.getElementById("studentName").textContent = data.student_name;
+      document.getElementById("studentEmail").textContent = data.student_email;
+      
+      // Formatting Invoice Serial (e.g. INV-ED-2026-0042)
+      const serial = "INV-ED-2026-" + String(data.id).padStart(4, '0');
+      document.getElementById("invoiceSerial").textContent = serial;
+      
+      const date = new Date(data.enrolled_at);
+      document.getElementById("invoiceDate").textContent = date.toLocaleDateString("en-IN", {
+        dateStyle: "long"
+      });
+
+      document.getElementById("itemTitle").textContent = data.course_title;
+      document.getElementById("itemDuration").textContent = data.course_duration;
+      
+      const price = data.price_paid;
+      const tax = (price * 18) / 118;
+      const subtotal = price - tax;
+
+      document.getElementById("itemAmount").textContent = "₹" + price.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("summarySubtotal").textContent = "₹" + subtotal.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("summaryTax").textContent = "₹" + tax.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("summaryTotal").textContent = "₹" + price.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      
+      lucide.createIcons();
+    } catch(e) {
+      document.getElementById("loadingBlock").innerHTML = `<p style="color:#ef4444;">Failed to compile receipt. Details: ${e.message}</p>`;
+    }
+  }
+
+  loadInvoiceDetails();
+</script>
+</body>
+</html>

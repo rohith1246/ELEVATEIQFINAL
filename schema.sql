@@ -192,6 +192,42 @@ CREATE TABLE IF NOT EXISTS designations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 19. Courses Table
+CREATE TABLE IF NOT EXISTS courses (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(150) NOT NULL UNIQUE,
+    level VARCHAR(50) NOT NULL, -- 'Beginner', 'Intermediate', 'Advanced'
+    duration VARCHAR(50) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    old_price DECIMAL(10,2),
+    rating DECIMAL(3,2) DEFAULT 5.00,
+    icon VARCHAR(50) DEFAULT 'layers',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 20. Course Enrollments
+CREATE TABLE IF NOT EXISTS course_enrollments (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    course_id INT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    price_paid DECIMAL(10,2) NOT NULL,
+    enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'Active', -- 'Active', 'Completed', 'Cancelled'
+    UNIQUE (user_id, course_id)
+);
+
+-- 21. Live Classes
+CREATE TABLE IF NOT EXISTS live_classes (
+    id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    platform VARCHAR(50) NOT NULL, -- 'Zoom', 'Google Meet', 'Teams', etc.
+    meeting_link VARCHAR(500) NOT NULL,
+    scheduled_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- ==================== PERFORMANCE OPTIMIZATION INDEXES ====================
 
@@ -227,4 +263,9 @@ CREATE INDEX IF NOT EXISTS idx_client_interactions_client_id ON client_interacti
 -- Indexes for meetings scheduled times and client keys
 CREATE INDEX IF NOT EXISTS idx_meetings_client_id ON meetings(client_id);
 CREATE INDEX IF NOT EXISTS idx_meetings_scheduled_at ON meetings(scheduled_at);
+
+-- Indexes for EduTech extensions
+CREATE INDEX IF NOT EXISTS idx_course_enrollments_user ON course_enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_live_classes_course ON live_classes(course_id);
+
 
