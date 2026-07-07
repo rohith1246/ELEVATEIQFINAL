@@ -918,6 +918,179 @@ const layouts = {
         </div>
       </div>
     </div>
+  `,
+  admin_payroll: `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <label style="font-weight:600; color:var(--ink-soft);">Select Cycle:</label>
+            <input type="month" id="edu_payrollMonthFilter" onchange="loadEdutechPayroll(this.value)" style="padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; outline:none;">
+        </div>
+        <button onclick="runEdutechBulkPayrun()" class="btn-primary" style="margin-top:0;">🚀 Run Bulk Payrun</button>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
+        <div class="stat-card">
+            <h3>Active Cycle</h3>
+            <div class="val" id="edu_stat_pay_cycle" style="font-size: 18px;">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Salary Pool</h3>
+            <div class="val" id="edu_stat_total_pool" style="font-family: monospace;">-</div>
+        </div>
+        <div class="stat-card" style="border: 1px solid rgba(255, 122, 0, 0.2); background: rgba(255, 122, 0, 0.02);">
+            <h3 style="color:var(--orange);">Accrued Spend (Live)</h3>
+            <div class="val" id="edu_stat_total_accrued" style="font-family: monospace; color:var(--orange); font-size:24px;">$0.00000</div>
+        </div>
+        <div class="stat-card">
+            <h3>Burn Rate</h3>
+            <div class="val" id="edu_stat_burn_rate" style="font-family: monospace;">-</div>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.01); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border);">
+        <div style="text-align: center;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Paid Cycles</div>
+            <div style="font-size: 20px; font-weight: 700; color: #00e676; margin-top: 5px;" id="edu_stat_paid_amount">$0.00</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;"><span id="edu_stat_paid_count">0</span> staff paid</div>
+        </div>
+        <div style="text-align: center; border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border);">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Processing Cycles</div>
+            <div style="font-size: 20px; font-weight: 700; color: #ffeb3b; margin-top: 5px;" id="edu_stat_proc_count">0</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">staff in queue</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Unprocessed / Pending</div>
+            <div style="font-size: 20px; font-weight: 700; color: #ff9100; margin-top: 5px;" id="edu_stat_pend_count">0</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">staff pending</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name & Designation</th>
+                    <th>Department</th>
+                    <th>Base Salary</th>
+                    <th>Accrued This Month (Live)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="edu_payrollTableBody">
+                <tr><td colspan="7" style="text-align:center;">Loading payroll register...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- individual process payroll modal -->
+    <div class="modal" id="edu_processPayrollModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal-content" style="max-width: 700px; text-align: left; background:#07101a; border:1px solid var(--glass-border); padding: 25px; border-radius: 12px; position: relative;">
+            <button class="close-modal" onclick="closeModal('edu_processPayrollModal')" style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+            <h2 style="margin-bottom: 20px; display:flex; align-items:center; gap:10px; font-size: 20px;">
+                <span style="color:var(--orange);">📊</span>
+                <span>Salary Calculator & Pay Processing</span>
+            </h2>
+            <div style="font-size:13px; color:var(--muted); margin-bottom:15px;">
+                Staff Member: <strong id="edu_calcEmpName" style="color:white;">-</strong> (<span id="edu_calcEmpId">-</span>)
+            </div>
+            
+            <form id="edu_processPayrollForm" onsubmit="submitEdutechPayroll(event)">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <!-- Earnings Column -->
+                    <div class="glass-card" style="padding:15px; background:rgba(0,230,118,0.01); border:1px solid rgba(0,230,118,0.15); border-radius:8px;">
+                        <h3 style="font-size:14px; margin-bottom:15px; color:#00e676; border-bottom:1px solid rgba(0,230,118,0.15); padding-bottom:5px;">Earnings & Allowances</h3>
+                        
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Base Monthly Salary ($)</label>
+                            <input type="number" id="edu_calcBaseSalary" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;" required>
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">House Rent Allowance (HRA 10%) ($)</label>
+                            <input type="number" id="edu_calcHra" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Dearness Allowance (DA 5%) ($)</label>
+                            <input type="number" id="edu_calcDa" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Medical Allowance ($)</label>
+                            <input type="number" id="edu_calcMedical" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Performance Bonus / Custom ($)</label>
+                            <input type="number" id="edu_calcBonus" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div style="text-align:right; font-weight:700; font-size:13px; margin-top:10px; color:#00e676;">
+                            Total Earnings: <span id="edu_calcTotalAllowances">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Deductions Column -->
+                    <div class="glass-card" style="padding:15px; background:rgba(239,68,68,0.01); border:1px solid rgba(239,68,68,0.15); border-radius:8px;">
+                        <h3 style="font-size:14px; margin-bottom:15px; color:#ef4444; border-bottom:1px solid rgba(239,68,68,0.15); padding-bottom:5px;">Deductions & Taxes</h3>
+                        
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Provident Fund (PF 12%) ($)</label>
+                            <input type="number" id="edu_calcPf" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Professional Tax (PT 2%) ($)</label>
+                            <input type="number" id="edu_calcPt" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Loss of Pay (LOP proration) ($)</label>
+                            <div style="font-size:10px; color:var(--muted); margin-bottom:4px;" id="edu_calcAbsentDays">0 day(s) absent</div>
+                            <input type="number" id="edu_calcLop" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Custom Deductions ($)</label>
+                            <input type="number" id="edu_calcCustomDeduction" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div style="text-align:right; font-weight:700; font-size:13px; margin-top:40px; color:#ef4444;">
+                            Total Deductions: <span id="edu_calcTotalDeductions">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Result Summary Row -->
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <div>
+                        <span style="font-size:11px; color:var(--muted); text-transform:uppercase;">Net Payable Take-Home</span>
+                        <div id="edu_calcNetPay" style="font-size:24px; font-weight:700; color:#00e676; font-family:monospace; margin-top:4px;">$0.00</div>
+                        <input type="hidden" id="edu_calcNetPayRaw">
+                    </div>
+                    <div class="field" style="margin-bottom:0; width:180px;">
+                        <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Payment Run Status</label>
+                        <select id="edu_calcStatus" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:#0c1928; color:white;">
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" onclick="closeModal('edu_processPayrollModal')" class="btn-ghost" style="padding:10px 20px; font-size:13px; color:white; border-color:var(--glass-border);">Cancel</button>
+                    <button type="submit" class="btn-primary" style="margin-top:0; padding:10px 20px; font-size:13px;">💾 Save & Process Run</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dynamic Printable Payslip Modal -->
+    <div class="modal" id="edu_payslipViewModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; overflow-y:auto;">
+        <div class="modal-content" style="max-width: 680px; text-align: left; background: transparent; box-shadow: none; border: none; padding:0; position:relative;">
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button class="btn-primary" style="margin-top:0; padding:6px 12px; font-size:12px;" onclick="printEdutechPayslip()">🖨️ Print Payslip</button>
+                <button class="btn-ghost" style="margin-left: 8px; padding:6px 12px; font-size:12px; color:white; border-color:white;" onclick="closeModal('edu_payslipViewModal')">Close</button>
+            </div>
+            <div id="edu_payslipPrintArea">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
   `
 };
 
@@ -955,7 +1128,8 @@ function switchTab(panelId) {
     admin_enrollments: { title: "Track Enrollments", sub: "Inspect cohort enrollments and statistics." },
     admin_live: { title: "Live Cohort Classes", sub: "Manage and broadcast platform screen-share sessions." },
     admin_employees: { title: "Manage Staff/Trainers", sub: "Register and manage academy staff profiles." },
-    admin_designations: { title: "Designations Registry", sub: "Configure custom designation roles for employees." }
+    admin_designations: { title: "Designations Registry", sub: "Configure custom designation roles for employees." },
+    admin_payroll: { title: "Payroll Suite", sub: "Review live accrued staff payroll, process pay runs, and generate printable statements." }
   };
 
   if (headers[panelId]) {
@@ -977,6 +1151,7 @@ function renderSidebar() {
       { id: "admin_live", label: "Live Classes Mgmt", icon: "video" },
       { id: "admin_employees", label: "Manage Staff/Trainers", icon: "users-2" },
       { id: "admin_designations", label: "Designations Registry", icon: "briefcase" },
+      { id: "admin_payroll", label: "Payroll Suite", icon: "wallet" },
       { id: "student_profile", label: "My Profile", icon: "user" }
     ];
   } else if (user.role === 'employee') {
@@ -1024,6 +1199,7 @@ function loadPanelData(panelId) {
   else if (panelId === "admin_live") loadAdminLive();
   else if (panelId === "admin_employees") loadAdminEmployees();
   else if (panelId === "admin_designations") loadAdminDesignations();
+  else if (panelId === "admin_payroll") loadEdutechPayroll();
 }
 
 // ==================== PANEL METHODS ====================
@@ -1608,6 +1784,361 @@ async function submitDesignation(e) {
     document.getElementById("desgName").value = "";
     loadAdminDesignations();
   } catch(e) {}
+}
+
+}
+
+// ==================== EDUTECH REALTIME PAYROLL MODULE ====================
+
+let edutechPayrollTickerInterval = null;
+let currentEdutechPayrollMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+let cachedEdutechPayrollLedger = [];
+let cachedEdutechPayrollSummary = null;
+
+async function loadEdutechPayroll(selectedMonth = null) {
+  if (selectedMonth) {
+    currentEdutechPayrollMonth = selectedMonth;
+  }
+  
+  const monthInput = document.getElementById("edu_payrollMonthFilter");
+  if (monthInput) monthInput.value = currentEdutechPayrollMonth;
+  
+  try {
+    cachedEdutechPayrollSummary = await apiCall(`/api/payroll/summary?month=${currentEdutechPayrollMonth}&portal=edutech`);
+    cachedEdutechPayrollLedger = await apiCall(`/api/payroll/ledger?month=${currentEdutechPayrollMonth}&portal=edutech`);
+    
+    renderEdutechPayrollSummary(cachedEdutechPayrollSummary);
+    renderEdutechPayrollLedger(cachedEdutechPayrollLedger);
+    startEdutechPayrollTickers(cachedEdutechPayrollSummary, cachedEdutechPayrollLedger);
+  } catch (err) {
+    console.error("Failed to load Edutech payroll:", err);
+  }
+}
+
+function renderEdutechPayrollSummary(summary) {
+  document.getElementById("edu_stat_pay_cycle").textContent = formatMonthLabel(summary.month);
+  document.getElementById("edu_stat_total_pool").textContent = formatCurrency(summary.total_monthly_payroll);
+  document.getElementById("edu_stat_burn_rate").textContent = `${formatCurrency(summary.burn_rate_sec)}/sec`;
+  document.getElementById("edu_stat_paid_amount").textContent = formatCurrency(summary.paid_amount);
+  
+  const c = summary.status_counts;
+  document.getElementById("edu_stat_paid_count").textContent = c.Paid || 0;
+  document.getElementById("edu_stat_proc_count").textContent = c.Processing || 0;
+  document.getElementById("edu_stat_pend_count").textContent = c.Pending || 0;
+}
+
+function startEdutechPayrollTickers(summary, ledger) {
+  if (edutechPayrollTickerInterval) {
+    clearInterval(edutechPayrollTickerInterval);
+  }
+  
+  const totalAccruedElem = document.getElementById("edu_stat_total_accrued");
+  const burnRate = summary.burn_rate_sec;
+  const elapsedSeconds = summary.elapsed_seconds;
+  const startTime = Date.now();
+  
+  const daysInMonth = getDaysInMonthString(summary.month);
+  const secsInMonth = daysInMonth * 24 * 3600;
+  
+  edutechPayrollTickerInterval = setInterval(() => {
+    const deltaSeconds = (Date.now() - startTime) / 1000;
+    const totalElapsed = elapsedSeconds + deltaSeconds;
+    
+    const cappedElapsed = Math.min(totalElapsed, secsInMonth);
+    
+    const accruedTotal = cappedElapsed * burnRate;
+    if (totalAccruedElem) {
+      totalAccruedElem.innerHTML = `<span class="ticker-prefix">$</span>${accruedTotal.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
+    }
+    
+    ledger.forEach(emp => {
+      const empTicker = document.getElementById(`edu_emp_ticker_${emp.employee_db_id}`);
+      if (empTicker) {
+        const empRate = emp.base_salary / secsInMonth;
+        const empAccrued = cappedElapsed * empRate;
+        empTicker.textContent = formatCurrency(empAccrued, 4);
+      }
+    });
+  }, 100);
+}
+
+function renderEdutechPayrollLedger(ledger) {
+  const tbody = document.getElementById("edu_payrollTableBody");
+  if (!tbody) return;
+  
+  if (!ledger.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted);">No active staff found.</td></tr>`;
+    return;
+  }
+  
+  tbody.innerHTML = ledger.map(emp => {
+    const statusClass = emp.status.toLowerCase();
+    const actionBtn = emp.status === 'Paid' 
+      ? `<button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="viewEdutechPayslipModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Payslip</button>`
+      : `<button class="btn-primary" style="padding:4px 8px; font-size:11px; margin-top:0;" onclick="openEdutechPayModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Process</button>
+         <button class="btn-ghost" style="padding:4px 8px; font-size:11px; margin-left:5px;" onclick="viewEdutechPayslipModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Preview</button>`;
+         
+    return `
+      <tr>
+        <td style="font-weight:600; color:white;">${emp.employee_id}</td>
+        <td>
+          <div style="font-weight:600; color:white;">${emp.name}</div>
+          <div style="font-size:10px; color:var(--muted);">${emp.designation || '-'}</div>
+        </td>
+        <td>${emp.department || '-'}</td>
+        <td style="font-weight:600;">${formatCurrency(emp.base_salary)}</td>
+        <td id="edu_emp_ticker_${emp.employee_db_id}" style="font-family:monospace; color:var(--orange); font-weight:600;">$0.0000</td>
+        <td><span class="badge ${statusClass === 'paid' ? 'active' : 'pending'}">${emp.status}</span></td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+let selectedEdutechEmployeePay = null;
+function openEdutechPayModal(emp) {
+  selectedEdutechEmployeePay = emp;
+  
+  document.getElementById("edu_calcEmpName").textContent = emp.name;
+  document.getElementById("edu_calcEmpId").textContent = emp.employee_id;
+  document.getElementById("edu_calcBaseSalary").value = emp.base_salary;
+  
+  let calc = emp.calc_details || {};
+  document.getElementById("edu_calcHra").value = (calc.hra || (emp.base_salary * 0.10)).toFixed(2);
+  document.getElementById("edu_calcDa").value = (calc.da || (emp.base_salary * 0.05)).toFixed(2);
+  document.getElementById("edu_calcMedical").value = (calc.flat || 1250.00).toFixed(2);
+  document.getElementById("edu_calcBonus").value = "0.00";
+  
+  document.getElementById("edu_calcPf").value = (calc.pf || (emp.base_salary * 0.12)).toFixed(2);
+  document.getElementById("edu_calcPt").value = (calc.pt || (emp.base_salary * 0.02)).toFixed(2);
+  
+  const absentDays = emp.absent_days_count || 0;
+  const daysInMonth = getDaysInMonthString(currentEdutechPayrollMonth);
+  const calculatedLop = absentDays * (emp.base_salary / daysInMonth);
+  document.getElementById("edu_calcAbsentDays").textContent = `${absentDays} day(s) absent`;
+  document.getElementById("edu_calcLop").value = calculatedLop.toFixed(2);
+  document.getElementById("edu_calcCustomDeduction").value = "0.00";
+  
+  document.getElementById("edu_calcStatus").value = emp.status === 'Pending' ? 'Processing' : emp.status;
+  
+  updateEdutechCalculatorTotals();
+  openModal("edu_processPayrollModal");
+}
+
+function updateEdutechCalculatorTotals() {
+  const base = parseFloat(document.getElementById("edu_calcBaseSalary").value) || 0.0;
+  
+  const hra = parseFloat(document.getElementById("edu_calcHra").value) || 0.0;
+  const da = parseFloat(document.getElementById("edu_calcDa").value) || 0.0;
+  const med = parseFloat(document.getElementById("edu_calcMedical").value) || 0.0;
+  const bonus = parseFloat(document.getElementById("edu_calcBonus").value) || 0.0;
+  const totalAllowances = hra + da + med + bonus;
+  
+  const pf = parseFloat(document.getElementById("edu_calcPf").value) || 0.0;
+  const pt = parseFloat(document.getElementById("edu_calcPt").value) || 0.0;
+  const lop = parseFloat(document.getElementById("edu_calcLop").value) || 0.0;
+  const customDed = parseFloat(document.getElementById("edu_calcCustomDeduction").value) || 0.0;
+  const totalDeductions = pf + pt + lop + customDed;
+  
+  const netPay = base + totalAllowances - totalDeductions;
+  
+  document.getElementById("edu_calcTotalAllowances").textContent = formatCurrency(totalAllowances);
+  document.getElementById("edu_calcTotalDeductions").textContent = formatCurrency(totalDeductions);
+  document.getElementById("edu_calcNetPay").textContent = formatCurrency(netPay);
+  document.getElementById("edu_calcNetPayRaw").value = netPay.toFixed(2);
+}
+
+async function submitEdutechPayroll(event) {
+  if (event) event.preventDefault();
+  if (!selectedEdutechEmployeePay) return;
+  
+  const base = parseFloat(document.getElementById("edu_calcBaseSalary").value) || 0.0;
+  const hra = parseFloat(document.getElementById("edu_calcHra").value) || 0.0;
+  const da = parseFloat(document.getElementById("edu_calcDa").value) || 0.0;
+  const med = parseFloat(document.getElementById("edu_calcMedical").value) || 0.0;
+  const bonus = parseFloat(document.getElementById("edu_calcBonus").value) || 0.0;
+  const totalAllowances = hra + da + med + bonus;
+  
+  const pf = parseFloat(document.getElementById("edu_calcPf").value) || 0.0;
+  const pt = parseFloat(document.getElementById("edu_calcPt").value) || 0.0;
+  const lop = parseFloat(document.getElementById("edu_calcLop").value) || 0.0;
+  const customDed = parseFloat(document.getElementById("edu_calcCustomDeduction").value) || 0.0;
+  const totalDeductions = pf + pt + lop + customDed;
+  
+  const netPay = parseFloat(document.getElementById("edu_calcNetPayRaw").value) || 0.0;
+  const status = document.getElementById("edu_calcStatus").value;
+  
+  try {
+    const res = await apiCall("/api/payroll/process", "POST", {
+      employee_db_id: selectedEdutechEmployeePay.employee_db_id,
+      month: currentEdutechPayrollMonth,
+      base_salary: base,
+      allowances: totalAllowances,
+      deductions: totalDeductions,
+      net_pay: netPay,
+      status: status
+    });
+    
+    alert(res.message || "Payroll processed successfully!");
+    closeModal("edu_processPayrollModal");
+    loadEdutechPayroll(currentEdutechPayrollMonth);
+  } catch(err) {
+    console.error("Failed to save Edutech payroll run:", err);
+  }
+}
+
+async function runEdutechBulkPayrun() {
+  if (!confirm(`Are you sure you want to run bulk payroll for ${formatMonthLabel(currentEdutechPayrollMonth)}? This will auto-generate runs for all pending active Edutech staff.`)) {
+    return;
+  }
+  
+  try {
+    const res = await apiCall("/api/payroll/bulk-process", "POST", {
+      month: currentEdutechPayrollMonth,
+      status: "Paid",
+      portal: "edutech"
+    });
+    
+    alert(res.message);
+    loadEdutechPayroll(currentEdutechPayrollMonth);
+  } catch (err) {
+    console.error("Failed to run bulk payroll:", err);
+  }
+}
+
+function viewEdutechPayslipModal(emp) {
+  const slipArea = document.getElementById("edu_payslipPrintArea");
+  if (!slipArea) return;
+  
+  const monthLabel = formatMonthLabel(currentEdutechPayrollMonth);
+  const isPreview = !emp.is_generated;
+  
+  let allowancesBreakdown = "";
+  let deductionsBreakdown = "";
+  
+  if (isPreview) {
+    const calc = emp.calc_details || {};
+    allowancesBreakdown = `
+      <tr><td>Basic Salary</td><td style="text-align:right;">${formatCurrency(emp.base_salary)}</td></tr>
+      <tr><td>House Rent Allowance (HRA 10%)</td><td style="text-align:right;">${formatCurrency(calc.hra || (emp.base_salary * 0.10))}</td></tr>
+      <tr><td>Dearness Allowance (DA 5%)</td><td style="text-align:right;">${formatCurrency(calc.da || (emp.base_salary * 0.05))}</td></tr>
+      <tr><td>Medical Allowance</td><td style="text-align:right;">${formatCurrency(calc.flat || 1250.00)}</td></tr>
+    `;
+    deductionsBreakdown = `
+      <tr><td>Provident Fund (PF 12%)</td><td style="text-align:right;">${formatCurrency(calc.pf || (emp.base_salary * 0.12))}</td></tr>
+      <tr><td>Professional Tax (PT 2%)</td><td style="text-align:right;">${formatCurrency(calc.pt || (emp.base_salary * 0.02))}</td></tr>
+      <tr><td>Loss of Pay (LOP) [${emp.absent_days_count || 0} Absent Days]</td><td style="text-align:right;">${formatCurrency(calc.lop || 0.00)}</td></tr>
+    `;
+  } else {
+    allowancesBreakdown = `
+      <tr><td>Basic Salary</td><td style="text-align:right;">${formatCurrency(emp.base_salary)}</td></tr>
+      <tr><td>Allowances & Bonuses</td><td style="text-align:right;">${formatCurrency(emp.allowances)}</td></tr>
+    `;
+    deductionsBreakdown = `
+      <tr><td>Provident Fund, PT & LOP</td><td style="text-align:right;">${formatCurrency(emp.deductions)}</td></tr>
+    `;
+  }
+  
+  slipArea.innerHTML = `
+    <div style="border: 2px solid var(--glass-border); padding: 30px; border-radius: 12px; background: rgba(12, 25, 40, 0.95); color: white; max-width: 600px; margin: auto; font-family: sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--glass-border); padding-bottom: 20px; margin-bottom: 20px;">
+        <div>
+          <h2 style="margin: 0; font-size: 22px; color: var(--orange); font-weight: 700; letter-spacing: 0.5px;">EDUTECH ACADEMY</h2>
+          <p style="margin: 3px 0 0 0; font-size: 11px; color: var(--muted); text-transform: uppercase;">Staff Pay Slip</p>
+        </div>
+        <div style="text-align: right;">
+          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #fff;">Pay Cycle: ${monthLabel}</p>
+          <span style="display: inline-block; margin-top: 5px; font-size: 10px; background:rgba(255,122,0,0.15); color:var(--orange); padding:4px 8px; border-radius:4px; font-weight:bold;">${emp.status.toUpperCase()}</span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px; line-height: 1.5; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border);">
+        <div>
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block;">Employee Details</span>
+          <strong style="font-size: 14px; color:#fff; display:block; margin-top:3px;">${emp.name}</strong>
+          <span style="color:var(--muted);">${emp.designation || '-'}</span><br>
+          <span style="color:var(--muted);">Dept: ${emp.department || '-'}</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block;">Employee ID</span>
+          <strong style="font-size: 14px; color:#fff; display:block; margin-top:3px;">${emp.employee_id}</strong>
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block; margin-top: 10px;">Email ID</span>
+          <span style="color:var(--muted); font-family: monospace;">${emp.email}</span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+        <div>
+          <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; color: var(--orange); font-size: 13px;">Earnings & Allowances</h4>
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+            ${allowancesBreakdown}
+          </table>
+        </div>
+        <div>
+          <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; color: #ef4444; font-size: 13px;">Deductions</h4>
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+            ${deductionsBreakdown}
+          </table>
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+        <div>
+          <span style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Net Take-Home Pay</span>
+          <div style="font-size: 26px; font-weight: 700; color: #00e676; margin-top: 4px; font-family: monospace;">${formatCurrency(emp.net_pay)}</div>
+        </div>
+        <div style="text-align: right; font-size: 10px; color: var(--muted); max-width: 150px; line-height: 1.4;">
+          * Generated statement for EduTech Academy.
+        </div>
+      </div>
+    </div>
+  `;
+  
+  openModal("edu_payslipViewModal");
+}
+
+function printEdutechPayslip() {
+  const printContent = document.getElementById("edu_payslipPrintArea").innerHTML;
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(`
+    <html>
+    <head>
+      <title>Payslip - EduTech Academy</title>
+      <style>
+        body { background: #000; color: #fff; padding: 20px; font-family: sans-serif; }
+      </style>
+    </head>
+    <body>
+      ${printContent}
+      <script>window.onload = function() { window.print(); }</script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+function formatMonthLabel(monthStr) {
+  if (!monthStr) return "";
+  const parts = monthStr.split("-");
+  const dateObj = new Date(parts[0], parts[1] - 1, 1);
+  return dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function formatCurrency(val, decimals = 2) {
+  if (val === undefined || val === null) val = 0;
+  return "$" + parseFloat(val).toLocaleString("en-US", { 
+    minimumFractionDigits: decimals, 
+    maximumFractionDigits: decimals 
+  });
+}
+
+function getDaysInMonthString(monthStr) {
+  try {
+    const parts = monthStr.split("-");
+    return new Date(parts[0], parts[1], 0).getDate();
+  } catch(e) {
+    return 30;
+  }
 }
 
 // Trigger initial rendering

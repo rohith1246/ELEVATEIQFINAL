@@ -715,6 +715,26 @@ footer{ position:relative; padding-top:120px; border-top:1px solid var(--line); 
     background: #ff7a00;
 }
 
+/* Pathfinder Quiz visual styles */
+.quiz-btn:hover {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: var(--blue) !important;
+}
+.quiz-btn.selected {
+  background: rgba(63,208,255,0.08) !important;
+  border-color: var(--blue) !important;
+}
+.quiz-btn.selected .quiz-radio {
+  border-color: var(--blue) !important;
+  background: var(--blue) !important;
+  box-shadow: 0 0 10px rgba(63,208,255,0.5);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
 
 
 

@@ -165,6 +165,14 @@
     } else {
       items.forEach(el=>{ el.style.opacity=1; el.style.transform="none"; });
     }
+    
+    // Safety fallback: force reveal all elements after 1.2s to guarantee visibility
+    setTimeout(() => {
+      items.forEach(el => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      });
+    }, 1200);
   }
 
   /* ============================================================
@@ -210,6 +218,27 @@
    * @param {number} n - Raw value.
    * @returns {string} Formatted label.
    */
+  function getCourseImagePath(icon) {
+    const map = {
+      layers: '/images/course_web_dev.webp',
+      code:   '/images/course_web_dev.webp',
+      coffee: '/images/course_web_dev.webp',
+      brain:  '/images/course_ai_data.webp',
+      chart:  '/images/course_ai_data.webp',
+      cloud:  '/images/course_cloud_sec.webp',
+      server: '/images/course_cloud_sec.webp',
+      shield: '/images/course_cloud_sec.webp',
+      palette:'/images/course_ui_ux.webp'
+    };
+    return map[icon] || '/images/course_web_dev.webp';
+  }
+
+  /**
+   * Formats Indian Rupee currency labels.
+   * 
+   * @param {number} n - Raw value.
+   * @returns {string} Formatted label.
+   */
   function money(n){ return "₹" + n.toLocaleString("en-IN"); }
   
   /**
@@ -225,9 +254,10 @@
       const oldPriceVal = c.oldPrice || c.old_price;
       return `
       <div class="glass-card course-card reveal" style="opacity:1; transform:none;">
-        <div class="course-thumb">
-          ${svgIcon(ICONS[c.icon]||ICONS.layers)}
-          <span class="course-level">${c.level}</span>
+        <div class="course-thumb" style="overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative;">
+          <img src="${getCourseImagePath(c.icon)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; opacity:0.8;">
+          <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent, rgba(2,6,23,0.5)); pointer-events:none;"></div>
+          <span class="course-level" style="z-index:2;">${c.level}</span>
         </div>
         <div class="course-body">
           <h3>${c.title}</h3>
@@ -287,12 +317,14 @@
     const pills = document.querySelectorAll(".pill");
     let activeFilter = "all";
     
-    /** Applies search and level filtering tags */
     function apply(){
       const q = search.value.trim().toLowerCase();
       const filtered = activeCourses.filter(c=>{
         const matchesFilter = activeFilter==="all" || c.level===activeFilter;
-        const matchesSearch = !q || c.title.toLowerCase().includes(q);
+        const matchesSearch = !q || 
+                              c.title.toLowerCase().includes(q) || 
+                              (c.description || "").toLowerCase().includes(q) || 
+                              (c.category || "").toLowerCase().includes(q);
         return matchesFilter && matchesSearch;
       });
       renderCourses(filtered);
@@ -589,6 +621,113 @@
     document.querySelectorAll(".ai-quick button").forEach(b=>{
       b.addEventListener("click", ()=> handleSend(b.dataset.q));
     });
+  }
+
+
+  /* ============================================================
+     14B. PATH FINDER QUIZ DECISION LOGIC
+     ============================================================ */
+  let quizAnswers = { step1: "", step2: "" };
+
+  window.selectStep1 = function(val, btn) {
+    quizAnswers.step1 = val;
+    const container = btn.parentElement;
+    container.querySelectorAll('.quiz-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    setTimeout(() => {
+      document.getElementById('quizStep1').style.display = 'none';
+      document.getElementById('quizStep2').style.display = 'block';
+    }, 350);
+  };
+
+  window.selectStep2 = function(val, btn) {
+    quizAnswers.step2 = val;
+    const container = btn.parentElement;
+    container.querySelectorAll('.quiz-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    setTimeout(() => {
+      const recommendation = calculateQuizRecommendation();
+      document.getElementById('recTitle').textContent = recommendation.title;
+      document.getElementById('recDesc').textContent = recommendation.desc;
+      
+      document.getElementById('quizStep2').style.display = 'none';
+      document.getElementById('quizResult').style.display = 'block';
+    }, 350);
+  };
+
+  window.backToStep1 = function() {
+    document.getElementById('quizStep2').style.display = 'none';
+    document.getElementById('quizStep1').style.display = 'block';
+  };
+
+  window.resetQuiz = function() {
+    quizAnswers = { step1: "", step2: "" };
+    document.querySelectorAll('.quiz-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizStep2').style.display = 'none';
+    document.getElementById('quizStep1').style.display = 'block';
+  };
+
+  window.highlightCourseCard = function(event) {
+    event.preventDefault();
+    const title = document.getElementById('recTitle').textContent;
+    
+    const coursesSection = document.getElementById('courses');
+    if (coursesSection) {
+      coursesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    const searchInput = document.getElementById('courseSearch');
+    if (searchInput) {
+      searchInput.value = title;
+      const eventObj = new Event('input', { bubbles: true });
+      searchInput.dispatchEvent(eventObj);
+    }
+  };
+
+  function calculateQuizRecommendation() {
+    const s1 = quizAnswers.step1;
+    const s2 = quizAnswers.step2;
+    
+    if (s2 === 'visual') {
+      if (s1 === 'beginner' || s1 === 'basic') {
+        return {
+          title: "Full Stack Web Development",
+          desc: "Master frontend UI engineering (React) and backend services (Node.js/SQL) alongside direct hiring pipelines. Perfect for starting from scratch."
+        };
+      } else {
+        return {
+          title: "UI/UX Design Professional",
+          desc: "Deep-dive into visual systems, wireframing, and user research. Learn to design premium user interfaces using Figma."
+        };
+      }
+    } else if (s2 === 'analytical') {
+      if (s1 === 'beginner') {
+        return {
+          title: "Data Science Professional",
+          desc: "Learn statistical programming, Python data structures, SQL databases, and visualization frameworks to build corporate dashboards."
+        };
+      } else {
+        return {
+          title: "AI & Machine Learning Bootcamp",
+          desc: "Learn probability, regression, deep neural networks, and transformer models. Specialized path for programmers seeking AI certification."
+        };
+      }
+    } else {
+      if (s1 === 'experienced') {
+        return {
+          title: "Cloud & DevOps Engineering",
+          desc: "Master container orchestration (Docker/Kubernetes), secure networking, infrastructure-as-code, and AWS/Azure deployment frameworks."
+        };
+      } else {
+        return {
+          title: "Cyber Security Fundamentals",
+          desc: "Master operating system security, risk auditing, compliance frameworks, penetration testing, and ethical hacking fundamentals."
+        };
+      }
+    }
   }
 
 

@@ -209,6 +209,29 @@
 </style>
 
 
+<!-- ==================== QUANTITATIVE METRICS SECTION ==================== -->
+<section class="section scroll-reveal" style="padding-top:20px; padding-bottom:40px; position:relative; z-index:2;">
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:24px; text-align:center;">
+    <div class="glass-card" style="padding: 30px; transition: transform 0.3s ease, border-color 0.3s; border: 1px solid var(--glass-border);" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--blue)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'">
+      <h3 style="font-size:42px; font-weight:800; color:var(--blue); margin-bottom:6px;"><span class="counter" data-target="50">0</span>+</h3>
+      <p style="font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1.5px; font-weight:700;">Enterprise Clients</p>
+    </div>
+    <div class="glass-card" style="padding: 30px; transition: transform 0.3s ease, border-color 0.3s; border: 1px solid var(--glass-border);" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--orange)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'">
+      <h3 style="font-size:42px; font-weight:800; color:var(--orange); margin-bottom:6px;"><span class="counter" data-target="98">0</span>%</h3>
+      <p style="font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1.5px; font-weight:700;">Project Delivery Success</p>
+    </div>
+    <div class="glass-card" style="padding: 30px; transition: transform 0.3s ease, border-color 0.3s; border: 1px solid var(--glass-border);" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--blue)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'">
+      <h3 style="font-size:42px; font-weight:800; color:var(--blue); margin-bottom:6px;"><span class="counter" data-target="150">0</span>+</h3>
+      <p style="font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1.5px; font-weight:700;">Expert Engineers Placed</p>
+    </div>
+    <div class="glass-card" style="padding: 30px; transition: transform 0.3s ease, border-color 0.3s; border: 1px solid var(--glass-border);" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--orange)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--glass-border)'">
+      <h3 style="font-size:42px; font-weight:800; color:var(--orange); margin-bottom:6px;">24/7</h3>
+      <p style="font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1.5px; font-weight:700;">Consulting Support Desk</p>
+    </div>
+  </div>
+</section>
+
+
 <!-- ==================== SERVICES SECTION ==================== -->
 <section class="section" id="services" style="padding-top: 100px;">
   <div class="section-head">
@@ -219,52 +242,446 @@
   
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
     <!-- IT Services Card -->
-    <div class="glass-card" style="padding: 30px;">
-      <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(63,208,255,0.18); color:var(--blue);">⚡</div>
-      <h3 style="font-size:20px; font-weight:600; margin-bottom:15px; color:#fff;">IT Services</h3>
-      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Software Engineering:</strong> Enterprise solutions built in Python, Java, and Go.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Web Development:</strong> Modern, responsive applications using React, Node.js, and Next.js.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Cloud & DevOps:</strong> Multi-cloud architecture, Docker, Kubernetes, and CI/CD pipelines.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Database Systems:</strong> Scale-ready database design in PostgreSQL, MySQL, and MongoDB.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>API & Microservices:</strong> Secure backend architecture and service integrations.</span>
-        </li>
-      </ul>
+    <div class="glass-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
+      <div style="height: 180px; width: 100%; position:relative; overflow:hidden; border-bottom: 1px solid var(--line);">
+        <img src="images/it_services.png" alt="IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--blue);">⚡</div>
+      </div>
+      <div style="padding: 30px; display:flex; flex-direction:column; gap:15px;">
+        <h3 style="font-size:20px; font-weight:600; color:#fff;">IT Services</h3>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Software Engineering:</strong> Enterprise solutions built in Python, Java, and Go.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Web Development:</strong> Modern, responsive applications using React, Node.js, and Next.js.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Cloud & DevOps:</strong> Multi-cloud architecture, Docker, Kubernetes, and CI/CD pipelines.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>Database Systems:</strong> Scale-ready database design in PostgreSQL, MySQL, and MongoDB.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--orange); line-height: 1;">✔</span> <span><strong>API & Microservices:</strong> Secure backend architecture and service integrations.</span>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <!-- Non-IT Services Card -->
-    <div class="glass-card" style="padding: 30px;">
-      <div style="width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:18px; background:rgba(255,138,61,0.18); color:var(--orange);">👥</div>
-      <h3 style="font-size:20px; font-weight:600; margin-bottom:15px; color:#fff;">Non-IT Services</h3>
-      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Customer Support:</strong> 24/7 dedicated inbound/outbound telecalling operations.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Medical Coding:</strong> HIPAA-compliant medical coding and healthcare audit operations.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>HR Support:</strong> Payroll management, benefits administration, and recruitment sourcing.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Business Operations:</strong> Back-office data handling, transcription, and BPM support.</span>
-        </li>
-        <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
-          <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Finance Outsourcing:</strong> Bookkeeping, corporate accounting, and financial reporting.</span>
-        </li>
-      </ul>
+    <div class="glass-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
+      <div style="height: 180px; width: 100%; position:relative; overflow:hidden; border-bottom: 1px solid var(--line);">
+        <img src="images/non_it_services.png" alt="Non-IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--orange);">👥</div>
+      </div>
+      <div style="padding: 30px; display:flex; flex-direction:column; gap:15px;">
+        <h3 style="font-size:20px; font-weight:600; color:#fff;">Non-IT Services</h3>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Customer Support:</strong> 24/7 dedicated inbound/outbound telecalling operations.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Medical Coding:</strong> HIPAA-compliant medical coding and healthcare audit operations.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>HR Support:</strong> Payroll management, benefits administration, and recruitment sourcing.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Business Operations:</strong> Back-office data handling, transcription, and BPM support.</span>
+          </li>
+          <li style="font-size:15px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;">
+            <span style="color:var(--blue); line-height: 1;">✔</span> <span><strong>Finance Outsourcing:</strong> Bookkeeping, corporate accounting, and financial reporting.</span>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
+
+
+<!-- ==================== SOLUTIONS & DEVELOPMENT PROCESS SECTION ==================== -->
+<section class="section scroll-reveal" id="process" style="padding-top: 80px; position:relative; z-index:2;">
+  <div class="section-head" style="text-align: center; margin-bottom: 40px;">
+    <div class="label" style="display:inline-block; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--blue); font-weight:700; border:1px solid rgba(63,208,255,0.3); padding:4px 10px; border-radius:100px; margin-bottom:12px; background:rgba(63,208,255,0.06);">Our Methodology</div>
+    <h2 style="font-size:clamp(24px,3.2vw,32px); font-weight:600; color:#fff; letter-spacing:-0.5px;">Solutions & Development Process</h2>
+    <p style="color:var(--ink-soft); max-width:600px; margin:10px auto 0;">Select a solution to see our customized step-by-step lifecycle and operational delivery strategy.</p>
+  </div>
+
+  <!-- Interactive Solution Tabs -->
+  <div style="display:flex; justify-content:center; gap:12px; margin-bottom:36px; flex-wrap:wrap;">
+    <button class="sol-tab active" onclick="switchSolution('software', this)">Custom Software</button>
+    <button class="sol-tab" onclick="switchSolution('ai', this)">AI & Automation</button>
+    <button class="sol-tab" onclick="switchSolution('cloud', this)">Cloud Infrastructure</button>
+    <button class="sol-tab" onclick="switchSolution('bpo', this)">BPO & Operations</button>
+  </div>
+
+  <!-- Process Timeline Grid -->
+  <div class="glass-card" style="padding: 40px; border-radius: 20px; border:1px solid var(--glass-border);" id="processTimeline">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:24px;" id="timelineContainer">
+      <!-- Steps will be injected dynamically -->
+    </div>
+  </div>
+</section>
+
+<script>
+const SOLUTIONS_PROCESS = {
+  software: [
+    { step: "01", title: "Consultation & Scope", desc: "We map system requirements, database entities, third-party APIs, and initial budget boundaries." },
+    { step: "02", title: "Visual Blueprinting", desc: "Our product teams design wireframes in Figma to align on user experience before any engineering begins." },
+    { step: "03", title: "Agile Sprints", desc: "Weekly developer sprints delivering unit-tested code in Python, Java, or Next.js, reviewed by senior technical architects." },
+    { step: "04", title: "CI/CD Staging", desc: "Automated pipelines compile and push the application directly to a staging sandbox for final client verification." }
+  ],
+  ai: [
+    { step: "01", title: "Data Audit", desc: "We review your data storage systems, logs, and database structures to identify learning variables." },
+    { step: "02", title: "Model Design", desc: "Designing neural networks, regression trees, or configuring fine-tuned LLMs matching target accuracy metrics." },
+    { step: "03", title: "API Integration", desc: "Deploying high-frequency backend endpoints (using FastAPI or Flask) to integrate models directly into user interfaces." },
+    { step: "04", title: "Drift Auditing", desc: "Implementing predictive logging layers to monitor predictions, verify weights, and schedule automatic updates." }
+  ],
+  cloud: [
+    { step: "01", title: "Architecture Audit", desc: "Analyzing legacy hosting platforms, compute performance, networking boundaries, and security credentials." },
+    { step: "02", title: "Containerization", desc: "Decoupling complex monolithic systems into clean, modular, scalable Docker and Kubernetes containers." },
+    { step: "03", title: "Infrastructure-as-Code", desc: "Writing Terraform and Ansible configurations to provision clusters, databases, and load balancers programmatically." },
+    { step: "04", title: "Security Scans", desc: "Applying firewalls, secure subnet structures, and integrating automatic CVE dependency vulnerability scanning." }
+  ],
+  bpo: [
+    { step: "01", title: "Sourcing & Allocation", desc: "Vetting experienced support agents and matching their specialized industry profiles to your operational vertical." },
+    { step: "02", title: "Operations Training", desc: "Structuring operations runbooks, scripts, HIPAA standard procedures, or accounting ledger formats." },
+    { step: "03", title: "Squad Pilot", desc: "Launching operations with a small dedicated crew under direct oversight from a team manager to ensure process sync." },
+    { step: "04", title: "Scale & SLA Audit", desc: "Scaling operations dynamically while auditing ticket reply speed, call quality, and contract SLAs." }
+  ]
+};
+
+function switchSolution(key, btn) {
+  document.querySelectorAll('.sol-tab').forEach(tab => tab.classList.remove('active'));
+  btn.classList.add('active');
+
+  const container = document.getElementById('timelineContainer');
+  const steps = SOLUTIONS_PROCESS[key];
+  
+  container.style.opacity = 0;
+  setTimeout(() => {
+    container.innerHTML = steps.map(s => `
+      <div class="timeline-step" style="opacity:0; transform:translateY(16px); animation: fadeUpStep 0.4s ease forwards;">
+        <div style="font-size:32px; font-weight:800; color:var(--blue); margin-bottom:12px; display:inline-block; font-family:'Poppins', sans-serif;">${s.step}</div>
+        <h4 style="font-size:16px; font-weight:600; color:#fff; margin-bottom:8px;">${s.title}</h4>
+        <p style="font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin:0;">${s.desc}</p>
+      </div>
+    `).join('');
+    
+    container.querySelectorAll('.timeline-step').forEach((el, index) => {
+      el.style.animationDelay = (index * 0.08) + 's';
+    });
+    
+    container.style.opacity = 1;
+  }, 150);
+}
+
+// Initialize on load
+document.addEventListener("DOMContentLoaded", () => {
+  const activeTab = document.querySelector('.sol-tab');
+  if (activeTab) switchSolution('software', activeTab);
+});
+</script>
+
+
+<!-- ==================== COMPANY GALLERY SECTION ==================== -->
+<section class="section scroll-reveal" id="gallery" style="padding: 80px 0; overflow:hidden; position:relative;">
+
+  <!-- Ambient radial glow -->
+  <div style="position:absolute; top:50%; left:50%; width:800px; height:800px; transform:translate(-50%,-50%); background:radial-gradient(circle, rgba(63,208,255,0.05) 0%, transparent 68%); pointer-events:none; z-index:0;"></div>
+
+  <div class="section-head" style="text-align:center; margin-bottom:52px; position:relative; z-index:2;">
+    <div class="label" style="display:inline-block; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--blue); font-weight:700; border:1px solid rgba(63,208,255,0.3); padding:4px 12px; border-radius:100px; margin-bottom:14px; background:rgba(63,208,255,0.06);">Our Company</div>
+    <h2 style="font-size:clamp(26px,3.2vw,38px); font-weight:700; color:#fff; letter-spacing:-0.5px; margin-bottom:12px;">Life at ElevateIQ</h2>
+    <p style="color:var(--ink-soft); max-width:540px; margin:0 auto; font-size:15.5px; line-height:1.7;">A glimpse inside our workspace, our people, and the culture we are proud to build every day.</p>
+  </div>
+
+  <!-- ── ROW 1 — scrolls LEFT ── -->
+  <div class="gallery-strip-wrap" style="margin-bottom:18px; position:relative; z-index:2;">
+    <div class="gallery-strip" id="galleryRow1">
+      <!-- First set -->
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Office">
+        <img src="images/company images/webp/20260707_115537.jpg.webp" alt="ElevateIQ Office" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Office</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team at Work">
+        <img src="images/company images/webp/20260707_115543.jpg.webp" alt="Team at Work" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team at Work</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Our Workspace">
+        <img src="images/company images/webp/20260707_115606.jpg.webp" alt="Our Workspace" loading="lazy" decoding="async">
+        <div class="gallery-caption">Our Workspace</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Company Culture">
+        <img src="images/company images/webp/20260707_115621.jpg.webp" alt="Company Culture" loading="lazy" decoding="async">
+        <div class="gallery-caption">Company Culture</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Collaboration">
+        <img src="images/company images/webp/20260707_115626.jpg.webp" alt="Collaboration" loading="lazy" decoding="async">
+        <div class="gallery-caption">Collaboration</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Innovation Hub">
+        <img src="images/company images/webp/20260707_115701.jpg.webp" alt="Innovation Hub" loading="lazy" decoding="async">
+        <div class="gallery-caption">Innovation Hub</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team Meeting">
+        <img src="images/company images/webp/20260707_115723.jpg.webp" alt="Team Meeting" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team Meeting</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Engineering Team">
+        <img src="images/company images/webp/20260707_115809.jpg.webp" alt="Engineering Team" loading="lazy" decoding="async">
+        <div class="gallery-caption">Engineering Team</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Product Sprint">
+        <img src="images/company images/webp/20260707_115823.jpg.webp" alt="Product Sprint" loading="lazy" decoding="async">
+        <div class="gallery-caption">Product Sprint</div>
+      </div>
+      <!-- Seamless loop duplicate -->
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Office">
+        <img src="images/company images/webp/20260707_115537.jpg.webp" alt="ElevateIQ Office" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Office</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team at Work">
+        <img src="images/company images/webp/20260707_115543.jpg.webp" alt="Team at Work" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team at Work</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Our Workspace">
+        <img src="images/company images/webp/20260707_115606.jpg.webp" alt="Our Workspace" loading="lazy" decoding="async">
+        <div class="gallery-caption">Our Workspace</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Company Culture">
+        <img src="images/company images/webp/20260707_115621.jpg.webp" alt="Company Culture" loading="lazy" decoding="async">
+        <div class="gallery-caption">Company Culture</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Collaboration">
+        <img src="images/company images/webp/20260707_115626.jpg.webp" alt="Collaboration" loading="lazy" decoding="async">
+        <div class="gallery-caption">Collaboration</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Innovation Hub">
+        <img src="images/company images/webp/20260707_115701.jpg.webp" alt="Innovation Hub" loading="lazy" decoding="async">
+        <div class="gallery-caption">Innovation Hub</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team Meeting">
+        <img src="images/company images/webp/20260707_115723.jpg.webp" alt="Team Meeting" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team Meeting</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Engineering Team">
+        <img src="images/company images/webp/20260707_115809.jpg.webp" alt="Engineering Team" loading="lazy" decoding="async">
+        <div class="gallery-caption">Engineering Team</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Product Sprint">
+        <img src="images/company images/webp/20260707_115823.jpg.webp" alt="Product Sprint" loading="lazy" decoding="async">
+        <div class="gallery-caption">Product Sprint</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 2 — scrolls RIGHT (reverse) ── -->
+  <div class="gallery-strip-wrap" style="position:relative; z-index:2;">
+    <div class="gallery-strip gallery-strip-reverse" id="galleryRow2">
+      <!-- First set -->
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Culture">
+        <img src="images/company images/webp/20260707_115834.jpg.webp" alt="ElevateIQ Culture" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Culture</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Our People">
+        <img src="images/company images/webp/20260707_115848.jpg.webp" alt="Our People" loading="lazy" decoding="async">
+        <div class="gallery-caption">Our People</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Company Event">
+        <img src="images/company images/webp/20260707_120107.jpg.webp" alt="Company Event" loading="lazy" decoding="async">
+        <div class="gallery-caption">Company Event</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Office Life">
+        <img src="images/company images/webp/20260707_120112.jpg.webp" alt="Office Life" loading="lazy" decoding="async">
+        <div class="gallery-caption">Office Life</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Team">
+        <img src="images/company images/webp/IMG_20260629_162519.jpg.webp" alt="ElevateIQ Team" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Team</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Group Photo">
+        <img src="images/company images/webp/IMG_20260629_162522.jpg.webp" alt="Group Photo" loading="lazy" decoding="async">
+        <div class="gallery-caption">Group Photo</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team Together">
+        <img src="images/company images/webp/IMG_20260629_162548.jpg.webp" alt="Team Together" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team Together</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Moments">
+        <img src="images/company images/webp/IMG_20260629_162556(1).jpg.webp" alt="ElevateIQ Moments" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Moments</div>
+      </div>
+      <!-- Seamless loop duplicate -->
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Culture">
+        <img src="images/company images/webp/20260707_115834.jpg.webp" alt="ElevateIQ Culture" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Culture</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Our People">
+        <img src="images/company images/webp/20260707_115848.jpg.webp" alt="Our People" loading="lazy" decoding="async">
+        <div class="gallery-caption">Our People</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Company Event">
+        <img src="images/company images/webp/20260707_120107.jpg.webp" alt="Company Event" loading="lazy" decoding="async">
+        <div class="gallery-caption">Company Event</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Office Life">
+        <img src="images/company images/webp/20260707_120112.jpg.webp" alt="Office Life" loading="lazy" decoding="async">
+        <div class="gallery-caption">Office Life</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Team">
+        <img src="images/company images/webp/IMG_20260629_162519.jpg.webp" alt="ElevateIQ Team" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Team</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Group Photo">
+        <img src="images/company images/webp/IMG_20260629_162522.jpg.webp" alt="Group Photo" loading="lazy" decoding="async">
+        <div class="gallery-caption">Group Photo</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="Team Together">
+        <img src="images/company images/webp/IMG_20260629_162548.jpg.webp" alt="Team Together" loading="lazy" decoding="async">
+        <div class="gallery-caption">Team Together</div>
+      </div>
+      <div class="gallery-img-wrap" data-caption="ElevateIQ Moments">
+        <img src="images/company images/webp/IMG_20260629_162556(1).jpg.webp" alt="ElevateIQ Moments" loading="lazy" decoding="async">
+        <div class="gallery-caption">ElevateIQ Moments</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Overlay -->
+  <div id="galleryLightbox" onclick="closeLightbox()" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.96); backdrop-filter:blur(18px); align-items:center; justify-content:center; cursor:zoom-out; padding:20px;">
+    <button onclick="event.stopPropagation(); closeLightbox()" style="position:fixed; top:20px; right:24px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:#fff; width:46px; height:46px; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); z-index:10000; transition:background 0.25s;">✕</button>
+    <img id="lightboxImg" src="" alt="" style="max-width:90vw; max-height:85vh; border-radius:14px; box-shadow:0 50px 120px rgba(0,0,0,0.8); object-fit:contain;">
+    <div id="lightboxCaption" style="position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:rgba(6,12,32,0.75); color:#fff; padding:9px 22px; border-radius:100px; font-size:14px; font-weight:600; letter-spacing:0.4px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); white-space:nowrap;"></div>
+  </div>
+
+</section>
+
+<style>
+/* ── Gallery Auto-Scroll Strips ── */
+.gallery-strip-wrap {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  contain: layout;
+}
+.gallery-strip {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  animation: galleryScroll 42s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);  /* promote to GPU compositor layer */
+  backface-visibility: hidden;
+}
+.gallery-strip:hover { animation-play-state: paused; }
+.gallery-strip-reverse {
+  animation-name: galleryScrollReverse;
+  animation-duration: 48s;
+}
+@keyframes galleryScroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes galleryScrollReverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+/* ── Gallery Image Cards ── */
+.gallery-img-wrap {
+  position: relative;
+  width: 300px;
+  height: 210px;          /* fixed card height — all cards identical */
+  aspect-ratio: 10 / 7;  /* belt-and-suspenders uniform ratio */
+  border-radius: 14px;
+  overflow: hidden;       /* clips any image that overflows the box */
+  cursor: zoom-in;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s, border-color 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transform: translateZ(0); /* GPU compositor layer */
+}
+.gallery-img-wrap:hover {
+  transform: scale(1.05) translateY(-5px) translateZ(0);
+  box-shadow: 0 24px 60px rgba(63,208,255,0.2);
+  border-color: rgba(63,208,255,0.4);
+  z-index: 5;
+}
+.gallery-img-wrap img {
+  /* This is the key fix: cover fills the fixed box from center,
+     cropping any excess — portrait images zoom in, landscape fills width */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transition: transform 0.55s ease;
+  display: block;
+  will-change: transform;
+}
+.gallery-img-wrap:hover img { transform: scale(1.08) translateZ(0); }
+
+/* ── Caption slide-up on hover ── */
+.gallery-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(2,6,23,0.92));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 32px 16px 14px;
+  transform: translateY(100%);
+  transition: transform 0.38s cubic-bezier(0.16,1,0.3,1);
+  letter-spacing: 0.25px;
+  z-index: 2;
+}
+.gallery-img-wrap:hover .gallery-caption { transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .gallery-img-wrap { width: 220px; height: 154px; }
+}
+</style>
+
+<script>
+// Lightbox handler for gallery
+(function() {
+  function openLightbox(src, alt, caption) {
+    const lb = document.getElementById('galleryLightbox');
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    img.src = src;
+    img.alt = alt;
+    cap.textContent = caption;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  window.closeLightbox = function() {
+    document.getElementById('galleryLightbox').style.display = 'none';
+    document.body.style.overflow = '';
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeLightbox(); });
+
+  // Attach after DOM ready
+  const attachGallery = () => {
+    document.querySelectorAll('.gallery-img-wrap').forEach(wrap => {
+      wrap.addEventListener('click', function() {
+        const img = this.querySelector('img');
+        const caption = this.dataset.caption || img.alt;
+        openLightbox(img.src, img.alt, caption);
+      });
+    });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachGallery);
+  } else {
+    attachGallery();
+  }
+})();
+</script>
 
 
 <!-- ==================== PORTFOLIO SECTION ==================== -->
@@ -295,6 +712,71 @@
     </div>
   </div>
 </section>
+
+
+<!-- ==================== FAQ SECTION ==================== -->
+<section class="section scroll-reveal" id="faq" style="padding-top: 80px; padding-bottom: 40px; position:relative; z-index:2;">
+  <div class="section-head" style="text-align: center; margin-bottom: 50px;">
+    <div class="label" style="display:inline-block; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--blue); font-weight:700; border:1px solid rgba(63,208,255,0.3); padding:4px 10px; border-radius:100px; margin-bottom:12px; background:rgba(63,208,255,0.06);">FAQs</div>
+    <h2 style="font-size:clamp(24px,3.2vw,32px); font-weight:600; color:#fff; letter-spacing:-0.5px;">Frequently Asked Questions</h2>
+    <p style="color:var(--ink-soft); max-width:600px; margin:10px auto 0;">Have queries about our corporate structure, hiring tracks, or services? Here are some answers.</p>
+  </div>
+
+  <div style="max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 16px;">
+    <div class="glass-card faq-item" style="padding: 20px 24px; cursor: pointer; transition: border-color 0.3s; border:1px solid var(--glass-border); border-radius:12px;" onclick="toggleFAQ(this)">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="font-size:16px; font-weight:600; color:#fff; margin:0;">Is ElevateIQ an IT Consulting company or an Academy?</h4>
+        <span class="faq-icon" style="font-size: 20px; color: var(--blue); transition: transform 0.3s; font-weight:700;">+</span>
+      </div>
+      <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.3s ease; color: var(--muted); font-size: 14px; line-height: 1.6;">
+        <p style="margin: 0; padding-top: 12px;">ElevateIQ operates as a dual-division corporate engine. Our core division specializes in IT and Non-IT business consulting solutions for global clients, while our EduTech Academy sub-division trains, certifies, and matches developers directly to our hiring teams and enterprise clients.</p>
+      </div>
+    </div>
+
+    <div class="glass-card faq-item" style="padding: 20px 24px; cursor: pointer; transition: border-color 0.3s; border:1px solid var(--glass-border); border-radius:12px;" onclick="toggleFAQ(this)">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="font-size:16px; font-weight:600; color:#fff; margin:0;">How can I apply to open career roles at ElevateIQ?</h4>
+        <span class="faq-icon" style="font-size: 20px; color: var(--blue); transition: transform 0.3s; font-weight:700;">+</span>
+      </div>
+      <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.3s ease; color: var(--muted); font-size: 14px; line-height: 1.6;">
+        <p style="margin: 0; padding-top: 12px;">You can browse active professional vacancies directly in our Careers dashboard, or enroll in our specialized EduTech training programs. Graduates from these cohorts are automatically qualified for placement across our parent engineering teams and contracting clients.</p>
+      </div>
+    </div>
+
+    <div class="glass-card faq-item" style="padding: 20px 24px; cursor: pointer; transition: border-color 0.3s; border:1px solid var(--glass-border); border-radius:12px;" onclick="toggleFAQ(this)">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="font-size:16px; font-weight:600; color:#fff; margin:0;">Where is ElevateIQ Soft Tech located?</h4>
+        <span class="faq-icon" style="font-size: 20px; color: var(--blue); transition: transform 0.3s; font-weight:700;">+</span>
+      </div>
+      <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.3s ease; color: var(--muted); font-size: 14px; line-height: 1.6;">
+        <p style="margin: 0; padding-top: 12px;">We are headquartered in Hyderabad, India, with remote consulting divisions operating across North America and APAC countries supporting diverse enterprise BPO and development contracts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function toggleFAQ(element) {
+  const answer = element.querySelector('.faq-answer');
+  const icon = element.querySelector('.faq-icon');
+  const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+  
+  // Close all FAQs first
+  document.querySelectorAll('.faq-answer').forEach(ans => {
+    ans.style.maxHeight = '0px';
+    ans.parentElement.style.borderColor = 'var(--glass-border)';
+    ans.parentElement.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
+    ans.parentElement.querySelector('.faq-icon').textContent = '+';
+  });
+
+  if (!isOpen) {
+    answer.style.maxHeight = answer.scrollHeight + 'px';
+    element.style.borderColor = 'var(--blue)';
+    icon.style.transform = 'rotate(45deg)';
+    icon.textContent = '×';
+  }
+}
+</script>
 
 
 <!-- ==================== CALL TO ACTION SECTION ==================== -->
@@ -331,6 +813,73 @@ function logout(e) {
   e.preventDefault();
   localStorage.clear();
   window.location.reload();
+}
+
+// Scroll counter animation and scroll reveal initializer
+const initLanding = () => {
+  const counters = document.querySelectorAll(".counter");
+  const speed = 120;
+
+  const runCounter = (el) => {
+    const target = +el.getAttribute("data-target");
+    const inc = target / speed;
+
+    const updateCount = () => {
+      const count = +el.innerText;
+      if (count < target) {
+        el.innerText = Math.ceil(count + inc);
+        setTimeout(updateCount, 12);
+      } else {
+        el.innerText = target;
+      }
+    };
+    updateCount();
+  };
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        runCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.8 });
+
+  counters.forEach(c => counterObserver.observe(c));
+
+  // Programmatically hook scroll reveals to landing cards and headers
+  const revealTargets = document.querySelectorAll(".scroll-reveal, .section-head, .glass-card, .faq-item");
+  revealTargets.forEach(el => el.classList.add("scroll-reveal"));
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("reveal-active");
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.02 });
+
+  revealTargets.forEach(t => revealObserver.observe(t));
+
+  // Safety fallback: Force reveal all page elements after 1.2s to guarantee visibility
+  setTimeout(() => {
+    revealTargets.forEach(el => {
+      if (!el.classList.contains("reveal-active")) {
+        el.classList.add("reveal-active");
+      }
+    });
+  }, 1200);
+
+  // Initialize process solution content timeline steps
+  const activeTab = document.querySelector('.sol-tab');
+  if (activeTab) switchSolution('software', activeTab);
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLanding);
+} else {
+  initLanding();
 }
 </script>
 

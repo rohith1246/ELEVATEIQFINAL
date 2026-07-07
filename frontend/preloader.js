@@ -9,6 +9,13 @@
   const video = document.getElementById("preloader-video");
 
   if (preloader) {
+    // Check if preloader has already played in this session
+    if (sessionStorage.getItem("preloader_played") === "true") {
+      preloader.remove();
+      document.body.style.overflow = "";
+      return;
+    }
+
     // Lock scrolling on page load to prevent user navigation during the intro
     document.body.style.overflow = "hidden";
 
@@ -42,6 +49,9 @@
       clearTimeout(fadeTimeout);
       if (!preloader.classList.contains("fade-out")) {
         preloader.classList.add("fade-out");
+        
+        // Record session run to bypass next loads
+        sessionStorage.setItem("preloader_played", "true");
         
         // Restore page scrolling
         document.body.style.overflow = "";

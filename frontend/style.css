@@ -631,3 +631,55 @@ footer a {
     padding-bottom: 30px;
   }
 }
+
+/* Scroll reveal triggers */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.scroll-reveal.reveal-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card hover glow accent */
+.glass-card {
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+.glass-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(63, 208, 255, 0.3) !important;
+  box-shadow: 0 12px 40px rgba(63, 208, 255, 0.1) !important;
+}
+
+/* Solution Tabs styling */
+.sol-tab {
+  padding: 10px 24px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+.sol-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+.sol-tab.active {
+  background: var(--blue);
+  color: #060913;
+  border-color: var(--blue);
+  box-shadow: 0 0 16px rgba(63,208,255,0.35);
+  font-weight: 700;
+}
+@keyframes fadeUpStep {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

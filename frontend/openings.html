@@ -96,6 +96,18 @@
     
   </div>
 
+  <!-- Interactive Job Search Bar -->
+  <div style="max-width: 500px; margin: 0 auto 24px; position:relative; display:flex; align-items:center;">
+    <input type="text" id="jobSearch" placeholder="Search open roles by title or keyword..." 
+           style="width:100%; padding:14px 20px 14px 44px; border-radius:100px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; outline:none; font-size:14.5px; backdrop-filter:blur(8px); transition: border-color 0.3s;"
+           oninput="handleJobSearch()"
+           onfocus="this.style.borderColor='var(--blue)'"
+           onblur="this.style.borderColor='var(--glass-border)'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="width:18px; height:18px; position:absolute; left:16px; pointer-events:none;">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </svg>
+  </div>
+
   <!-- Department Selection Filter -->
   <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
     <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
@@ -199,19 +211,39 @@ function renderJobs(list) {
   });
 }
 
-// Filter listings depending on clicked department chip category
+// Filter listings depending on clicked department chip category or search box inputs
+let activeDept = 'All';
+let searchQuery = '';
+
+function handleJobSearch() {
+  searchQuery = document.getElementById("jobSearch").value.trim().toLowerCase();
+  applyFilters();
+}
+
 function filterDepartment(dept) {
+  activeDept = dept;
   document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+  
   if (dept === 'All') {
     document.getElementById("chip_all").classList.add("active");
-    renderJobs(allJobs);
-  } else {
-    if (dept === 'IT Services') document.getElementById("chip_it").classList.add("active");
-    if (dept === 'Non-IT Services') document.getElementById("chip_nonit").classList.add("active");
-    
-    const filtered = allJobs.filter(j => j.department.toLowerCase().includes(dept.toLowerCase()));
-    renderJobs(filtered);
+  } else if (dept === 'IT Services') {
+    document.getElementById("chip_it").classList.add("active");
+  } else if (dept === 'Non-IT Services') {
+    document.getElementById("chip_nonit").classList.add("active");
   }
+  
+  applyFilters();
+}
+
+function applyFilters() {
+  const filtered = allJobs.filter(j => {
+    const matchesDept = activeDept === 'All' || j.department.toLowerCase().includes(activeDept.toLowerCase());
+    const titleMatch = j.title.toLowerCase().includes(searchQuery);
+    const descMatch = (j.description || "").toLowerCase().includes(searchQuery);
+    const matchesSearch = !searchQuery || titleMatch || descMatch;
+    return matchesDept && matchesSearch;
+  });
+  renderJobs(filtered);
 }
 
 // Set up apply modal fields and auto-complete candidate details if logged in

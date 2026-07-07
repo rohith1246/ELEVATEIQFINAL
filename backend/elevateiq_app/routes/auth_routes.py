@@ -252,8 +252,11 @@ def profile():
                 )
                 profile_data = cursor.fetchone()
                 # Serialize Python date objects to ISO string representation
-                if profile_data and profile_data.get("date_of_joining"):
-                    profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
+                if profile_data:
+                    if profile_data.get("date_of_joining"):
+                        profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
+                    if profile_data.get("salary") is not None:
+                        profile_data["salary"] = float(profile_data["salary"])
             elif user["role"] == "client":
                 cursor.execute(
                     """
@@ -356,6 +359,8 @@ def list_employees():
         for emp in employees:
             if emp.get("date_of_joining"):
                 emp["date_of_joining"] = emp["date_of_joining"].isoformat()
+            if emp.get("salary") is not None:
+                emp["salary"] = float(emp["salary"])
         return jsonify(employees), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -437,6 +442,14 @@ def add_employee():
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         
         # Insert user login credentials
+        salary = data.get("salary", 35000.00)
+        if salary is not None:
+            try:
+                salary = float(salary)
+            except ValueError:
+                return jsonify({"error": "Invalid salary amount format"}), 400
+
+        # Insert user login credentials
         portal = data.get("portal", "elevateiq")
         cursor.execute(
             "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, 'employee', %s) RETURNING id",
@@ -447,10 +460,10 @@ def add_employee():
         # Insert detailed employee metadata
         cursor.execute(
             """
-            INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status, salary) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (user_id, employee_id, phone, department, designation, date_of_joining, status)
+            (user_id, employee_id, phone, department, designation, date_of_joining, status, salary)
         )
         conn.commit()
         return jsonify({"message": f"Employee added successfully. Temporary password is '{password}'"}), 201
@@ -511,14 +524,21 @@ def update_employee(emp_id):
                 (name, email, user_id)
             )
 
+        salary = data.get("salary")
+        if salary is not None:
+            try:
+                salary = float(salary)
+            except ValueError:
+                return jsonify({"error": "Invalid salary amount format"}), 400
+
         # Update employee information
         cursor.execute(
             """
             UPDATE employees 
-            SET phone_number = %s, department = %s, designation = %s, date_of_joining = %s, status = %s 
+            SET phone_number = %s, department = %s, designation = %s, date_of_joining = %s, status = %s, salary = COALESCE(%s, salary) 
             WHERE id = %s
             """,
-            (phone, department, designation, date_of_joining, status, emp_id)
+            (phone, department, designation, date_of_joining, status, salary, emp_id)
         )
         conn.commit()
         return jsonify({"message": "Employee updated successfully"}), 200

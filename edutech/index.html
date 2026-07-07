@@ -185,6 +185,76 @@
     </div>
   </div>
 </section>
+
+<!-- ============ INTERACTIVE PATH FINDER QUIZ ============ -->
+<section id="pathfinder" class="section reveal" style="border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:radial-gradient(circle at 50% 50%, rgba(63,208,255,0.04), transparent 60%); padding: 80px 0;">
+  <div class="container" style="max-width:800px; margin:auto;">
+    <div class="section-head center" style="margin-bottom:32px;">
+      <div class="eyebrow">Interactive Quiz</div>
+      <h2>Find your perfect learning track in 30 seconds</h2>
+      <p>Answer two simple questions, and our placement algorithm will match you to the ideal program.</p>
+    </div>
+
+    <div class="glass-card" style="padding: 40px; border-radius: 20px; border:1px solid var(--glass-border); box-shadow: 0 16px 40px rgba(0,0,0,0.3); position:relative;" id="quizBox">
+      
+      <!-- Step 1: Background -->
+      <div id="quizStep1" class="quiz-step">
+        <h3 style="font-size:19px; color:#fff; margin-bottom:20px; font-weight:600;">Step 1 of 2: What is your current coding background?</h3>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <button class="quiz-btn" onclick="selectStep1('beginner', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Absolute Beginner:</strong> I have zero coding experience and want to learn from scratch.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep1('basic', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Basic Knowledge:</strong> I know loops/variables, but want real project-building skills.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep1('experienced', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Experienced:</strong> I can code comfortably and want to specialize in AI, DevOps, or design.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Goal -->
+      <div id="quizStep2" class="quiz-step" style="display:none;">
+        <h3 style="font-size:19px; color:#fff; margin-bottom:20px; font-weight:600;">Step 2 of 2: What area of tech excites you most?</h3>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <button class="quiz-btn" onclick="selectStep2('visual', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Visual & Creative:</strong> Designing interfaces, coding responsive websites & mobile apps.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep2('analytical', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Data & Intelligence:</strong> Training machine models, AI automation, and database pipelines.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep2('cloud', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Infrastructure & Architecture:</strong> Cloud servers, secure networking, and DevOps pipelines.</span>
+          </button>
+        </div>
+        <button onclick="backToStep1()" style="margin-top:20px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; font-weight:500; display:flex; align-items:center; gap:4px; transition:color 0.25s;">
+          ← Back to Step 1
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div id="quizResult" class="quiz-step" style="display:none; text-align:center; animation: fadeIn 0.5s ease;">
+        <div style="font-size:48px; margin-bottom:12px;">🎉</div>
+        <h3 style="font-size:22px; color:#fff; margin-bottom:10px; font-weight:700;">Your Recommended Program is:</h3>
+        <h2 style="font-size:30px; background:linear-gradient(135deg, var(--blue), var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:16px; font-weight:800;" id="recTitle">Full Stack Web Development</h2>
+        <p style="color:var(--muted); max-width:550px; margin:0 auto 26px auto; font-size:15px; line-height:1.6;" id="recDesc">Get job-ready from scratch. Master frontend UI engineering (React) and backend services (Node.js/SQL) alongside direct hiring pipelines.</p>
+        
+        <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <a href="#courses" class="btn btn-primary" onclick="highlightCourseCard(event)" style="display:inline-flex; align-items:center; gap:8px;">View Program Details</a>
+          <button onclick="resetQuiz()" class="btn btn-ghost">Retake Quiz</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- ============ PROGRAMS COURSES SECTION ============ -->
 <section id="courses" class="section">
   <div class="container">
