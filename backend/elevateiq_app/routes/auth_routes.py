@@ -163,7 +163,7 @@ def login():
             user_portal = user_record.get("portal") or "elevateiq"
             user_role = user_record["role"]
             
-            if user_role != "admin" and user_portal != requested_portal:
+            if user_portal != "both" and user_portal != requested_portal:
                 return jsonify({"error": f"Unauthorized: This account is registered for the {user_portal.upper()} portal only"}), 403
 
             # Build user data payload for security token
