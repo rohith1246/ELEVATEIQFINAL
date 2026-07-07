@@ -15,11 +15,16 @@
   /* ============================================================
      1. PRELOADER TRANSITIONS
      ============================================================ */
-  window.addEventListener("load", () => {
+  let preloaderRemoved = false;
+  function hidePreloader() {
+    if (preloaderRemoved) return;
+    preloaderRemoved = true;
+    
     const bar = document.getElementById("preload-bar");
     const pre = document.getElementById("preloader");
     if (bar) bar.style.transition = "width .6s ease";
     requestAnimationFrame(() => { if (bar) bar.style.width = "100%"; });
+    
     setTimeout(() => {
       if (pre){
         pre.style.transition = "opacity .5s ease, visibility .5s";
@@ -27,7 +32,12 @@
         setTimeout(() => pre.remove(), 550);
       }
       document.body.classList.add("loaded");
+      playEntranceAnimations();
     }, 650);
+  }
+
+  window.addEventListener("load", () => {
+    setTimeout(hidePreloader, 100);
   });
 
   /* ============================================================
@@ -137,11 +147,21 @@
   /* ============================================================
      6. HERO ANIMATION TIMELINES (GSAP)
      ============================================================ */
+  function playEntranceAnimations(){
+    if (hasGSAP){
+      gsap.to(".hero-line span", { yPercent:0, y:0, duration:1, ease:"power4.out", stagger:0.12, delay:0.15 });
+      gsap.to(".hero-badge", { opacity:1, y:0, duration:0.8, delay:0.05 });
+      gsap.to(".hero-ctas .btn", { opacity:1, y:0, duration:0.8, stagger:0.1, delay:0.6 });
+      gsap.to(".hero-stats", { opacity:1, y:0, duration:0.8, delay:0.85 });
+    } else {
+      document.querySelectorAll(".hero-line span").forEach(el => el.style.transform = "none");
+      document.querySelectorAll(".hero-badge, .hero-ctas .btn, .hero-stats").forEach(el => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      });
+    }
+  }
   if (hasGSAP){
-    gsap.from(".hero-line span", { yPercent:120, duration:1, ease:"power4.out", stagger:0.12, delay:0.2 });
-    gsap.from(".hero-badge", { opacity:0, y:-14, duration:0.8, delay:0.1 });
-    gsap.from(".hero-ctas .btn", { opacity:0, y:20, duration:0.8, stagger:0.1, delay:0.9 });
-    gsap.from(".hero-stats", { opacity:0, y:20, duration:0.8, delay:1.1 });
     document.querySelectorAll("[data-float]").forEach((el,i)=>{
       gsap.to(el, { y: i%2===0 ? -22 : 22, duration: 3+i*0.4, ease:"sine.inOut", yoyo:true, repeat:-1 });
     });
@@ -162,6 +182,7 @@
           scrollTrigger:{ trigger: el, start:"top 88%" }
         });
       });
+      ScrollTrigger.refresh();
     } else {
       items.forEach(el=>{ el.style.opacity=1; el.style.transform="none"; });
     }
@@ -172,41 +193,13 @@
         el.style.opacity = "1";
         el.style.transform = "none";
       });
+      if (hasGSAP && typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.refresh();
+      }
     }, 1200);
   }
 
-  /* ============================================================
-     8. QUANTITATIVE STAT COUNTERS
-     ============================================================ */
-  /**
-   * Triggers stat counting animations when elements cross scroll viewport.
-   */
-  function setupCounters(){
-    document.querySelectorAll("[data-count]").forEach(el=>{
-      const target = parseFloat(el.getAttribute("data-count"));
-      const decimals = parseInt(el.getAttribute("data-decimal")||"0");
-      const prefix = el.getAttribute("data-prefix")||"";
-      const suffix = el.getAttribute("data-suffix")||"";
-      
-      /** Fires the counter animation */
-      const run = ()=>{
-        let obj = {val:0};
-        if (hasGSAP){
-          gsap.to(obj, { val: target, duration:1.8, ease:"power2.out",
-            onUpdate: ()=> el.textContent = prefix + obj.val.toFixed(decimals) + suffix
-          });
-        } else {
-          el.textContent = prefix + target.toFixed(decimals) + suffix;
-        }
-      };
-      if ("IntersectionObserver" in window){
-        const io = new IntersectionObserver((entries)=>{
-          entries.forEach(entry=>{ if(entry.isIntersecting){ run(); io.unobserve(el); } });
-        }, {threshold:0.4});
-        io.observe(el);
-      } else run();
-    });
-  }
+
 
   /* ============================================================
      9. COURSES LIST RENDERER & FILTERS
@@ -218,19 +211,43 @@
    * @param {number} n - Raw value.
    * @returns {string} Formatted label.
    */
-  function getCourseImagePath(icon) {
+  function getCourseImagePath(icon, title = "") {
+    const titleLower = (title || "").toLowerCase();
+    
+    if (titleLower.includes("aws") || icon === "server") {
+      return "/images/course%20images/aws.jpeg";
+    }
+    if (titleLower.includes("app") || titleLower.includes("mobile")) {
+      return "/images/course%20images/app.jpeg";
+    }
+    if (titleLower.includes("python")) {
+      return "/images/course%20images/python%20course.jpg";
+    }
+    if (titleLower.includes("java")) {
+      return "/images/course%20images/java%20couse.webp";
+    }
+    if (titleLower.includes("data science") || titleLower.includes("ai") || icon === "brain" || icon === "chart") {
+      return "/images/course%20images/Data-science.jpg";
+    }
+    if (titleLower.includes("cyber") || titleLower.includes("security") || icon === "shield") {
+      return "/images/course%20images/cybersecurity.jpg";
+    }
+    if (titleLower.includes("full stack") || titleLower.includes("web") || titleLower.includes("devops") || titleLower.includes("cloud")) {
+      return "/images/course%20images/fullstack%20development.jpg";
+    }
+    
     const map = {
-      layers: '/images/course_web_dev.webp',
-      code:   '/images/course_web_dev.webp',
-      coffee: '/images/course_web_dev.webp',
-      brain:  '/images/course_ai_data.webp',
-      chart:  '/images/course_ai_data.webp',
-      cloud:  '/images/course_cloud_sec.webp',
-      server: '/images/course_cloud_sec.webp',
-      shield: '/images/course_cloud_sec.webp',
+      layers: '/images/course%20images/app.jpeg',
+      code:   '/images/course%20images/fullstack%20development.jpg',
+      coffee: '/images/course%20images/java%20couse.webp',
+      brain:  '/images/course%20images/Data-science.jpg',
+      chart:  '/images/course%20images/Data-science.jpg',
+      cloud:  '/images/course%20images/fullstack%20development.jpg',
+      server: '/images/course%20images/aws.jpeg',
+      shield: '/images/course%20images/cybersecurity.jpg',
       palette:'/images/course_ui_ux.webp'
     };
-    return map[icon] || '/images/course_web_dev.webp';
+    return map[icon] || '/images/course%20images/fullstack%20development.jpg';
   }
 
   /**
@@ -246,16 +263,20 @@
    * 
    * @param {Array<Object>} list - The courses data items array.
    */
-  function renderCourses(list){
+  function renderCourses(list, isInitial = false){
     const grid = document.getElementById("coursesGrid");
     if (!list.length){ grid.innerHTML = `<p style="color:var(--muted); grid-column:1/-1; text-align:center; padding:40px 0;">No programs match that search.</p>`; return; }
+    
+    const revealClass = isInitial ? "reveal" : "";
+    const revealStyle = isInitial ? "" : 'style="opacity:1; transform:none;"';
+
     grid.innerHTML = list.map(c => {
       const priceVal = c.price;
       const oldPriceVal = c.oldPrice || c.old_price;
       return `
-      <div class="glass-card course-card reveal" style="opacity:1; transform:none;">
+      <div class="glass-card course-card alive-card ${revealClass}" ${revealStyle}>
         <div class="course-thumb" style="overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative;">
-          <img src="${getCourseImagePath(c.icon)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; opacity:0.8;">
+          <img src="${getCourseImagePath(c.icon, c.title)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; opacity:0.8;">
           <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent, rgba(2,6,23,0.5)); pointer-events:none;"></div>
           <span class="course-level" style="z-index:2;">${c.level}</span>
         </div>
@@ -284,6 +305,10 @@
         window.location.href = `login.html?redirect=payment.html?course_id=${courseId}`;
       }
     }));
+
+    if (hasGSAP && typeof ScrollTrigger !== "undefined") {
+      ScrollTrigger.refresh();
+    }
   }
 
   /**
@@ -311,7 +336,7 @@
       activeCourses = COURSES;
     }
 
-    renderCourses(activeCourses);
+    renderCourses(activeCourses, true);
 
     const search = document.getElementById("courseSearch");
     const pills = document.querySelectorAll(".pill");
@@ -327,7 +352,7 @@
                               (c.category || "").toLowerCase().includes(q);
         return matchesFilter && matchesSearch;
       });
-      renderCourses(filtered);
+      renderCourses(filtered, false);
     }
     search.addEventListener("input", apply);
     pills.forEach(p=> p.addEventListener("click", ()=>{
@@ -336,6 +361,42 @@
       activeFilter = p.dataset.filter;
       apply();
     }));
+
+    window.highlightCourseCard = function(event) {
+      event.preventDefault();
+      const title = document.getElementById('recTitle').textContent;
+      
+      const coursesSection = document.getElementById('courses');
+      if (coursesSection) {
+        coursesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      // Reset filter pills to All
+      pills.forEach(x => x.classList.remove("active"));
+      const allPill = Array.from(pills).find(p => p.dataset.filter === "all");
+      if (allPill) allPill.classList.add("active");
+      activeFilter = "all";
+
+      const searchInput = document.getElementById('courseSearch');
+      if (searchInput) {
+        searchInput.value = title;
+        apply();
+      }
+
+      // Dynamic glow highlight
+      setTimeout(() => {
+        const cards = document.querySelectorAll('.course-card');
+        cards.forEach(card => {
+          const h3 = card.querySelector('h3');
+          if (h3 && (h3.textContent.toLowerCase().includes(title.toLowerCase()) || title.toLowerCase().includes(h3.textContent.toLowerCase()))) {
+            card.classList.add('highlight-pulse');
+            setTimeout(() => {
+              card.classList.remove('highlight-pulse');
+            }, 6000);
+          }
+        });
+      }, 500);
+    };
   }
 
 
@@ -670,22 +731,7 @@
     document.getElementById('quizStep1').style.display = 'block';
   };
 
-  window.highlightCourseCard = function(event) {
-    event.preventDefault();
-    const title = document.getElementById('recTitle').textContent;
-    
-    const coursesSection = document.getElementById('courses');
-    if (coursesSection) {
-      coursesSection.scrollIntoView({ behavior: 'smooth' });
-    }
 
-    const searchInput = document.getElementById('courseSearch');
-    if (searchInput) {
-      searchInput.value = title;
-      const eventObj = new Event('input', { bubbles: true });
-      searchInput.dispatchEvent(eventObj);
-    }
-  };
 
   function calculateQuizRecommendation() {
     const s1 = quizAnswers.step1;
@@ -734,16 +780,28 @@
   /* ============================================================
      15. INITIALIZATION CONTROLLER
      ============================================================ */
-  document.getElementById("year").textContent = new Date().getFullYear();
-  setupCourses();
-  renderTeam();
-  renderFAQ();
-  setupTestimonials();
-  setupForm();
-  setupAI();
-  setupCounters();
-  setupRoadmap();
-  setupReveal();
+  async function initPortal() {
+    document.getElementById("year").textContent = new Date().getFullYear();
+    
+    // 3s fallback safety timeout to prevent getting stuck
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+    const coursesPromise = setupCourses();
+    
+    // Race database courses fetch against the 3s timeout
+    await Promise.race([coursesPromise, timeoutPromise]);
+    
+    // Remove preloader
+    hidePreloader();
+    
+    renderTeam();
+    renderFAQ();
+    setupTestimonials();
+    setupForm();
+    setupAI();
+    setupRoadmap();
+    setupReveal();
+  }
+  initPortal();
 
 
   /* ============================================================

@@ -682,4 +682,86 @@ footer a {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Premium Click & Action Animations */
+@keyframes navClickScale {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.92); opacity: 0.85; }
+  100% { transform: scale(1); }
+}
+
+.nav-links a.nav-clicked {
+  animation: navClickScale 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* Smooth physically-responsive click feedbacks on active actions */
+.nav-links a:active {
+  color: var(--orange);
+}
+
+.btn-login:active,
+.btn-primary:active,
+.btn-ghost:active,
+.logo:active,
+nav .menu-toggle:active {
+  transform: scale(0.95) translateY(0px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.08s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* Premium Alive-Card Animations */
+.alive-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              border-color 0.3s ease;
+}
+
+/* Image Zoom */
+.alive-card img {
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+.alive-card:hover img {
+  transform: scale(1.08) !important;
+}
+
+/* Icon Badge Spring */
+.alive-card .icon-badge {
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.alive-card:hover .icon-badge {
+  transform: scale(1.15) rotate(10deg);
+}
+
+/* List Item Slide */
+.alive-card li {
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.alive-card:hover li {
+  transform: translateX(6px);
+}
+/* Staggered delay for list items to feel organic */
+.alive-card:hover li:nth-child(1) { transition-delay: 0.02s; }
+.alive-card:hover li:nth-child(2) { transition-delay: 0.06s; }
+.alive-card:hover li:nth-child(3) { transition-delay: 0.10s; }
+.alive-card:hover li:nth-child(4) { transition-delay: 0.14s; }
+.alive-card:hover li:nth-child(5) { transition-delay: 0.18s; }
+
+/* Custom theme shadow glows */
+.alive-card.it-card:hover {
+  transform: translateY(-10px) scale(1.01);
+  border-color: rgba(63, 208, 255, 0.4) !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 
+              0 0 40px rgba(63, 208, 255, 0.18),
+              inset 0 1px rgba(255,255,255,0.15) !important;
+}
+
+.alive-card.nonit-card:hover {
+  transform: translateY(-10px) scale(1.01);
+  border-color: rgba(255, 107, 0, 0.4) !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 
+              0 0 40px rgba(255, 107, 0, 0.18),
+              inset 0 1px rgba(255,255,255,0.15) !important;
+}
 

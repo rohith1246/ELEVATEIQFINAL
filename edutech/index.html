@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>document.documentElement.classList.add('js');</script>
 <!-- ============ HTML HEAD & SEO METRICS ============ -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,11 +105,11 @@
       </a>
     </div>
 
-    <div class="hero-stats reveal">
-      <div class="stat"><div class="num" data-count="4200">0</div><div class="label">Students Placed</div></div>
-      <div class="stat"><div class="num" data-count="18.5" data-decimal="1" data-prefix="₹" data-suffix=" LPA">0</div><div class="label">Highest Package</div></div>
-      <div class="stat"><div class="num" data-count="210">0</div><div class="label">Hiring Partners</div></div>
-      <div class="stat"><div class="num" data-count="94" data-suffix="%">0</div><div class="label">Placement Rate</div></div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num">4200</div><div class="label">Students Placed</div></div>
+      <div class="stat"><div class="num">₹18.5 LPA</div><div class="label">Highest Package</div></div>
+      <div class="stat"><div class="num">210</div><div class="label">Hiring Partners</div></div>
+      <div class="stat"><div class="num">94%</div><div class="label">Placement Rate</div></div>
     </div>
   </div>
 
@@ -278,8 +279,33 @@
       </div>
     </div>
 
-    <!-- Dynamic Courses target card grid -->
-    <div class="courses-grid" id="coursesGrid"></div>
+    <!-- Dynamic Courses target card grid with skeleton loaders -->
+    <div class="courses-grid" id="coursesGrid">
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 

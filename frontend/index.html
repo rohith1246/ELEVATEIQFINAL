@@ -232,6 +232,59 @@
 </section>
 
 
+<!-- ==================== CLIENTS / PARTNERS SECTION ==================== -->
+<section id="clients" style="padding: 30px 0; background: rgba(255,255,255,0.01); border-top: 1.5px solid var(--line); border-bottom: 1.5px solid var(--line); overflow:hidden; position:relative; z-index:2;">
+  <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+    <marquee behavior="scroll" direction="left" scrollamount="5" onmouseover="this.stop()" onmouseout="this.start()" style="width:100%; display:block;">
+      <div style="display:flex; align-items:center; gap:80px; color:var(--ink-faint); white-space:nowrap;">
+        <!-- Google -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:20px; font-weight:700; font-family:'Product Sans', Arial, sans-serif; color:white;">Google</span>
+        </div>
+        <!-- Microsoft -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <svg width="16" height="16" viewBox="0 0 23 23" fill="currentColor" style="color:#f25022;">
+            <rect x="0" y="0" width="11" height="11"/>
+            <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+            <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+            <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+          </svg>
+          <span style="font-size:18px; font-weight:600; font-family:'Segoe UI', sans-serif; color:white;">Microsoft</span>
+        </div>
+        <!-- Amazon -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:19px; font-weight:700; font-family:'Amazon Ember', Arial, sans-serif; letter-spacing:-0.5px; color:white;">amazon</span>
+        </div>
+        <!-- Meta -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <svg width="22" height="18" viewBox="0 0 24 24" fill="none" stroke="#0081fb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 12c-2-4.5-8-4.5-8 0s6 4.5 8 0c2 4.5 8 4.5 8 0s-6-4.5-8 0z"/>
+          </svg>
+          <span style="font-size:18px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px; color:white;">Meta</span>
+        </div>
+        <!-- Netflix -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:18px; font-weight:800; font-family:sans-serif; letter-spacing:1px; color:#e50914;">NETFLIX</span>
+        </div>
+        <!-- Accenture -->
+        <div style="display:inline-flex; align-items:center; gap:4px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:18px; font-weight:700; font-family:sans-serif; color:white;">accenture</span>
+          <span style="color:var(--orange); font-size:20px; font-weight:bold;">&gt;</span>
+        </div>
+        <!-- Cognizant -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:18px; font-weight:600; font-family:sans-serif; color:white;">Cognizant</span>
+        </div>
+        <!-- Wipro -->
+        <div style="display:inline-flex; align-items:center; gap:8px; opacity:0.35; transition:opacity 0.3s; cursor:pointer;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='0.35'">
+          <span style="font-size:18px; font-weight:600; font-family:sans-serif; color:white;">Wipro</span>
+        </div>
+      </div>
+    </marquee>
+  </div>
+</section>
+
+
 <!-- ==================== SERVICES SECTION ==================== -->
 <section class="section" id="services" style="padding-top: 100px;">
   <div class="section-head">
@@ -242,10 +295,10 @@
   
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
     <!-- IT Services Card -->
-    <div class="glass-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="glass-card alive-card it-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
       <div style="height: 180px; width: 100%; position:relative; overflow:hidden; border-bottom: 1px solid var(--line);">
-        <img src="images/it_services.png" alt="IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--blue);">⚡</div>
+        <img src="images/it_image.jpeg" alt="IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
+        <div class="icon-badge" style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--blue);">⚡</div>
       </div>
       <div style="padding: 30px; display:flex; flex-direction:column; gap:15px;">
         <h3 style="font-size:20px; font-weight:600; color:#fff;">IT Services</h3>
@@ -270,10 +323,10 @@
     </div>
 
     <!-- Non-IT Services Card -->
-    <div class="glass-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="glass-card alive-card nonit-card" style="padding: 0; display:flex; flex-direction:column; overflow:hidden;">
       <div style="height: 180px; width: 100%; position:relative; overflow:hidden; border-bottom: 1px solid var(--line);">
-        <img src="images/non_it_services.png" alt="Non-IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--orange);">👥</div>
+        <img src="images/non%20it%20image.jpeg" alt="Non-IT Services Illustration" style="width:100%; height:100%; object-fit:cover;">
+        <div class="icon-badge" style="position:absolute; top:12px; left:12px; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(2,6,23,0.7); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); color:var(--orange);">👥</div>
       </div>
       <div style="padding: 30px; display:flex; flex-direction:column; gap:15px;">
         <h3 style="font-size:20px; font-weight:600; color:#fff;">Non-IT Services</h3>
@@ -385,9 +438,120 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 
+<!-- ==================== STRATEGIC VISION & CORE VALUES SECTION ==================== -->
+<section class="section scroll-reveal" id="vision-strategy" style="padding: 100px 0; position:relative;">
+  <div style="position:absolute; top:20%; left:10%; width:600px; height:600px; background:radial-gradient(circle, rgba(255,107,0,0.03) 0%, transparent 70%); pointer-events:none; z-index:0;"></div>
+  <div style="position:absolute; bottom:20%; right:10%; width:600px; height:600px; background:radial-gradient(circle, rgba(0,230,118,0.03) 0%, transparent 70%); pointer-events:none; z-index:0;"></div>
+
+  <div class="section-head" style="text-align:center; margin-bottom:60px; position:relative; z-index:2;">
+    <div class="label" style="display:inline-block; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--blue); font-weight:700; border:1px solid rgba(63,208,255,0.3); padding:4px 12px; border-radius:100px; margin-bottom:14px; background:rgba(63,208,255,0.06);">Strategic direction</div>
+    <h2 style="font-size:clamp(26px,3.2vw,38px); font-weight:700; color:#fff; letter-spacing:-0.5px; margin-bottom:12px;">Our Purpose &amp; Comparative Value</h2>
+    <p style="color:var(--ink-soft); max-width:600px; margin:0 auto; font-size:15.5px; line-height:1.7;">A comprehensive look at our guiding mission, strategic framework, and why we are the preferred partner for clients and talent alike.</p>
+  </div>
+
+  <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; position:relative; z-index:2;">
+    <!-- Mission, Vision, and Strategy Grid -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:30px; margin-bottom:60px;">
+      
+      <!-- Mission Card -->
+      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(63,208,255,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(63,208,255,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--blue); border:1px solid rgba(63,208,255,0.2);">🎯</div>
+        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Mission</h3>
+        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To bridge the gap between global enterprise demands and top-tier technical expertise by delivering scalable IT services and grooming the next generation of software engineering leaders through focused academy programs.</p>
+      </div>
+
+      <!-- Vision Card -->
+      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(255,107,0,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,107,0,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--orange); border:1px solid rgba(255,107,0,0.2);">👁️</div>
+        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Vision</h3>
+        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To become the global benchmark for combined software consulting and talent acceleration, fostering a reliable ecosystem where continuous up-skilling translates directly into robust, enterprise-grade technology solutions.</p>
+      </div>
+
+      <!-- Strategy Card -->
+      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(0,230,118,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0,230,118,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:#00e676; border:1px solid rgba(0,230,118,0.2);">♟️</div>
+        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Strategy</h3>
+        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">We operate a dual-engine model: combining direct software consulting with our incubator (EduTech). This cyclical engine drives rapid deployment of skilled staff and provides our clients with highly qualified project support.</p>
+      </div>
+
+    </div>
+
+    <!-- Why ElevateIQ & Why EduTech Side-by-Side Comparison -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:30px;">
+      
+      <!-- Why ElevateIQ Card -->
+      <div class="glass-card" style="padding: 40px; border-radius: 24px; border:1px solid var(--glass-border); background:linear-gradient(135deg, rgba(63,208,255,0.02) 0%, rgba(2,6,23,0.3) 100%); transition: border-color 0.3s ease;" onmouseenter="this.style.borderColor='rgba(63,208,255,0.25)'" onmouseleave="this.style.borderColor='var(--glass-border)'">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+          <span style="font-size:28px;">💼</span>
+          <h3 style="font-size:24px; font-weight:700; color:#fff; margin:0;">Why ElevateIQ?</h3>
+        </div>
+        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:24px;">For clients requiring elite software consulting, BPO operations, and robust, production-grade applications that scale seamlessly.</p>
+        
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:16px;">
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--blue); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">Global Delivery Network</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Operations running 24/7 in APAC and North America for seamless support.</span>
+            </div>
+          </li>
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--blue); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">Modern Engineering Competence</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Architectures designed in Python, Java, Docker, Kubernetes, and PostgreSQL.</span>
+            </div>
+          </li>
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--blue); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">Compliance & Security First</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Strict ISO and HIPAA-compliant data practices across all client accounts.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Why EduTech Card -->
+      <div class="glass-card" style="padding: 40px; border-radius: 24px; border:1px solid var(--glass-border); background:linear-gradient(135deg, rgba(255,107,0,0.02) 0%, rgba(2,6,23,0.3) 100%); transition: border-color 0.3s ease;" onmouseenter="this.style.borderColor='rgba(255,107,0,0.25)'" onmouseleave="this.style.borderColor='var(--glass-border)'">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+          <span style="font-size:28px;">🎓</span>
+          <h3 style="font-size:24px; font-weight:700; color:#fff; margin:0;">Why EduTech Academy?</h3>
+        </div>
+        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:24px;">For students and professionals looking to launch their tech careers through direct, industry-aligned up-skilling roadmaps.</p>
+        
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:16px;">
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--orange); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">Job-Driven Curriculum</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Courses custom-tailored to actual, active jobs in our hiring pipeline.</span>
+            </div>
+          </li>
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--orange); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">1-on-1 Senior Mentorship</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Weekly check-ins and direct code reviews from engineering experts.</span>
+            </div>
+          </li>
+          <li style="display:flex; align-items:start; gap:12px;">
+            <span style="color:var(--orange); font-size:16px; margin-top:2px;">✔</span>
+            <div>
+              <strong style="color:#fff; display:block; font-size:14px; margin-bottom:3px;">Direct Placement Channels</strong>
+              <span style="font-size:13.5px; color:var(--ink-soft);">Top performers are immediately placed within internal and external teams.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
 <!-- ==================== COMPANY GALLERY SECTION ==================== -->
 <section class="section scroll-reveal" id="gallery" style="padding: 80px 0; overflow:hidden; position:relative;">
-
   <!-- Ambient radial glow -->
   <div style="position:absolute; top:50%; left:50%; width:800px; height:800px; transform:translate(-50%,-50%); background:radial-gradient(circle, rgba(63,208,255,0.05) 0%, transparent 68%); pointer-events:none; z-index:0;"></div>
 
@@ -719,7 +883,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="faq-icon" style="font-size: 20px; color: var(--blue); transition: transform 0.3s; font-weight:700;">+</span>
       </div>
       <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.3s ease; color: var(--muted); font-size: 14px; line-height: 1.6;">
-        <p style="margin: 0; padding-top: 12px;">We are headquartered in Hyderabad, India, with remote consulting divisions operating across North America and APAC countries supporting diverse enterprise BPO and development contracts.</p>
+        <p style="margin: 0; padding-top: 12px;">We are headquartered in Narasaraopet-Palnadu District,Andhra Pradesh, with remote consulting divisions operating across North America and APAC countries supporting diverse enterprise BPO and development contracts.</p>
       </div>
     </div>
   </div>
@@ -746,6 +910,26 @@ function toggleFAQ(element) {
     icon.textContent = '×';
   }
 }
+
+// Premium Navigation links click animation feedback & smooth scroll handler
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('.nav-links a, nav .logo').forEach(link => {
+    link.addEventListener('click', function(e) {
+      this.classList.add('nav-clicked');
+      setTimeout(() => this.classList.remove('nav-clicked'), 250);
+
+      // Smooth scroll if anchor
+      const href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+});
 </script>
 
 
@@ -763,8 +947,88 @@ function toggleFAQ(element) {
 
 
 <!-- ==================== FOOTER ==================== -->
-<footer>
-  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
+<footer style="position:relative; z-index:2; border-top: 1px solid rgba(255,255,255,0.08); padding: 60px 6vw 40px; background: rgba(2,6,23,0.4); backdrop-filter: blur(10px); color: var(--ink-soft);">
+  <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; text-align: left; margin-bottom: 40px;">
+    
+    <!-- Column 1: Brand Info -->
+    <div>
+      <a href="index.html" style="text-decoration:none; display:inline-block; margin-bottom:15px;">
+        <img src="images/logo.png" alt="ElevateIQ Logo" style="height: 35px; width: auto; object-fit: contain;">
+      </a>
+      <p style="font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); margin: 0;">
+        Providing exceptional software engineering, enterprise BPO services, and advanced tech solutions with a focus on client success and cutting-edge automation.
+      </p>
+    </div>
+
+    <!-- Column 2: Contact Info -->
+    <div>
+      <h4 style="font-size: 14.5px; font-weight: 600; color: #fff; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px;">Contact Info</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
+        <li style="display: flex; align-items: start; gap: 8px;">
+          <span style="color: var(--orange); font-size: 14px;">📍</span>
+          <span>Arundelpet, Narasaraopet,<br>Palnadu District, AP, 522601</span>
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--blue); font-size: 14px;">📞</span>
+          <a href="tel:+916300855710" style="color: var(--ink-soft); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='var(--orange)'" onmouseleave="this.style.color='var(--ink-soft)'">+91 63008 55710</a>
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--pink-light); font-size: 14px;">✉</span>
+          <a href="mailto:hr.support@elevateiq-softtech.com" style="color: var(--ink-soft); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='var(--orange)'" onmouseleave="this.style.color='var(--ink-soft)'">hr.support@elevateiq-softtech.com</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Column 3: Office Hours -->
+    <div>
+      <h4 style="font-size: 14.5px; font-weight: 600; color: #fff; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px;">Office Hours</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; line-height: 1.5;">
+        <li style="display: flex; align-items: start; gap: 8px;">
+          <span style="color: var(--blue); font-size: 14px;">🕒</span>
+          <div>
+            <strong>Monday - Friday:</strong><br>
+            <span>8:00 AM - 6:00 PM</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: start; gap: 8px;">
+          <span style="color: var(--muted); font-size: 14px; opacity: 0.5;">🕒</span>
+          <div>
+            <strong>Saturday:</strong><br>
+            <span style="color: var(--muted);">Closed</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: start; gap: 8px;">
+          <span style="color: var(--muted); font-size: 14px; opacity: 0.5;">🕒</span>
+          <div>
+            <strong>Sunday:</strong><br>
+            <span style="color: var(--muted);">Closed</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Column 4: Locate Us & Socials -->
+    <div>
+      <h4 style="font-size: 14.5px; font-weight: 600; color: #fff; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px;">Locate Us</h4>
+      <div style="border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border); margin-bottom: 15px; height: 110px;">
+        <iframe src="https://maps.google.com/maps?q=ElevateIQ%20Soft%20Tech,%20Arundelpet,%20Narasaraopeta,%20Andhra%20Pradesh%20522601&t=&z=14&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 15px; font-size: 14px; align-items: center;">
+        <a href="https://www.instagram.com/elevateiq_soft_tech/" target="_blank" style="color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseenter="this.style.color='#e1306c'" onmouseleave="this.style.color='var(--ink-soft)'">📸 Instagram</a>
+      </div>
+      <div style="display: flex; gap: 12px; font-size: 12px;">
+        <a href="#" style="color: var(--ink-soft); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='var(--orange)'" onmouseleave="this.style.color='var(--ink-soft)'">Privacy Policy</a>
+        <span style="color: var(--glass-border);">|</span>
+        <a href="#" style="color: var(--ink-soft); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='var(--orange)'" onmouseleave="this.style.color='var(--ink-soft)'">Terms</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Copyright notice -->
+  <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 25px; text-align: center; font-size: 12.5px; color: var(--ink-faint);">
+    © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
+  </div>
 </footer>
 
 
