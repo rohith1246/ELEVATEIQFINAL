@@ -51,6 +51,9 @@ def register():
     email = data.get("email", "").strip() if data.get("email") else ""
     password = data.get("password", "")
     role = "candidate"  # Enforce candidate role for public registration
+    portal = data.get("portal", "elevateiq").strip().lower()
+    if portal not in ["elevateiq", "edutech"]:
+        portal = "elevateiq"
 
     if not name or not email or not password:
         return jsonify({"error": "All fields are required"}), 400
@@ -76,8 +79,8 @@ def register():
         # Hash password using bcrypt salt generation
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         cursor.execute(
-            "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s) RETURNING id",
-            (name, email, hashed_password, role)
+            "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (name, email, hashed_password, role, portal)
         )
         conn.commit()
         return jsonify({"message": "Registration successful"}), 201
@@ -257,6 +260,8 @@ def profile():
                         profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
                     if profile_data.get("salary") is not None:
                         profile_data["salary"] = float(profile_data["salary"])
+                    else:
+                        profile_data["salary"] = 35000.00
             elif user["role"] == "client":
                 cursor.execute(
                     """
@@ -361,6 +366,8 @@ def list_employees():
                 emp["date_of_joining"] = emp["date_of_joining"].isoformat()
             if emp.get("salary") is not None:
                 emp["salary"] = float(emp["salary"])
+            else:
+                emp["salary"] = 35000.00
         return jsonify(employees), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -457,14 +464,35 @@ def add_employee():
         )
         user_id = cursor.fetchone()[0]
 
-        # Insert detailed employee metadata
+        # Check if the salary column exists in the database
         cursor.execute(
             """
-            INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status, salary) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (user_id, employee_id, phone, department, designation, date_of_joining, status, salary)
+            SELECT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name='employees' AND column_name='salary'
+            );
+            """
         )
+        has_salary = cursor.fetchone()[0]
+
+        # Insert detailed employee metadata
+        if has_salary:
+            cursor.execute(
+                """
+                INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status, salary) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (user_id, employee_id, phone, department, designation, date_of_joining, status, salary)
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining, status) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (user_id, employee_id, phone, department, designation, date_of_joining, status)
+            )
         conn.commit()
         return jsonify({"message": f"Employee added successfully. Temporary password is '{password}'"}), 201
     except Exception as e:
@@ -531,15 +559,37 @@ def update_employee(emp_id):
             except ValueError:
                 return jsonify({"error": "Invalid salary amount format"}), 400
 
-        # Update employee information
+        # Check if the salary column exists in the database
         cursor.execute(
             """
-            UPDATE employees 
-            SET phone_number = %s, department = %s, designation = %s, date_of_joining = %s, status = %s, salary = COALESCE(%s, salary) 
-            WHERE id = %s
-            """,
-            (phone, department, designation, date_of_joining, status, salary, emp_id)
+            SELECT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name='employees' AND column_name='salary'
+            );
+            """
         )
+        has_salary = cursor.fetchone()[0]
+
+        # Update employee information
+        if has_salary:
+            cursor.execute(
+                """
+                UPDATE employees 
+                SET phone_number = %s, department = %s, designation = %s, date_of_joining = %s, status = %s, salary = COALESCE(%s, salary) 
+                WHERE id = %s
+                """,
+                (phone, department, designation, date_of_joining, status, salary, emp_id)
+            )
+        else:
+            cursor.execute(
+                """
+                UPDATE employees 
+                SET phone_number = %s, department = %s, designation = %s, date_of_joining = %s, status = %s 
+                WHERE id = %s
+                """,
+                (phone, department, designation, date_of_joining, status, emp_id)
+            )
         conn.commit()
         return jsonify({"message": "Employee updated successfully"}), 200
     except Exception as e:

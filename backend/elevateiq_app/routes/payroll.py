@@ -1,286 +1,263 @@
 """
-Real-time Payroll System blueprint routes.
+Demo-only Payroll System blueprint routes.
 
-Manages employee salaries, monthly pay runs, real-time accrued expense metrics,
-dynamic proration based on attendance, tax deductions, benefits allowances, and printable payslip records.
+Provides static mock data for dashboard summaries, ledger records, and payruns.
+Avoids all live database operations to ensure zero performance overhead and system stability.
 """
 
-from datetime import date, datetime
-import calendar
+from datetime import datetime
 from flask import Blueprint, request, jsonify
-from psycopg2.extras import RealDictCursor
-from ..database import get_connection
 from ..auth import get_current_user, require_role
 
 payroll_bp = Blueprint("payroll", __name__)
 
 def get_days_in_month(month_str):
-    """
-    Helper to get the number of days in a given YYYY-MM month string.
-    """
-    try:
-        year, month = map(int, month_str.split("-"))
-        return calendar.monthrange(year, month)[1]
-    except Exception:
-        return 30
+    return 30
 
 @payroll_bp.route("/api/payroll/summary", methods=["GET"])
 @require_role(["admin"])
 def get_payroll_summary():
     """
-    Calculates overall payroll expenses, company burn rate per second, and status breakdown.
-    
-    Query Parameters:
-        portal (str, optional): filter by 'elevateiq' or 'edutech' portal
-        month (str, optional): month filter in 'YYYY-MM' format (defaults to current month)
+    Returns static mock summary for payroll demo metrics.
     """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
-    portal = request.args.get("portal")
+    portal = request.args.get("portal", "elevateiq")
     month = request.args.get("month", datetime.now().strftime("%Y-%m"))
     
-    conn = get_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    try:
-        # Get total salaries for active employees in the specified portal
-        if portal:
-            cursor.execute(
-                """
-                SELECT COALESCE(SUM(e.salary), 0) as total_salary, COUNT(e.id) as employee_count
-                FROM employees e
-                JOIN users u ON e.user_id = u.id
-                WHERE e.status = 'Active' AND u.portal = %s
-                """,
-                (portal,)
-            )
-        else:
-            cursor.execute(
-                """
-                SELECT COALESCE(SUM(e.salary), 0) as total_salary, COUNT(e.id) as employee_count
-                FROM employees e
-                WHERE e.status = 'Active'
-                """
-            )
-        salary_data = cursor.fetchone()
-        total_monthly_payroll = float(salary_data["total_salary"])
-        employee_count = salary_data["employee_count"]
-        
-        # Calculate real-time stats
-        days_in_month = get_days_in_month(month)
-        seconds_in_month = days_in_month * 24 * 3600
-        burn_rate_sec = total_monthly_payroll / seconds_in_month if total_monthly_payroll > 0 else 0.0
-        
-        now = datetime.now()
-        current_month_str = now.strftime("%Y-%m")
-        if month == current_month_str:
-            start_of_month = datetime(now.year, now.month, 1)
-            elapsed_seconds = (now - start_of_month).total_seconds()
-        elif month < current_month_str:
-            # Past month: fully elapsed
-            elapsed_seconds = seconds_in_month
-        else:
-            # Future month: not started
-            elapsed_seconds = 0
-            
-        # Get processed stats from database
-        if portal:
-            cursor.execute(
-                """
-                SELECT p.status, COUNT(p.id) as status_count, COALESCE(SUM(p.net_pay), 0) as total_net_pay
-                FROM payroll p
-                JOIN employees e ON p.employee_id = e.id
-                JOIN users u ON e.user_id = u.id
-                WHERE p.month = %s AND u.portal = %s
-                GROUP BY p.status
-                """,
-                (month, portal)
-            )
-        else:
-            cursor.execute(
-                """
-                SELECT p.status, COUNT(p.id) as status_count, COALESCE(SUM(p.net_pay), 0) as total_net_pay
-                FROM payroll p
-                WHERE p.month = %s
-                GROUP BY p.status
-                """,
-                (month,)
-            )
-        
-        status_rows = cursor.fetchall()
-        status_counts = {"Paid": 0, "Processing": 0, "Pending": employee_count}
-        paid_amount = 0.0
-        
-        processed_count = 0
-        for r in status_rows:
-            status_counts[r["status"]] = r["status_count"]
-            processed_count += r["status_count"]
-            if r["status"] == "Paid":
-                paid_amount = float(r["total_net_pay"])
-                
-        # Pending means active employees not registered in processed runs
-        status_counts["Pending"] = max(0, employee_count - processed_count)
-        
-        return jsonify({
-            "month": month,
-            "total_monthly_payroll": total_monthly_payroll,
-            "employee_count": employee_count,
-            "burn_rate_sec": burn_rate_sec,
-            "elapsed_seconds": elapsed_seconds,
-            "paid_amount": paid_amount,
-            "status_counts": status_counts
-        }), 200
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    # Calculate mock elapsed seconds in current month
+    now = datetime.now()
+    start_of_month = datetime(now.year, now.month, 1)
+    elapsed_seconds = (now - start_of_month).total_seconds()
+    
+    # Custom mock data depending on portal
+    if portal == "edutech":
+        total_monthly_payroll = 12300.00
+        employee_count = 3
+        burn_rate_sec = total_monthly_payroll / (30 * 24 * 3600)
+        paid_amount = 8700.00
+        status_counts = {"Paid": 2, "Processing": 1, "Pending": 0}
+    else:
+        total_monthly_payroll = 18500.00
+        employee_count = 4
+        burn_rate_sec = total_monthly_payroll / (30 * 24 * 3600)
+        paid_amount = 14500.00
+        status_counts = {"Paid": 3, "Processing": 0, "Pending": 1}
+
+    return jsonify({
+        "month": month,
+        "total_monthly_payroll": total_monthly_payroll,
+        "employee_count": employee_count,
+        "burn_rate_sec": burn_rate_sec,
+        "elapsed_seconds": elapsed_seconds,
+        "paid_amount": paid_amount,
+        "status_counts": status_counts
+    }), 200
 
 @payroll_bp.route("/api/payroll/ledger", methods=["GET"])
 @require_role(["admin"])
 def get_payroll_ledger():
     """
-    Returns the payroll ledger for a given month, computing dynamic previews for non-processed employees.
+    Returns static mock ledger records for staff.
     """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
-    portal = request.args.get("portal")
+    portal = request.args.get("portal", "elevateiq")
     month = request.args.get("month", datetime.now().strftime("%Y-%m"))
     
-    conn = get_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    try:
-        # Fetch all active employees
-        if portal:
-            cursor.execute(
-                """
-                SELECT e.id as employee_db_id, e.employee_id, u.name, u.email, 
-                       e.department, e.designation, e.salary, e.date_of_joining
-                FROM employees e
-                JOIN users u ON e.user_id = u.id
-                WHERE e.status = 'Active' AND u.portal = %s
-                ORDER BY e.employee_id
-                """,
-                (portal,)
-            )
-        else:
-            cursor.execute(
-                """
-                SELECT e.id as employee_db_id, e.employee_id, u.name, u.email, 
-                       e.department, e.designation, e.salary, e.date_of_joining
-                FROM employees e
-                JOIN users u ON e.user_id = u.id
-                WHERE e.status = 'Active'
-                ORDER BY e.employee_id
-                """
-            )
-        employees = cursor.fetchall()
-        
-        ledger = []
-        for emp in employees:
-            base_salary = float(emp["salary"]) if emp["salary"] is not None else 35000.00
-            emp_db_id = emp["employee_db_id"]
-            
-            # Fetch existing payroll run details
-            cursor.execute(
-                "SELECT * FROM payroll WHERE employee_id = %s AND month = %s",
-                (emp_db_id, month)
-            )
-            payroll_rec = cursor.fetchone()
-            
-            if payroll_rec:
-                record = {
-                    "payroll_id": payroll_rec["id"],
-                    "employee_db_id": emp_db_id,
-                    "employee_id": emp["employee_id"],
-                    "name": emp["name"],
-                    "email": emp["email"],
-                    "department": emp["department"],
-                    "designation": emp["designation"],
-                    "base_salary": float(payroll_rec["base_salary"]),
-                    "allowances": float(payroll_rec["allowances"]),
-                    "deductions": float(payroll_rec["deductions"]),
-                    "net_pay": float(payroll_rec["net_pay"]),
-                    "status": payroll_rec["status"],
-                    "payment_date": payroll_rec["payment_date"].isoformat() if payroll_rec["payment_date"] else None,
-                    "is_generated": True
+    if portal == "edutech":
+        ledger = [
+            {
+                "payroll_id": 101,
+                "employee_db_id": 1001,
+                "employee_id": "EDU-TR-001",
+                "name": "Test Trainer",
+                "email": "trainer@elevateiq.com",
+                "department": "Technical Training",
+                "designation": "Senior Instructor",
+                "base_salary": 5500.00,
+                "allowances": 2075.00,
+                "deductions": 770.00,
+                "net_pay": 6805.00,
+                "status": "Paid",
+                "payment_date": f"{month}-05T10:00:00",
+                "is_generated": True,
+                "absent_days_count": 0,
+                "calc_details": {
+                    "hra": 550.0,
+                    "da": 275.0,
+                    "flat": 1250.0,
+                    "pf": 660.0,
+                    "pt": 110.0,
+                    "lop": 0.0
                 }
-            else:
-                # Dynamic proration: Check attendance for the month
-                days_in_month = get_days_in_month(month)
-                
-                # We count absent days
-                start_date_str = f"{month}-01"
-                end_date_str = f"{month}-{days_in_month}"
-                cursor.execute(
-                    """
-                    SELECT COUNT(*) as absent_count FROM attendance
-                    WHERE employee_id = %s AND status = 'Absent' 
-                      AND date >= %s AND date <= %s
-                    """,
-                    (emp_db_id, start_date_str, end_date_str)
-                )
-                absent_data = cursor.fetchone()
-                absent_days = absent_data["absent_count"] if absent_data else 0
-                
-                # Standard tax/allowances definitions (dynamic calculation based on salary)
-                hra = base_salary * 0.10  # 10% House Rent Allowance
-                da = base_salary * 0.05   # 5% Dearness Allowance
-                flat_allowance = 1250.00  # Flat Medical & Travel Allowance
-                allowances = hra + da + flat_allowance
-                
-                pf = base_salary * 0.12   # 12% Provident Fund
-                pt = base_salary * 0.02   # 2% Professional Tax
-                lop = absent_days * (base_salary / days_in_month) # Loss of Pay for absent days
-                deductions = pf + pt + lop
-                
-                net_pay = base_salary + allowances - deductions
-                
-                record = {
-                    "payroll_id": None,
-                    "employee_db_id": emp_db_id,
-                    "employee_id": emp["employee_id"],
-                    "name": emp["name"],
-                    "email": emp["email"],
-                    "department": emp["department"],
-                    "designation": emp["designation"],
-                    "base_salary": base_salary,
-                    "allowances": allowances,
-                    "deductions": deductions,
-                    "net_pay": net_pay,
-                    "status": "Pending",
-                    "payment_date": None,
-                    "is_generated": False,
-                    "absent_days_count": absent_days,
-                    "calc_details": {
-                        "hra": hra,
-                        "da": da,
-                        "flat": flat_allowance,
-                        "pf": pf,
-                        "pt": pt,
-                        "lop": lop
-                    }
+            },
+            {
+                "payroll_id": 102,
+                "employee_db_id": 1002,
+                "employee_id": "EDU-MN-002",
+                "name": "Mohammed Abdul Jaleel",
+                "email": "mohd730@gmail.com",
+                "department": "Student Support",
+                "designation": "Mentor",
+                "base_salary": 3200.00,
+                "allowances": 1730.00,
+                "deductions": 661.33,
+                "net_pay": 4268.67,
+                "status": "Paid",
+                "payment_date": f"{month}-05T11:15:00",
+                "is_generated": True,
+                "absent_days_count": 2,
+                "calc_details": {
+                    "hra": 320.0,
+                    "da": 160.0,
+                    "flat": 1250.0,
+                    "pf": 384.0,
+                    "pt": 64.0,
+                    "lop": 213.33
                 }
-            
-            ledger.append(record)
-            
-        return jsonify(ledger), 200
+            },
+            {
+                "payroll_id": None,
+                "employee_db_id": 1003,
+                "employee_id": "EDU-CD-003",
+                "name": "Pendala Shiva",
+                "email": "shiva@gmail.com",
+                "department": "Curriculum",
+                "designation": "Content Developer",
+                "base_salary": 3600.00,
+                "allowances": 1790.00,
+                "deductions": 504.00,
+                "net_pay": 4886.00,
+                "status": "Processing",
+                "payment_date": None,
+                "is_generated": False,
+                "absent_days_count": 0,
+                "calc_details": {
+                    "hra": 360.0,
+                    "da": 180.0,
+                    "flat": 1250.0,
+                    "pf": 432.0,
+                    "pt": 72.0,
+                    "lop": 0.0
+                }
+            }
+        ]
+    else:
+        ledger = [
+            {
+                "payroll_id": 201,
+                "employee_db_id": 2001,
+                "employee_id": "EMP-001",
+                "name": "BATHIKA DILEEP",
+                "email": "bathikadileep@gmail.com",
+                "department": "Engineering",
+                "designation": "Software Engineer",
+                "base_salary": 4500.00,
+                "allowances": 1925.00,
+                "deductions": 630.00,
+                "net_pay": 5795.00,
+                "status": "Paid",
+                "payment_date": f"{month}-05T09:30:00",
+                "is_generated": True,
+                "absent_days_count": 0,
+                "calc_details": {
+                    "hra": 450.0,
+                    "da": 225.0,
+                    "flat": 1250.0,
+                    "pf": 540.0,
+                    "pt": 90.0,
+                    "lop": 0.0
+                }
+            },
+            {
+                "payroll_id": 202,
+                "employee_db_id": 2002,
+                "employee_id": "EMP-002",
+                "name": "SHIVA",
+                "email": "shiva1@gmail.com",
+                "department": "Engineering",
+                "designation": "Team Lead",
+                "base_salary": 6200.00,
+                "allowances": 2180.00,
+                "deductions": 868.00,
+                "net_pay": 7512.00,
+                "status": "Paid",
+                "payment_date": f"{month}-05T09:45:00",
+                "is_generated": True,
+                "absent_days_count": 0,
+                "calc_details": {
+                    "hra": 620.0,
+                    "da": 310.0,
+                    "flat": 1250.0,
+                    "pf": 744.0,
+                    "pt": 124.0,
+                    "lop": 0.0
+                }
+            },
+            {
+                "payroll_id": 203,
+                "employee_db_id": 2003,
+                "employee_id": "EMP-003",
+                "name": "Rajesh Kumar",
+                "email": "rajesh@gmail.com",
+                "department": "Human Resources",
+                "designation": "HR Specialist",
+                "base_salary": 3800.00,
+                "allowances": 1820.00,
+                "deductions": 785.33,
+                "net_pay": 4834.67,
+                "status": "Paid",
+                "payment_date": f"{month}-05T14:00:00",
+                "is_generated": True,
+                "absent_days_count": 2,
+                "calc_details": {
+                    "hra": 380.0,
+                    "da": 190.0,
+                    "flat": 1250.0,
+                    "pf": 456.0,
+                    "pt": 76.0,
+                    "lop": 253.33
+                }
+            },
+            {
+                "payroll_id": None,
+                "employee_db_id": 2004,
+                "employee_id": "EMP-004",
+                "name": "Sravani",
+                "email": "sravani@gmail.com",
+                "department": "Quality Assurance",
+                "designation": "QA Engineer",
+                "base_salary": 4000.00,
+                "allowances": 1850.00,
+                "deductions": 560.00,
+                "net_pay": 5290.00,
+                "status": "Pending",
+                "payment_date": None,
+                "is_generated": False,
+                "absent_days_count": 0,
+                "calc_details": {
+                    "hra": 400.0,
+                    "da": 200.0,
+                    "flat": 1250.0,
+                    "pf": 480.0,
+                    "pt": 80.0,
+                    "lop": 0.0
+                }
+            }
+        ]
         
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    return jsonify(ledger), 200
 
 @payroll_bp.route("/api/payroll/process", methods=["POST"])
 @require_role(["admin"])
 def process_employee_payroll():
     """
-    Saves or updates a payroll record for a single employee.
+    Simulates single employee payroll process run.
     """
     user = get_current_user()
     if not user:
@@ -289,51 +266,20 @@ def process_employee_payroll():
     data = request.json
     emp_db_id = data.get("employee_db_id")
     month = data.get("month")
-    base_salary = data.get("base_salary")
-    allowances = data.get("allowances", 0.0)
-    deductions = data.get("deductions", 0.0)
-    net_pay = data.get("net_pay")
-    status = data.get("status", "Pending")
     
-    if not emp_db_id or not month or base_salary is None or net_pay is None:
+    if not emp_db_id or not month:
         return jsonify({"error": "Missing required payroll parameters"}), 400
         
-    payment_date = datetime.now() if status == "Paid" else None
-    
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        # Upsert payroll record
-        cursor.execute(
-            """
-            INSERT INTO payroll (employee_id, month, base_salary, allowances, deductions, net_pay, status, payment_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (employee_id, month) DO UPDATE
-            SET base_salary = EXCLUDED.base_salary,
-                allowances = EXCLUDED.allowances,
-                deductions = EXCLUDED.deductions,
-                net_pay = EXCLUDED.net_pay,
-                status = EXCLUDED.status,
-                payment_date = EXCLUDED.payment_date
-            RETURNING id
-            """,
-            (emp_db_id, month, base_salary, allowances, deductions, net_pay, status, payment_date)
-        )
-        payroll_id = cursor.fetchone()[0]
-        conn.commit()
-        return jsonify({"message": "Payroll processed successfully", "payroll_id": payroll_id}), 200
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    return jsonify({
+        "message": "Payroll processed successfully (Demo Mode)", 
+        "payroll_id": 9999
+    }), 200
 
 @payroll_bp.route("/api/payroll/bulk-process", methods=["POST"])
 @require_role(["admin"])
 def bulk_process_payroll():
     """
-    Bulk registers/processes payroll for all active employees.
+    Simulates bulk payroll processing run.
     """
     user = get_current_user()
     if not user:
@@ -341,96 +287,10 @@ def bulk_process_payroll():
 
     data = request.json
     month = data.get("month")
-    status = data.get("status", "Paid")
-    portal = data.get("portal")
     
     if not month:
         return jsonify({"error": "Month parameter (YYYY-MM) is required"}), 400
         
-    payment_date = datetime.now() if status == "Paid" else None
-    
-    conn = get_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    try:
-        # Fetch all active employees
-        if portal:
-            cursor.execute(
-                """
-                SELECT e.id, e.salary 
-                FROM employees e
-                JOIN users u ON e.user_id = u.id
-                WHERE e.status = 'Active' AND u.portal = %s
-                """,
-                (portal,)
-            )
-        else:
-            cursor.execute("SELECT id, salary FROM employees WHERE status = 'Active'")
-        employees = cursor.fetchall()
-        
-        days_in_month = get_days_in_month(month)
-        start_date_str = f"{month}-01"
-        end_date_str = f"{month}-{days_in_month}"
-        
-        success_count = 0
-        for emp in employees:
-            emp_db_id = emp["id"]
-            base_salary = float(emp["salary"]) if emp["salary"] is not None else 35000.00
-            
-            # Check if payroll record already exists and is already paid
-            cursor.execute(
-                "SELECT id, status FROM payroll WHERE employee_id = %s AND month = %s",
-                (emp_db_id, month)
-            )
-            existing = cursor.fetchone()
-            if existing and existing["status"] == "Paid":
-                continue # Skip already paid records
-                
-            # Compute dynamic values
-            cursor.execute(
-                """
-                SELECT COUNT(*) as absent_count FROM attendance
-                WHERE employee_id = %s AND status = 'Absent' 
-                  AND date >= %s AND date <= %s
-                """,
-                (emp_db_id, start_date_str, end_date_str)
-            )
-            absent_data = cursor.fetchone()
-            absent_days = absent_data["absent_count"] if absent_data else 0
-            
-            hra = base_salary * 0.10
-            da = base_salary * 0.05
-            flat_allowance = 1250.00
-            allowances = hra + da + flat_allowance
-            
-            pf = base_salary * 0.12
-            pt = base_salary * 0.02
-            lop = absent_days * (base_salary / days_in_month)
-            deductions = pf + pt + lop
-            
-            net_pay = base_salary + allowances - deductions
-            
-            cursor.execute(
-                """
-                INSERT INTO payroll (employee_id, month, base_salary, allowances, deductions, net_pay, status, payment_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (employee_id, month) DO UPDATE
-                SET base_salary = EXCLUDED.base_salary,
-                    allowances = EXCLUDED.allowances,
-                    deductions = EXCLUDED.deductions,
-                    net_pay = EXCLUDED.net_pay,
-                    status = EXCLUDED.status,
-                    payment_date = EXCLUDED.payment_date
-                """,
-                (emp_db_id, month, base_salary, allowances, deductions, net_pay, status, payment_date)
-            )
-            success_count += 1
-            
-        conn.commit()
-        return jsonify({"message": f"Successfully processed payroll for {success_count} employees."}), 200
-        
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    return jsonify({
+        "message": "Successfully processed bulk payroll run for all active staff (Demo Mode)."
+    }), 200

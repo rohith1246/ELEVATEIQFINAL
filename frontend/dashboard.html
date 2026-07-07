@@ -372,7 +372,7 @@ const layouts = {
             <button onclick="runBulkPayrun()" class="btn-primary" style="margin-top:0;">🚀 Run Bulk Payrun</button>
         </div>
 
-        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
             <div class="stat-card">
                 <h3>Active Cycle</h3>
                 <div class="val" id="stat_pay_cycle" style="font-size: 18px;">-</div>
@@ -391,7 +391,7 @@ const layouts = {
             </div>
         </div>
 
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.01); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border);">
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.01); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border);">
             <div style="text-align: center;">
                 <div style="font-size: 11px; color: var(--ink-faint); text-transform: uppercase;">Paid Cycles</div>
                 <div style="font-size: 20px; font-weight: 700; color: #00e676; margin-top: 5px;" id="stat_paid_amount">$0.00</div>
@@ -441,7 +441,7 @@ const layouts = {
                 </div>
                 
                 <form id="processPayrollForm" onsubmit="submitProcessedPayroll(event)">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; margin-bottom:20px;">
                         <!-- Earnings Column -->
                         <div class="glass-card" style="padding:15px; background:rgba(0,230,118,0.02); border-color:rgba(0,230,118,0.15);">
                             <h3 style="font-size:14px; margin-bottom:15px; color:#00e676; border-bottom:1px solid rgba(0,230,118,0.15); padding-bottom:5px;">Earnings & Allowances</h3>
