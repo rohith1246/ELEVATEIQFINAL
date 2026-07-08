@@ -96,6 +96,11 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   errorMsg.style.display = 'none';
   successMsg.style.display = 'none';
 
+  const submitBtn = document.querySelector('.auth-submit');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Creating Account...';
+
   const payload = {
     name: document.getElementById('name').value,
     email: document.getElementById('email').value,
@@ -120,10 +125,14 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     } else {
       errorMsg.textContent = data.error || 'Something went wrong.';
       errorMsg.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
     }
   } catch (err) {
     errorMsg.textContent = 'Could not reach the server. Make sure the backend is running.';
     errorMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   }
 });
 </script>

@@ -246,6 +246,22 @@
     border-top: 1px solid var(--line);
     background: rgba(2, 6, 23, 0.3);
   }
+
+  /* Spinner Loader styling */
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 </style>
 </head>
 <body>
@@ -314,6 +330,11 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   errorMsg.style.display = 'none';
   successMsg.style.display = 'none';
 
+  const submitBtn = document.querySelector('.btn-submit');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Creating Account...';
+
   const payload = {
     name: document.getElementById('name').value,
     email: document.getElementById('email').value,
@@ -337,10 +358,14 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     } else {
       errorMsg.textContent = data.error || 'Registration failed.';
       errorMsg.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
     }
   } catch (err) {
     errorMsg.textContent = 'Could not reach server. Verify connection.';
     errorMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   }
 });
 </script>

@@ -42,60 +42,78 @@ async function refreshAccessToken() {
 }
 
 async function apiCall(endpoint, method = "GET", body = null) {
-    const options = {
-        method,
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
+    const activeBtn = document.activeElement;
+    const isButton = activeBtn && (activeBtn.tagName === 'BUTTON' || (activeBtn.tagName === 'INPUT' && ['submit', 'button'].includes(activeBtn.type)));
+    let originalHtml = "";
+    if (isButton && !activeBtn.disabled) {
+        activeBtn.disabled = true;
+        originalHtml = activeBtn.innerHTML;
+        if (!activeBtn.querySelector('.spinner')) {
+            activeBtn.innerHTML = `<span class="spinner"></span> ` + (activeBtn.textContent.trim() || 'Loading...');
         }
-    };
-    if (body) options.body = JSON.stringify(body);
-    if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-        options.headers["X-CSRF-Token"] = csrfToken;
     }
 
     try {
-        const res = await fetch(`${API_BASE}${endpoint}`, options);
-        let data = null;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            data = await res.json();
-        }
-        if (res.status === 401 && !isRefreshing) {
-            isRefreshing = true;
-            const refreshed = await refreshAccessToken();
-            isRefreshing = false;
-            if (refreshed) {
-                options.headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
-                if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-                    options.headers["X-CSRF-Token"] = csrfToken;
-                }
-                const retryRes = await fetch(`${API_BASE}${endpoint}`, options);
-                let retryData = null;
-                const retryContentType = retryRes.headers.get("content-type");
-                if (retryContentType && retryContentType.includes("application/json")) {
-                    retryData = await retryRes.json();
-                }
-                if (!retryRes.ok) {
-                    const errMsg = (retryData && retryData.error) ? retryData.error : `Request failed with status ${retryRes.status}`;
-                    throw new Error(errMsg);
-                }
-                return retryData;
+        const options = {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
             }
-            localStorage.removeItem("token");
-            localStorage.removeItem("refresh_token");
-            localStorage.removeItem("user");
-            localStorage.removeItem("csrf_token");
-            window.location.href = "/";
-            return;
+        };
+        if (body) options.body = JSON.stringify(body);
+        if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+            options.headers["X-CSRF-Token"] = csrfToken;
         }
-        if (!res.ok) {
-            const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
-            throw new Error(errMsg);
+
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, options);
+            let data = null;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            }
+            if (res.status === 401 && !isRefreshing) {
+                isRefreshing = true;
+                const refreshed = await refreshAccessToken();
+                isRefreshing = false;
+                if (refreshed) {
+                    options.headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
+                    if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+                        options.headers["X-CSRF-Token"] = csrfToken;
+                    }
+                    const retryRes = await fetch(`${API_BASE}${endpoint}`, options);
+                    let retryData = null;
+                    const retryContentType = retryRes.headers.get("content-type");
+                    if (retryContentType && retryContentType.includes("application/json")) {
+                        retryData = await retryRes.json();
+                    }
+                    if (!retryRes.ok) {
+                        const errMsg = (retryData && retryData.error) ? retryData.error : `Request failed with status ${retryRes.status}`;
+                        throw new Error(errMsg);
+                    }
+                    return retryData;
+                }
+                localStorage.removeItem("token");
+                localStorage.removeItem("refresh_token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("csrf_token");
+                window.location.href = "/";
+                return;
+            }
+            if (!res.ok) {
+                const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
+                throw new Error(errMsg);
+            }
+            return data;
+        } catch (err) {
+            throw err;
         }
-        return data;
-    } catch (err) {
-        throw err;
+    } finally {
+        if (isButton) {
+            activeBtn.disabled = false;
+            activeBtn.innerHTML = originalHtml;
+        }
     }
 }
 

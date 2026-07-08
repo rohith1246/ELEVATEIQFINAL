@@ -136,6 +136,11 @@ document.getElementById('contactForm').addEventListener('submit', async function
   const msgEl = document.getElementById('msg');
   msgEl.style.display = 'none';
   
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Sending...';
+  
   try {
     // Send form data to back-end contact API endpoint
     const res = await fetch('/api/elevate-contact', {
@@ -160,6 +165,9 @@ document.getElementById('contactForm').addEventListener('submit', async function
     msgEl.textContent = "Connection error. Please check your internet connection.";
     msgEl.style.color = '#fca5a5';
     msgEl.style.display = 'block';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   }
 });
 </script>

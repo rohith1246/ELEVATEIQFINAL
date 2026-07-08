@@ -1586,30 +1586,48 @@ if (user) {
 
 // Global API Fetch wrapper
 async function apiCall(endpoint, method = "GET", body = null) {
-  const options = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+  const activeBtn = document.activeElement;
+  const isButton = activeBtn && (activeBtn.tagName === 'BUTTON' || (activeBtn.tagName === 'INPUT' && ['submit', 'button'].includes(activeBtn.type)));
+  let originalHtml = "";
+  if (isButton && !activeBtn.disabled) {
+    activeBtn.disabled = true;
+    originalHtml = activeBtn.innerHTML;
+    if (!activeBtn.querySelector('.spinner')) {
+      activeBtn.innerHTML = `<span class="spinner"></span> ` + (activeBtn.textContent.trim() || 'Loading...');
     }
-  };
-  if (body) options.body = JSON.stringify(body);
-  
+  }
+
   try {
-    const res = await fetch(`${API_BASE}${endpoint}`, options);
-    let data = null;
-    const contentType = res.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await res.json();
+    const options = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    };
+    if (body) options.body = JSON.stringify(body);
+    
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, options);
+      let data = null;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
+      if (!res.ok) {
+        const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
+        throw new Error(errMsg);
+      }
+      return data;
+    } catch (err) {
+      console.error("API Call Error:", err);
+      throw err;
     }
-    if (!res.ok) {
-      const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
-      throw new Error(errMsg);
+  } finally {
+    if (isButton) {
+      activeBtn.disabled = false;
+      activeBtn.innerHTML = originalHtml;
     }
-    return data;
-  } catch (err) {
-    console.error("API Call Error:", err);
-    throw err;
   }
 }
 
