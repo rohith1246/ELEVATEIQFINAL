@@ -1291,6 +1291,133 @@ const layouts = {
         </table>
       </div>
     </div>
+  `,
+  tickets: `
+    <div id="adminTicketsView" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <h3 style="font-size:16px; margin:0;">Platform Support Tickets</h3>
+        <select id="ticketStatusFilter" onchange="loadAdminTickets()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg-soft); color:white; outline:none; font-size:13px;">
+          <option value="">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User Details</th>
+              <th>Portal / Role</th>
+              <th>Subject</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Created At</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTicketsTableBody">
+            <tr><td colspan="8" style="text-align:center;">Loading all support tickets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="userTicketsView" style="display:none;">
+      <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 1.6fr; gap:20px; align-items:start;">
+        <!-- Submit Ticket Form -->
+        <div class="glass-card" style="padding:20px; margin-bottom:0;">
+          <h3 style="font-size:16px; margin-bottom:15px;">Create Support Ticket</h3>
+          <form id="createTicketForm" onsubmit="submitTicket(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="field">
+              <label>Subject / Short Title</label>
+              <input type="text" id="ticketTitle" placeholder="e.g. Mentor schedule sync issue" required>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select id="ticketCategory" required>
+                <option value="Technical">Technical</option>
+                <option value="Billing">Billing</option>
+                <option value="HR">HR / Workplace</option>
+                <option value="Academic">Academic / Mentorship</option>
+                <option value="General">General / Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Priority</label>
+              <select id="ticketPriority" required>
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Description of Issue</label>
+              <textarea id="ticketDescription" rows="4" placeholder="Please describe the problem in detail..." required></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Submit Ticket</button>
+          </form>
+        </div>
+
+        <!-- Ticket History List -->
+        <div class="glass-card" style="padding:20px; margin-bottom:0;">
+          <h3 style="font-size:16px; margin-bottom:15px;">My Ticket History</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject & Description</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Created At</th>
+                  <th>Status</th>
+                  <th>Resolution Details</th>
+                </tr>
+              </thead>
+              <tbody id="userTicketsTableBody">
+                <tr><td colspan="6" style="text-align:center;">Loading ticket history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolve Ticket Modal -->
+    <div class="modal" id="resolveTicketModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="modal-content" style="max-width:480px;">
+        <span class="modal-close" onclick="closeModal('resolveTicketModal')">&times;</span>
+        <h2 style="font-size:18px; margin-bottom:15px;">Resolve Support Ticket</h2>
+        <form id="resolveTicketForm" onsubmit="submitResolveTicket(event)">
+          <input type="hidden" id="resolveTicketId">
+          <div class="field">
+            <label>Ticket Subject</label>
+            <div id="resolveTicketSubject" style="font-weight:600; padding:8px 0; color:#fff;"></div>
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <div id="resolveTicketDesc" style="color:var(--muted); font-size:13px; max-height:80px; overflow-y:auto; background:rgba(255,255,255,0.02); padding:8px; border-radius:8px; border:1px solid var(--glass-border); line-height:1.4;"></div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label>Update Status</label>
+            <select id="resolveTicketStatus" required>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved" selected>Resolved</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Admin Resolution Notes / Comments</label>
+            <textarea id="resolveTicketNotes" rows="4" placeholder="Enter resolution details or next steps..." required></textarea>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:20px;">
+            <button type="button" onclick="closeModal('resolveTicketModal')" class="btn-ghost" style="flex:1;">Cancel</button>
+            <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Resolution</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 };
 
@@ -1333,7 +1460,8 @@ function switchTab(panelId) {
     admin_assignments: { title: "Manage Assignments", sub: "Configure technical cohort assignments coursework." },
     admin_quizzes: { title: "Manage Quizzes", sub: "Create assessments and quiz question databases." },
     admin_resources: { title: "Manage Resources", sub: "Publish decks, slides, and syllabus guides." },
-    admin_student_leaves: { title: "Student Leaves Review", sub: "Inspect, approve, or reject student leave requests." }
+    admin_student_leaves: { title: "Student Leaves Review", sub: "Inspect, approve, or reject student leave requests." },
+    tickets: { title: "Support Tickets", sub: "Manage, review, or submit platform support issues." }
   };
 
   if (headers[panelId]) {
@@ -1362,6 +1490,7 @@ function renderSidebar() {
       { id: "admin_employees", label: "Manage Staff/Trainers", icon: "users-2" },
       { id: "admin_designations", label: "Designations Registry", icon: "briefcase" },
       { id: "admin_payroll", label: "Payroll Suite", icon: "wallet" },
+      { id: "tickets", label: "Support Tickets", icon: "help-circle" },
       { id: "student_profile", label: "My Profile", icon: "user" }
     ];
   } else if (user.role === 'employee') {
@@ -1373,6 +1502,7 @@ function renderSidebar() {
       { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
       { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
       { id: "admin_student_leaves", label: "Student Leaves", icon: "calendar" },
+      { id: "tickets", label: "Support Tickets", icon: "help-circle" },
       { id: "student_profile", label: "My Profile", icon: "user" }
     ];
   } else {
@@ -1418,6 +1548,7 @@ function loadPanelData(panelId) {
   else if (panelId === "admin_quizzes") loadAdminQuizzes();
   else if (panelId === "admin_resources") loadAdminResources();
   else if (panelId === "admin_student_leaves") loadAdminStudentLeaves();
+  else if (panelId === "tickets") loadTicketsPanel();
 }
 
 // ==================== PANEL METHODS ====================
@@ -2598,6 +2729,149 @@ async function reviewStudentLeave(id, action) {
     } catch(err) {
       alert("Failed to update status: " + err.message);
     }
+  }
+}
+
+// --- Support Ticketing System JS Controllers ---
+
+async function loadTicketsPanel() {
+  if (user.role === 'admin') {
+    document.getElementById("adminTicketsView").style.display = "block";
+    document.getElementById("userTicketsView").style.display = "none";
+    loadAdminTickets();
+  } else {
+    document.getElementById("adminTicketsView").style.display = "none";
+    document.getElementById("userTicketsView").style.display = "block";
+    loadUserTickets();
+  }
+}
+
+async function loadAdminTickets() {
+  const tbody = document.getElementById("adminTicketsTableBody");
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading all support tickets...</td></tr>';
+  
+  try {
+    const filterVal = document.getElementById("ticketStatusFilter").value;
+    const list = await apiCall("/api/tickets?scope=all");
+    
+    const filtered = filterVal ? list.filter(t => t.status === filterVal) : list;
+    
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--muted);">No support tickets found.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = filtered.map(t => {
+      const statusClass = t.status.toLowerCase().replace(" ", "-");
+      const priorityClass = t.priority.toLowerCase();
+      const actionBtn = (t.status === 'Resolved' || t.status === 'Closed')
+        ? `<span style="font-size:12px; color:var(--muted);">Resolved by ${t.resolved_by_name || 'Admin'}</span>`
+        : `<button onclick="openResolveTicketModal(${JSON.stringify(t).replace(/"/g, '&quot;')})" class="btn-primary" style="padding:4px 8px; font-size:11px; margin:0;">Resolve</button>`;
+        
+      const userPortalLabel = t.user_portal === 'edutech' ? 'EduTech' : 'ElevateIQ';
+      const userRoleLabel = t.user_role.toUpperCase();
+      
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600; color:#fff;">${escapeHTML(t.user_name)}</div>
+            <div style="font-size:11px; color:var(--muted);">${escapeHTML(t.user_email)}</div>
+          </td>
+          <td>
+            <div style="font-weight:500;">${userPortalLabel}</div>
+            <div style="font-size:10px; color:var(--primary);">${userRoleLabel}</div>
+          </td>
+          <td><div style="font-weight:600; color:#fff; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHTML(t.title)}">${escapeHTML(t.title)}</div></td>
+          <td>${t.category}</td>
+          <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString("en-IN")}</td>
+          <td><span class="badge ${statusClass}">${t.status}</span></td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+    
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load tickets: ${err.message}</td></tr>`;
+  }
+}
+
+async function loadUserTickets() {
+  const tbody = document.getElementById("userTicketsTableBody");
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading ticket history...</td></tr>';
+  
+  try {
+    const list = await apiCall("/api/tickets");
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">You have not submitted any support tickets.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(t => {
+      const statusClass = t.status.toLowerCase().replace(" ", "-");
+      const priorityClass = t.priority.toLowerCase();
+      const resolution = t.admin_notes 
+        ? `<div style="font-size:11.5px; color:#00e676; max-width:220px;" title="${escapeHTML(t.admin_notes)}">${escapeHTML(t.admin_notes)}</div>` 
+        : `<span style="font-size:11px; color:var(--muted);">Awaiting review</span>`;
+        
+      return `
+        <tr>
+          <td><strong>${escapeHTML(t.title)}</strong><div style="font-size:10.5px; color:var(--muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHTML(t.description)}">${escapeHTML(t.description)}</div></td>
+          <td>${t.category}</td>
+          <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString("en-IN")}</td>
+          <td><span class="badge ${statusClass}">${t.status}</span></td>
+          <td>${resolution}</td>
+        </tr>
+      `;
+    }).join("");
+    
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#ef4444; text-align:center;">Failed to load tickets: ${err.message}</td></tr>`;
+  }
+}
+
+async function submitTicket(e) {
+  e.preventDefault();
+  const title = document.getElementById("ticketTitle").value.trim();
+  const category = document.getElementById("ticketCategory").value;
+  const priority = document.getElementById("ticketPriority").value;
+  const description = document.getElementById("ticketDescription").value.trim();
+  
+  try {
+    await apiCall("/api/tickets", "POST", { title, category, priority, description });
+    alert("Support ticket submitted successfully!");
+    document.getElementById("createTicketForm").reset();
+    loadUserTickets();
+  } catch(err) {
+    alert("Failed to submit ticket: " + err.message);
+  }
+}
+
+let activeResolveTicket = null;
+function openResolveTicketModal(ticket) {
+  activeResolveTicket = ticket;
+  document.getElementById("resolveTicketId").value = ticket.id;
+  document.getElementById("resolveTicketSubject").textContent = ticket.title;
+  document.getElementById("resolveTicketDesc").textContent = ticket.description;
+  document.getElementById("resolveTicketNotes").value = ticket.admin_notes || "";
+  document.getElementById("resolveTicketStatus").value = "Resolved";
+  openModal("resolveTicketModal");
+}
+
+async function submitResolveTicket(e) {
+  e.preventDefault();
+  const id = document.getElementById("resolveTicketId").value;
+  const status = document.getElementById("resolveTicketStatus").value;
+  const admin_notes = document.getElementById("resolveTicketNotes").value.trim();
+  
+  try {
+    await apiCall(`/api/tickets/${id}`, "PUT", { status, admin_notes });
+    alert("Ticket resolution saved successfully.");
+    closeModal("resolveTicketModal");
+    loadAdminTickets();
+  } catch(err) {
+    alert("Failed to resolve ticket: " + err.message);
   }
 }
 

@@ -1061,6 +1061,10 @@
       <i data-lucide="bell" class="sidebar-icon"></i>
       <span>Notifications</span>
     </a>
+    <a class="sidebar-link" id="link_tickets" onclick="switchTab('tickets')">
+      <i data-lucide="help-circle" class="sidebar-icon"></i>
+      <span>Support Tickets</span>
+    </a>
   </div>
 
   <!-- Content Workspace -->
@@ -1435,9 +1439,68 @@
               </table>
             </div>
           </div>
-        </div>
       </div>
 
+      <!-- ==================== Support Tickets Panel ==================== -->
+      <div class="section-panel" id="panel_tickets">
+        <div class="grid-two-cols" style="display:grid; grid-template-columns: 1fr 1.6fr; gap:24px; align-items: start;">
+          <!-- Submit Ticket Form -->
+          <div class="glass-card" style="margin-bottom:0;">
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:16px;">Create Support Ticket</h3>
+            <form id="studentCreateTicketForm" onsubmit="submitStudentTicket(event)">
+              <div class="field">
+                <label for="studentTicketTitle">Subject / Short Title</label>
+                <input type="text" id="studentTicketTitle" placeholder="e.g. Cannot open assignment link" required>
+              </div>
+              <div class="field">
+                <label for="studentTicketCategory">Category</label>
+                <select id="studentTicketCategory" required>
+                  <option value="Technical">Technical</option>
+                  <option value="Billing">Billing</option>
+                  <option value="HR">HR / Workplace</option>
+                  <option value="Academic">Academic / Mentorship</option>
+                  <option value="General">General / Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="studentTicketPriority">Priority</label>
+                <select id="studentTicketPriority" required>
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="studentTicketDescription">Description of Issue</label>
+                <textarea id="studentTicketDescription" rows="4" placeholder="Please describe the problem in detail..." required></textarea>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%;">Submit Ticket</button>
+            </form>
+          </div>
+
+          <!-- Ticket History List -->
+          <div class="glass-card" style="margin-bottom:0; display:flex; flex-direction:column;">
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:16px;">My Support Tickets</h3>
+            <div class="table-wrap" style="flex:1;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Subject & Description</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Resolution Details</th>
+                  </tr>
+                </thead>
+                <tbody id="studentTicketsTableBody">
+                  <tr><td colspan="6" style="text-align:center;">Loading ticket history...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -1596,7 +1659,8 @@ function switchTab(panelId) {
     placement: { title: "Placement Tracker", sub: "Inspect your career stages and recruitment tracks" },
     messages: { title: "AI Mentor", sub: "Ask questions directly to your AI LMS assistant" },
     leaves: { title: "Apply Leave", sub: "Request leaves and track approval status from trainers and admin" },
-    notifications: { title: "Board Notifications", sub: "Notice board alerts and company posts" }
+    notifications: { title: "Board Notifications", sub: "Notice board alerts and company posts" },
+    tickets: { title: "Support Tickets", sub: "Submit and monitor academic or platform support issues" }
   };
 
   if (headers[panelId]) {
@@ -1619,6 +1683,7 @@ function loadPanelData(panelId) {
   else if (panelId === "messages") { /* no load actions needed */ }
   else if (panelId === "leaves") loadStudentLeaves();
   else if (panelId === "notifications") loadNotificationsBoard();
+  else if (panelId === "tickets") loadStudentTickets();
 }
 
 // ==================== PANEL CONTROLLERS LOGIC ====================
@@ -2309,6 +2374,61 @@ async function submitStudentLeave(e) {
     loadStudentLeaves();
   } catch (err) {
     alert("Failed to submit leave request: " + err.message);
+  }
+}
+
+// Support Tickets Client Logic
+async function loadStudentTickets() {
+  const tbody = document.getElementById("studentTicketsTableBody");
+  tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Loading ticket history...</td></tr>";
+  try {
+    const list = await apiCall("/api/tickets");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:var(--muted);'>No support tickets submitted.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(t => {
+      const statusClass = t.status.toLowerCase().replace(" ", "-");
+      const priorityClass = t.priority.toLowerCase();
+      const resolution = t.admin_notes 
+          ? `<div style="font-size:11.5px; color:#00e676; max-width:220px;" title="${t.admin_notes}">${t.admin_notes}</div>` 
+          : `<span style="font-size:11px; color:var(--muted);">Awaiting review</span>`;
+          
+      return `
+        <tr>
+          <td>
+            <strong>${t.title}</strong>
+            <div style="font-size:11px; color:var(--muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.description}">${t.description}</div>
+          </td>
+          <td>${t.category}</td>
+          <td><span class="badge ${priorityClass}" style="font-size:9.5px;">${t.priority}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString("en-IN")}</td>
+          <td><span class="badge ${statusClass}">${t.status}</span></td>
+          <td>${resolution}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='6' style='color:#ef4444; text-align:center;'>Failed to load tickets.</td></tr>";
+  }
+}
+
+async function submitStudentTicket(e) {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById("studentTicketTitle").value.trim(),
+    category: document.getElementById("studentTicketCategory").value,
+    priority: document.getElementById("studentTicketPriority").value,
+    description: document.getElementById("studentTicketDescription").value.trim()
+  };
+
+  try {
+    await apiCall("/api/tickets", "POST", payload);
+    alert("Support ticket submitted successfully!");
+    document.getElementById("studentCreateTicketForm").reset();
+    loadStudentTickets();
+  } catch (err) {
+    alert("Failed to submit support ticket: " + err.message);
   }
 }
 

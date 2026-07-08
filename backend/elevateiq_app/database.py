@@ -72,6 +72,25 @@ def init_db(app=None):
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # Create tickets table if it doesn't already exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tickets (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT NOT NULL,
+                    category VARCHAR(50) NOT NULL DEFAULT 'General',
+                    status VARCHAR(20) DEFAULT 'Open',
+                    priority VARCHAR(20) DEFAULT 'Medium',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    admin_notes TEXT,
+                    resolved_by INT REFERENCES users(id) ON DELETE SET NULL,
+                    resolved_at TIMESTAMP
+                )
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)")
             conn.commit()
             
             # Seed default designations if table is empty

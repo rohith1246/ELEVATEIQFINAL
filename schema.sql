@@ -370,6 +370,22 @@ CREATE INDEX IF NOT EXISTS idx_placement_user ON placement_tracks(user_id);
 CREATE INDEX IF NOT EXISTS idx_student_leaves_user ON student_leaves(user_id);
 CREATE INDEX IF NOT EXISTS idx_student_leaves_status ON student_leaves(status);
 
+-- 30. Tickets Table (Support system)
+CREATE TABLE IF NOT EXISTS tickets (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'General', -- 'Technical', 'Billing', 'HR', 'Academic', 'General'
+    status VARCHAR(20) DEFAULT 'Open', -- 'Open', 'In Progress', 'Resolved', 'Closed'
+    priority VARCHAR(20) DEFAULT 'Medium', -- 'Low', 'Medium', 'High'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    admin_notes TEXT,
+    resolved_by INT REFERENCES users(id) ON DELETE SET NULL,
+    resolved_at TIMESTAMP
+);
 
-
-
+-- Indexes for ticketing query performance
+CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);

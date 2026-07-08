@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import bcrypt
+from datetime import datetime
 from elevateiq_app import create_app
 
 class ElevateIQTestCase(unittest.TestCase):
@@ -309,6 +310,63 @@ class ElevateIQTestCase(unittest.TestCase):
             'content': 'hello'
         })
         self.assertEqual(response.status_code, 403)
+
+    @patch('elevateiq_app.routes.tickets.get_connection')
+    @patch('elevateiq_app.routes.tickets.get_current_user')
+    def test_create_ticket_success(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {
+            'id': 1,
+            'name': 'Candidate User',
+            'email': 'cand@example.com',
+            'role': 'candidate'
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchone.return_value = {'id': 100}
+        
+        response = self.client.post('/api/tickets', json={
+            'title': 'Test Issue',
+            'description': 'Description details',
+            'category': 'Technical',
+            'priority': 'High'
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertIn(b'Ticket created successfully', response.data)
+
+    @patch('elevateiq_app.routes.tickets.get_connection')
+    @patch('elevateiq_app.routes.tickets.get_current_user')
+    def test_get_tickets_success(self, mock_get_user, mock_get_conn):
+        mock_get_user.return_value = {
+            'id': 1,
+            'name': 'Candidate User',
+            'email': 'cand@example.com',
+            'role': 'candidate'
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchall.return_value = [
+            {
+                'id': 100,
+                'title': 'Test Issue',
+                'description': 'Details',
+                'category': 'Technical',
+                'priority': 'High',
+                'status': 'Open',
+                'created_at': datetime.now(),
+                'updated_at': datetime.now(),
+                'resolved_at': None,
+                'admin_notes': None
+            }
+        ]
+        
+        response = self.client.get('/api/tickets')
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()

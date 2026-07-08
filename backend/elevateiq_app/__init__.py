@@ -63,6 +63,7 @@ def create_app():
     from .routes.leaves import leaves_bp
     from .routes.edutech_routes import edutech_bp
     from .routes.payroll import payroll_bp
+    from .routes.tickets import tickets_bp
 
     # Register each modular blueprint with the central Flask application
     app.register_blueprint(auth_bp)
@@ -72,6 +73,7 @@ def create_app():
     app.register_blueprint(leaves_bp)
     app.register_blueprint(edutech_bp)
     app.register_blueprint(payroll_bp)
+    app.register_blueprint(tickets_bp)
 
     import gzip
     import io
