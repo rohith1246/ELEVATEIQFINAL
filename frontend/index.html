@@ -403,24 +403,52 @@ document.addEventListener("DOMContentLoaded", () => {
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:30px; margin-bottom:60px;">
       
       <!-- Mission Card -->
-      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(63,208,255,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(63,208,255,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--blue); border:1px solid rgba(63,208,255,0.2);">🎯</div>
-        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Mission</h3>
-        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To bridge the gap between global enterprise demands and top-tier technical expertise by delivering scalable IT services and grooming the next generation of software engineering leaders through focused academy programs.</p>
+      <div class="glass-card mvs-card" style="padding: 0; border-radius: 20px; display:flex; flex-direction:column; gap:0; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); overflow:hidden; transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(63,208,255,0.4)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <!-- Image Header -->
+        <div style="position:relative; height:200px; overflow:hidden; background:#1a3a4a;">
+          <img src="images/mission_card_bg.png" alt="Our Mission" style="width:100%; height:100%; object-fit:cover; object-position:center; transition:transform 0.55s ease;">
+          <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,6,23,0.08) 0%, rgba(2,6,23,0.55) 100%);"></div>
+          <div style="position:absolute; top:12px; left:14px; display:inline-flex; align-items:center; gap:6px; background:rgba(2,6,23,0.72); border:1px solid rgba(63,208,255,0.35); border-radius:100px; padding:5px 13px; font-size:11px; font-weight:700; letter-spacing:1.2px; color:var(--blue); text-transform:uppercase; backdrop-filter:blur(8px);">💡 OUR MISSION</div>
+        </div>
+        <!-- Content Body -->
+        <div style="padding:28px 30px 30px; display:flex; flex-direction:column; gap:14px;">
+          <h3 style="font-size:20px; font-weight:700; color:#fff; margin:0;">Our Mission</h3>
+          <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To bridge the gap between global enterprise demands and top-tier technical expertise by delivering scalable IT services and grooming the next generation of software engineering leaders through focused academy programs.</p>
+          <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+            <li style="font-size:13.5px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;"><span style="color:var(--blue); font-size:10px; margin-top:5px;">●</span>Scalable IT &amp; BPO solutions for global enterprises</li>
+            <li style="font-size:13.5px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;"><span style="color:var(--orange); font-size:10px; margin-top:5px;">●</span>Grooming next-gen software engineering leaders</li>
+            <li style="font-size:13.5px; color:var(--ink-soft); display:flex; align-items:start; gap:8px;"><span style="color:#00e676; font-size:10px; margin-top:5px;">●</span>Connecting talent with industry through EduTech Academy</li>
+          </ul>
+        </div>
       </div>
 
       <!-- Vision Card -->
-      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(255,107,0,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,107,0,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--orange); border:1px solid rgba(255,107,0,0.2);">👁️</div>
-        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Vision</h3>
-        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To become the global benchmark for combined software consulting and talent acceleration, fostering a reliable ecosystem where continuous up-skilling translates directly into robust, enterprise-grade technology solutions.</p>
+      <div class="glass-card mvs-card" style="padding: 0; border-radius: 20px; display:flex; flex-direction:column; gap:0; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); overflow:hidden; transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(255,107,0,0.4)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <!-- Image Header -->
+        <div style="position:relative; height:200px; overflow:hidden; background:#3d2100;">
+          <img src="images/vision_card_bg.png" alt="Our Vision" style="width:100%; height:100%; object-fit:cover; object-position:center; transition:transform 0.55s ease;">
+          <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,6,23,0.05) 0%, rgba(2,6,23,0.5) 100%);"></div>
+          <div style="position:absolute; top:12px; left:14px; display:inline-flex; align-items:center; gap:6px; background:rgba(2,6,23,0.72); border:1px solid rgba(255,107,0,0.35); border-radius:100px; padding:5px 13px; font-size:11px; font-weight:700; letter-spacing:1.2px; color:var(--orange); text-transform:uppercase; backdrop-filter:blur(8px);">👁️ OUR VISION</div>
+        </div>
+        <!-- Content Body -->
+        <div style="padding:28px 30px 30px; display:flex; flex-direction:column; gap:14px;">
+          <h3 style="font-size:20px; font-weight:700; color:#fff; margin:0;">Our Vision</h3>
+          <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">To become the global benchmark for combined software consulting and talent acceleration, fostering a reliable ecosystem where continuous up-skilling translates directly into robust, enterprise-grade technology solutions.</p>
+        </div>
       </div>
 
       <!-- Strategy Card -->
-      <div class="glass-card" style="padding: 35px; border-radius: 20px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(0,230,118,0.3)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0,230,118,0.08); display:flex; align-items:center; justify-content:center; font-size:24px; color:#00e676; border:1px solid rgba(0,230,118,0.2);">♟️</div>
-        <h3 style="font-size:22px; font-weight:600; color:#fff; margin:0;">Our Strategy</h3>
-        <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">We operate a dual-engine model: combining direct software consulting with our incubator (EduTech). This cyclical engine drives rapid deployment of skilled staff and provides our clients with highly qualified project support.</p>
+      <div class="glass-card mvs-card" style="padding: 0; border-radius: 20px; display:flex; flex-direction:column; gap:0; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); overflow:hidden; transition: transform 0.3s ease, border-color 0.3s ease;" onmouseenter="this.style.transform='translateY(-6px)'; this.style.borderColor='rgba(0,230,118,0.4)'" onmouseleave="this.style.transform='none'; this.style.borderColor='var(--glass-border)'">
+        <!-- Image Header -->
+        <div style="position:relative; height:200px; overflow:hidden; background:#e8e8e8; display:flex; align-items:center; justify-content:center;">
+          <img src="images/strategy_card_bg.png" alt="Our Strategy" style="width:100%; height:100%; object-fit:contain; object-position:center; padding:16px; transition:transform 0.55s ease;">
+          <div style="position:absolute; top:12px; left:14px; display:inline-flex; align-items:center; gap:6px; background:rgba(2,6,23,0.82); border:1px solid rgba(0,230,118,0.35); border-radius:100px; padding:5px 13px; font-size:11px; font-weight:700; letter-spacing:1.2px; color:#00e676; text-transform:uppercase; backdrop-filter:blur(8px);">♟️ OUR STRATEGY</div>
+        </div>
+        <!-- Content Body -->
+        <div style="padding:28px 30px 30px; display:flex; flex-direction:column; gap:14px;">
+          <h3 style="font-size:20px; font-weight:700; color:#fff; margin:0;">Our Strategy</h3>
+          <p style="font-size:14.5px; color:var(--ink-soft); line-height:1.7; margin:0;">We operate a dual-engine model: combining direct software consulting with our incubator (EduTech). This cyclical engine drives rapid deployment of skilled staff and provides our clients with highly qualified project support.</p>
+        </div>
       </div>
 
     </div>
