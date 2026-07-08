@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Track which tables have been checked to avoid repeated CREATE TABLE IF NOT EXISTS
-_tables_checked = set()
+_tables_checked = {'csrf_tokens', 'login_attempts', 'account_lockouts', 'password_history', 'refresh_tokens', 'role_permissions'}
 _permissions_seeded = False
 
 def _bcrypt_check(password_bytes, hashed_bytes):
@@ -570,10 +570,17 @@ def seed_default_permissions_conn(conn):
                 "chat:read", "chat:write",
             ],
         }
+        values = []
         for role, perms in role_perms.items():
             for p in perms:
-                c.execute("INSERT INTO role_permissions (role, permission) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (role, p))
+                values.append((role, p))
+        
+        if values:
+            placeholders = ",".join(["(%s, %s)"] * len(values))
+            query = f"INSERT INTO role_permissions (role, permission) VALUES {placeholders} ON CONFLICT DO NOTHING"
+            flat_args = [item for sublist in values for item in sublist]
+            c.execute(query, flat_args)
+            
         conn.commit()
         _permissions_seeded = True
     except Exception as e:

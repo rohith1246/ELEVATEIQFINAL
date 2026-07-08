@@ -91,6 +91,52 @@ def init_db(app=None):
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)")
+
+            # Create authentication and brute force lockout helper tables
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS csrf_tokens (
+                    user_id INT NOT NULL, token VARCHAR(64) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id, token)
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS login_attempts (
+                    id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ip_address VARCHAR(45)
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS account_lockouts (
+                    user_id INT PRIMARY KEY,
+                    locked_until TIMESTAMP NOT NULL,
+                    attempt_count INT DEFAULT 0
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS password_history (
+                    id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS refresh_tokens (
+                    id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                    token_hash VARCHAR(255) NOT NULL UNIQUE,
+                    expires_at TIMESTAMP NOT NULL,
+                    revoked BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS role_permissions (
+                    role VARCHAR(50) NOT NULL,
+                    permission VARCHAR(100) NOT NULL,
+                    PRIMARY KEY (role, permission)
+                )
+            """)
             conn.commit()
             
             # Seed default designations if table is empty
