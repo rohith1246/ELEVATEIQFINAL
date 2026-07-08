@@ -116,7 +116,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     if (res.ok) {
       successMsg.textContent = data.message || 'Account created successfully.';
       successMsg.style.display = 'block';
-      setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+      setTimeout(() => { window.location.href = 'login.html'; }, 150);
     } else {
       errorMsg.textContent = data.error || 'Something went wrong.';
       errorMsg.style.display = 'block';

@@ -13,7 +13,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
-from ..auth import get_current_user, require_role, check_is_crm_manager, rate_limit, validate_email, validate_password_strength
+from ..auth import get_current_user, require_role, check_is_crm_manager, rate_limit, validate_email, validate_password_strength, _bcrypt_hash
 from ..config import safe_error
 
 logger = logging.getLogger(__name__)
@@ -262,7 +262,7 @@ def provision_crm_client(client_id):
         if cursor.fetchone():
             return jsonify({"error": "Email is already taken"}), 400
 
-        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        hashed_pw = _bcrypt_hash(password.encode("utf-8")).decode("utf-8")
         # Insert client login details into users table
         cursor.execute(
             "INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, 'client') RETURNING id",

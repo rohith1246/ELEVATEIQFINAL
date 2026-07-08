@@ -197,5 +197,15 @@ def create_app():
         response.headers["Content-Length"] = len(response.get_data())
         return response
 
+    @app.after_request
+    def add_cache_headers(response):
+        """
+        Configures aggressive browser caching for static assets to reduce network roundtrips.
+        """
+        ext = os.path.splitext(request.path)[1].lower()
+        if ext in ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.mp4', '.webp', '.svg']:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
     return app
 

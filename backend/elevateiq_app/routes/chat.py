@@ -87,14 +87,19 @@ def chat_stream():
         try:
             # Yield initial connection success packet
             yield "data: {\"type\": \"connected\"}\n\n"
+            ping_counter = 0
             while True:
                 try:
-                    # Block waiting for a message for max 20 seconds
-                    msg_data = q.get(timeout=20)
+                    # Block waiting for a message for 1 second to release thread quickly on disconnect
+                    msg_data = q.get(timeout=1)
                     yield f"data: {msg_data}\n\n"
                 except queue.Empty:
-                    # Yield lightweight keep-alive ping frame to prevent proxy/gateway timeouts
-                    yield "data: {\"type\": \"ping\"}\n\n"
+                    # Yield a lightweight comment keep-alive to test if connection is still open
+                    yield ":keepalive\n\n"
+                    ping_counter += 1
+                    if ping_counter >= 20:
+                        yield "data: {\"type\": \"ping\"}\n\n"
+                        ping_counter = 0
         finally:
             # Ensure socket closure cleans up queue pointers
             unregister_queue(user_id, q)
@@ -120,25 +125,16 @@ def chat_user_details():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        is_tl = check_is_team_leader(user, cursor)
-        
-        can_approve = False
-        is_hr = False
-        if user["role"] == "admin":
-            can_approve = True
-            is_hr = True
-        else:
-            # Check designation from database
+        designation = ""
+        if user["role"] != "admin":
             cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
             res = cursor.fetchone()
             if res:
-                designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
-                designation = designation.lower()
-                # Check for approval and human resources keywords
-                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
-                    can_approve = True
-                if "hr" in designation or "human resource" in designation:
-                    is_hr = True
+                designation = ((res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")).lower()
+
+        is_tl = user.get("role") in ["admin", "team_leader"] or "team leader" in designation or "lead" in designation
+        can_approve = user.get("role") == "admin" or "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation
+        is_hr = user.get("role") == "admin" or "hr" in designation or "human resource" in designation
 
         return jsonify({
             "id": user["id"],

@@ -32,6 +32,7 @@ from ..auth import (
     is_account_locked_conn, record_failed_attempt_conn,
     reset_login_attempts_conn, issue_refresh_token_conn,
     get_csrf_token_conn, seed_default_permissions_conn,
+    _bcrypt_check, _bcrypt_hash,
 )
 from ..config import Config, safe_error
 
@@ -93,7 +94,7 @@ def register():
         if cursor.fetchone():
             return jsonify({"error": "Email already registered"}), 400
 
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        hashed_password = _bcrypt_hash(password.encode("utf-8")).decode("utf-8")
         cursor.execute(
             "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, %s, %s) RETURNING id",
             (name, email, hashed_password, role, portal)
@@ -186,33 +187,20 @@ def login():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        user_record = None
         cursor.execute(
             """
-            SELECT u.*, e.id as emp_db_id, e.employee_id 
-            FROM users u 
-            JOIN employees e ON u.id = e.user_id 
-            WHERE e.employee_id = %s OR u.email = %s
+            SELECT u.*, 
+                   e.id as emp_db_id, e.employee_id,
+                   c.id as client_db_id, c.client_id, c.company_name
+            FROM users u
+            LEFT JOIN employees e ON u.id = e.user_id
+            LEFT JOIN clients c ON u.id = c.user_id
+            WHERE u.email = %s OR e.employee_id = %s OR c.client_id = %s
+            LIMIT 1
             """,
-            (login_id, login_id)
+            (login_id, login_id, login_id)
         )
         user_record = cursor.fetchone()
-
-        if not user_record:
-            cursor.execute(
-                """
-                SELECT u.*, c.id as client_db_id, c.client_id, c.company_name
-                FROM users u
-                JOIN clients c ON u.id = c.user_id
-                WHERE c.client_id = %s OR u.email = %s
-                """,
-                (login_id, login_id)
-            )
-            user_record = cursor.fetchone()
-
-        if not user_record:
-            cursor.execute("SELECT * FROM users WHERE email = %s", (login_id,))
-            user_record = cursor.fetchone()
 
         if not user_record:
             return jsonify({"error": "Invalid email or password"}), 401
@@ -226,7 +214,7 @@ def login():
                 "error": f"Account locked due to too many failed login attempts. Try again in {max(60, remaining)} seconds."
             }), 429
 
-        if bcrypt.checkpw(password.encode("utf-8"), user_record["password"].encode("utf-8")):
+        if _bcrypt_check(password.encode("utf-8"), user_record["password"].encode("utf-8")):
             reset_login_attempts_conn(conn, user_id)
             requested_portal = data.get("portal", "elevateiq")
             user_portal = user_record.get("portal") or "elevateiq"
@@ -452,12 +440,12 @@ def profile():
                     return jsonify({"error": "Current password is required to set a new password"}), 400
                 cursor.execute("SELECT password FROM users WHERE id = %s", (user["id"],))
                 stored = cursor.fetchone()
-                if not stored or not bcrypt.checkpw(current_password.encode("utf-8"), stored["password"].encode("utf-8")):
+                if not stored or not _bcrypt_check(current_password.encode("utf-8"), stored["password"].encode("utf-8")):
                     return jsonify({"error": "Current password is incorrect"}), 403
                 is_strong, pw_msg = validate_password_strength(password)
                 if not is_strong:
                     return jsonify({"error": pw_msg}), 400
-                hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+                hashed = _bcrypt_hash(password.encode("utf-8")).decode("utf-8")
                 if not check_password_history(user["id"], hashed):
                     return jsonify({"error": f"Password has been used recently. Choose a different password."}), 400
                 store_password_history(user["id"], hashed)
@@ -610,7 +598,7 @@ def add_employee():
         if cursor.fetchone():
             return jsonify({"error": "Employee ID already exists"}), 400
 
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        hashed_password = _bcrypt_hash(password.encode("utf-8")).decode("utf-8")
         
         # Insert user login credentials
         salary = data.get("salary", 35000.00)
@@ -899,62 +887,62 @@ def get_dashboard_stats():
     today_date = date.today()
     try:
         if user["role"] == "admin":
-            cursor.execute("SELECT COUNT(*) FROM employees WHERE status = 'Active'")
-            active_employees = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM attendance WHERE date = %s AND status IN ('Present', 'Half Day')", (today_date,))
-            present_today = cursor.fetchone()["count"]
-
+            cursor.execute(
+                """
+                SELECT 
+                    (SELECT COUNT(*) FROM employees WHERE status = 'Active') AS active_employees,
+                    (SELECT COUNT(*) FROM attendance WHERE date = %s AND status IN ('Present', 'Half Day')) AS present_today,
+                    (SELECT COUNT(*) FROM leaves WHERE status = 'Pending') AS pending_leaves,
+                    (SELECT COUNT(*) FROM jobs WHERE status = 'Open') AS active_jobs,
+                    (SELECT COUNT(*) FROM applications) AS total_applications
+                """,
+                (today_date,)
+            )
+            row = cursor.fetchone()
+            active_employees = row["active_employees"]
+            present_today = row["present_today"]
             absent_today = max(0, active_employees - present_today)
-
-            cursor.execute("SELECT COUNT(*) FROM leaves WHERE status = 'Pending'")
-            pending_leaves = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM jobs WHERE status = 'Open'")
-            active_jobs = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM applications")
-            total_applications = cursor.fetchone()["count"]
-
+            
             stats = {
                 "active_employees": active_employees,
                 "present_today": present_today,
                 "absent_today": absent_today,
-                "pending_leaves": pending_leaves,
-                "active_jobs": active_jobs,
-                "total_applications": total_applications
+                "pending_leaves": row["pending_leaves"],
+                "active_jobs": row["active_jobs"],
+                "total_applications": row["total_applications"]
             }
             return jsonify(stats), 200
         elif user["role"] == "employee":
-            cursor.execute("SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Present'", (user["emp_db_id"],))
-            p_count = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Half Day'", (user["emp_db_id"],))
-            h_count = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status = 'Pending'", (user["emp_db_id"],))
-            pending_leaves = cursor.fetchone()["count"]
-
-            # Calculate total leaves approved (in days)
-            cursor.execute("SELECT COALESCE(SUM(end_date - start_date + 1), 0) AS total_leaves FROM leaves WHERE employee_id = %s AND status = 'Approved'", (user["emp_db_id"],))
-            total_leaves = cursor.fetchone()["total_leaves"]
-
+            cursor.execute(
+                """
+                SELECT 
+                    (SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Present') AS p_count,
+                    (SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Half Day') AS h_count,
+                    (SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status = 'Pending') AS pending_leaves,
+                    (SELECT COALESCE(SUM(end_date - start_date + 1), 0) FROM leaves WHERE employee_id = %s AND status = 'Approved') AS total_leaves
+                """,
+                (user["emp_db_id"], user["emp_db_id"], user["emp_db_id"], user["emp_db_id"])
+            )
+            row = cursor.fetchone()
             stats = {
-                "total_present_days": p_count + h_count,
-                "total_leaves": total_leaves,
-                "pending_leaves": pending_leaves
+                "total_present_days": row["p_count"] + row["h_count"],
+                "total_leaves": row["total_leaves"],
+                "pending_leaves": row["pending_leaves"]
             }
             return jsonify(stats), 200
         else:
-            cursor.execute("SELECT COUNT(*) FROM applications WHERE email = %s", (user["email"],))
-            total_apps = cursor.fetchone()["count"]
-
-            cursor.execute("SELECT COUNT(*) FROM applications WHERE email = %s AND status = 'Shortlisted'", (user["email"],))
-            shortlisted_apps = cursor.fetchone()["count"]
-
+            cursor.execute(
+                """
+                SELECT 
+                    (SELECT COUNT(*) FROM applications WHERE email = %s) AS total_apps,
+                    (SELECT COUNT(*) FROM applications WHERE email = %s AND status = 'Shortlisted') AS shortlisted_apps
+                """,
+                (user["email"], user["email"])
+            )
+            row = cursor.fetchone()
             stats = {
-                "total_applications": total_apps,
-                "shortlisted_applications": shortlisted_apps
+                "total_applications": row["total_apps"],
+                "shortlisted_applications": row["shortlisted_apps"]
             }
             return jsonify(stats), 200
     except Exception as e:

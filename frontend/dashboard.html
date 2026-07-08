@@ -1492,6 +1492,25 @@ function renderSidebar() {
 }
 
 async function initDashboard() {
+    // 1. Try to load cached user details to render UI immediately
+    const cachedUser = localStorage.getItem("user");
+    if (cachedUser) {
+        try {
+            currentUser = JSON.parse(cachedUser);
+            const greeting = document.getElementById("userGreeting");
+            if (greeting) {
+                greeting.textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
+            }
+        } catch (err) {
+            console.error("Failed to parse cached user", err);
+        }
+    }
+
+    // 2. Render sidebar and start SSE immediately (from cache)
+    renderSidebar();
+    initChatSSE();
+
+    // 3. Fetch fresh user details in the background
     try {
         const details = await apiCall("/chat/user-details");
         currentUser = details;
@@ -1500,11 +1519,10 @@ async function initDashboard() {
         if (greeting) {
             greeting.textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
         }
+        renderSidebar();
     } catch (e) {
         console.error("Could not fetch fresh user details", e);
     }
-    renderSidebar();
-    initChatSSE();
 }
 
 function openModal(id) { document.getElementById(id).classList.add("open"); }

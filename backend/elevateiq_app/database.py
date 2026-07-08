@@ -39,8 +39,8 @@ def init_db(app=None):
             raise ValueError("CRITICAL: DATABASE_URL environment variable is missing or empty. Please check your config.")
         
         try:
-            # Initialize thread-safe connection pool with minimum 1 and maximum 40 connections
-            db_pool = ThreadedConnectionPool(1, 40, dsn=dsn)
+            # Initialize thread-safe connection pool with minimum 5 and maximum 120 connections
+            db_pool = ThreadedConnectionPool(5, 120, dsn=dsn)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -194,27 +194,31 @@ def get_connection():
     if db_pool is None:
         init_db()
         
-    retries = 3
-    for _ in range(retries):
+    retries = 5
+    import time
+    for attempt in range(retries):
         # Generate a unique key for tracking checkout and returning to the pool
         key = str(uuid.uuid4())
-        conn = db_pool.getconn(key=key)
-        
-        # Test if the connection is alive and healthy locally (avoiding remote network roundtrip latency)
         try:
+            conn = db_pool.getconn(key=key)
             if conn.closed == 0:
-                # Connection is verified active and safe!
+                # Reset connection state if it was left in an error/aborted transaction
+                if conn.info.transaction_status != 0:  # 0 = IDLE
+                    conn.rollback()
                 return PooledConnection(db_pool, conn, key)
             else:
-                raise Exception("Connection is closed")
-        except Exception:
-            # Connection is dead (timeout/EOF). Close and discard it from the pool.
-            try:
-                db_pool.putconn(conn, key=key, close=True)
-            except Exception:
-                pass
+                try:
+                    db_pool.putconn(conn, key=key, close=True)
+                except Exception:
+                    pass
+        except Exception as e:
+            # Catch pool exhaustion or dead socket errors, back off, and retry
+            if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
+                time.sleep(0.05 * (attempt + 1))
+                continue
+            raise e
                 
-    # Fallback: If all retries failed, attempt one final normal checkout
+    # Fallback: If all retries failed, attempt one final checkout
     key = str(uuid.uuid4())
     conn = db_pool.getconn(key=key)
     return PooledConnection(db_pool, conn, key)

@@ -13,6 +13,25 @@ logger = logging.getLogger(__name__)
 
 # Track which tables have been checked to avoid repeated CREATE TABLE IF NOT EXISTS
 _tables_checked = set()
+_permissions_seeded = False
+
+def _bcrypt_check(password_bytes, hashed_bytes):
+    """Run bcrypt.checkpw in a way that doesn't block the gevent event loop."""
+    try:
+        from gevent import get_hub
+        return get_hub().threadpool.apply(bcrypt.checkpw, (password_bytes, hashed_bytes))
+    except (ImportError, Exception):
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+
+def _bcrypt_hash(password_bytes):
+    """Run bcrypt.hashpw in a way that doesn't block the gevent event loop."""
+    try:
+        from gevent import get_hub
+        return get_hub().threadpool.apply(bcrypt.hashpw, (password_bytes, bcrypt.gensalt(rounds=10)))
+    except (ImportError, Exception):
+        return bcrypt.hashpw(password_bytes, bcrypt.gensalt(rounds=10))
+
+import bcrypt
 
 ACCESS_TOKEN_MAX_AGE = 900
 REFRESH_TOKEN_MAX_AGE = 604800
@@ -20,6 +39,66 @@ REFRESH_TOKEN_MAX_AGE = 604800
 serializer = URLSafeTimedSerializer(Config.SECRET_KEY, salt="access")
 refresh_serializer = URLSafeTimedSerializer(Config.SECRET_KEY, salt="refresh")
 TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE
+
+# ─── Eagerly ensure all auth tables at startup (single DB round trip) ────────
+def ensure_all_auth_tables():
+    """Create all auth-related tables in a single connection to avoid
+    multiple round trips to the remote cloud database."""
+    if all(t in _tables_checked for t in ['csrf_tokens', 'login_attempts', 'account_lockouts',
+                                            'password_history', 'token_blacklist',
+                                            'refresh_tokens', 'role_permissions']):
+        return
+    try:
+        conn = get_connection()
+        c = conn.cursor()
+        try:
+            c.execute("""CREATE TABLE IF NOT EXISTS csrf_tokens (
+                user_id INT NOT NULL, token VARCHAR(64) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, token))""")
+            c.execute("""CREATE TABLE IF NOT EXISTS login_attempts (
+                id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ip_address VARCHAR(45))""")
+            c.execute("""CREATE TABLE IF NOT EXISTS account_lockouts (
+                user_id INT PRIMARY KEY,
+                locked_until TIMESTAMP NOT NULL,
+                attempt_count INT DEFAULT 0)""")
+            c.execute("""CREATE TABLE IF NOT EXISTS password_history (
+                id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+            c.execute("""CREATE TABLE IF NOT EXISTS token_blacklist (
+                token_hash VARCHAR(255) PRIMARY KEY,
+                blacklisted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+            c.execute("""CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id SERIAL PRIMARY KEY, user_id INT NOT NULL,
+                token_hash VARCHAR(255) NOT NULL UNIQUE,
+                expires_at TIMESTAMP NOT NULL,
+                revoked BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+            c.execute("""CREATE TABLE IF NOT EXISTS role_permissions (
+                role VARCHAR(50) NOT NULL,
+                permission VARCHAR(100) NOT NULL,
+                PRIMARY KEY (role, permission))""")
+            conn.commit()
+            _tables_checked.update(['csrf_tokens', 'login_attempts', 'account_lockouts',
+                                     'password_history', 'token_blacklist',
+                                     'refresh_tokens', 'role_permissions'])
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to ensure auth tables: {e}")
+        finally:
+            c.close()
+            conn.close()
+    except Exception as e:
+        logger.error(f"Could not connect to DB for table init: {e}")
+
+# Run eagerly at import time so first login is fast
+try:
+    ensure_all_auth_tables()
+except Exception:
+    pass
 
 # ─── CSRF Protection ──────────────────────────────────────────
 
@@ -159,7 +238,8 @@ def record_failed_attempt(user_id, ip_address):
         conn.close()
 
 def record_failed_attempt_conn(conn, user_id, ip_address):
-    _ensure_lockout_tables()
+    if 'login_attempts' not in _tables_checked or 'account_lockouts' not in _tables_checked:
+        _ensure_lockout_tables()
     c = conn.cursor()
     try:
         c.execute("INSERT INTO login_attempts (user_id, ip_address) VALUES (%s, %s)", (user_id, ip_address))
@@ -197,7 +277,8 @@ def is_account_locked(user_id):
         conn.close()
 
 def is_account_locked_conn(conn, user_id):
-    _ensure_lockout_tables()
+    if 'login_attempts' not in _tables_checked or 'account_lockouts' not in _tables_checked:
+        _ensure_lockout_tables()
     c = conn.cursor()
     try:
         c.execute("SELECT locked_until FROM account_lockouts WHERE user_id = %s AND locked_until > NOW()", (user_id,))
@@ -451,7 +532,8 @@ def issue_refresh_token_conn(conn, user_id):
         c.close()
 
 def get_csrf_token_conn(conn, user_id):
-    _ensure_csrf_table()
+    if 'csrf_tokens' not in _tables_checked:
+        _ensure_csrf_table()
     c = conn.cursor()
     try:
         token = secrets.token_hex(CSRF_TOKEN_LENGTH)
@@ -466,6 +548,9 @@ def get_csrf_token_conn(conn, user_id):
         c.close()
 
 def seed_default_permissions_conn(conn):
+    global _permissions_seeded
+    if _permissions_seeded:
+        return
     _ensure_permissions_table()
     c = conn.cursor()
     try:
@@ -490,6 +575,7 @@ def seed_default_permissions_conn(conn):
                 c.execute("INSERT INTO role_permissions (role, permission) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (role, p))
         conn.commit()
+        _permissions_seeded = True
     except Exception as e:
         conn.rollback()
         logger.error(f"Seed permissions error: {e}")
@@ -526,6 +612,26 @@ def get_current_user():
     except (SignatureExpired, BadSignature):
         return None
 
+_blacklist_cache = set()
+_blacklist_loaded = False
+
+def load_blacklist_cache():
+    global _blacklist_loaded
+    if _blacklist_loaded:
+        return
+    try:
+        conn = get_connection()
+        c = conn.cursor()
+        c.execute("SELECT token_hash FROM token_blacklist")
+        for row in c.fetchall():
+            _blacklist_cache.add(row[0] if isinstance(row, dict) else row[0])
+        _blacklist_loaded = True
+    except Exception as e:
+        logger.error(f"Failed to load blacklist cache: {e}")
+    finally:
+        c.close()
+        conn.close()
+
 def _ensure_blacklist_table():
     if 'token_blacklist' in _tables_checked:
         return
@@ -545,12 +651,15 @@ def _ensure_blacklist_table():
 
 def blacklist_token(token):
     _ensure_blacklist_table()
+    if not _blacklist_loaded:
+        load_blacklist_cache()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     conn = get_connection()
     c = conn.cursor()
     try:
-        c.execute("INSERT INTO token_blacklist (token_hash) VALUES (%s) ON CONFLICT DO NOTHING",
-            (hashlib.sha256(token.encode()).hexdigest(),))
+        c.execute("INSERT INTO token_blacklist (token_hash) VALUES (%s) ON CONFLICT DO NOTHING", (token_hash,))
         conn.commit()
+        _blacklist_cache.add(token_hash)
     except Exception:
         conn.rollback()
     finally:
@@ -558,25 +667,23 @@ def blacklist_token(token):
         conn.close()
 
 def is_token_blacklisted(token):
-    _ensure_blacklist_table()
-    conn = get_connection()
-    c = conn.cursor()
-    try:
-        c.execute("SELECT 1 FROM token_blacklist WHERE token_hash = %s",
-            (hashlib.sha256(token.encode()).hexdigest(),))
-        return c.fetchone() is not None
-    except Exception:
-        return False
-    finally:
-        c.close()
-        conn.close()
+    if not _blacklist_loaded:
+        load_blacklist_cache()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    return token_hash in _blacklist_cache
 
 def cleanup_blacklist():
+    global _blacklist_cache
     conn = get_connection()
     c = conn.cursor()
     try:
         c.execute("DELETE FROM token_blacklist WHERE blacklisted_at < NOW() - INTERVAL '7 days'")
         conn.commit()
+        # Refresh the cache from DB
+        _blacklist_cache.clear()
+        c.execute("SELECT token_hash FROM token_blacklist")
+        for row in c.fetchall():
+            _blacklist_cache.add(row[0] if isinstance(row, dict) else row[0])
     except Exception:
         conn.rollback()
     finally:
