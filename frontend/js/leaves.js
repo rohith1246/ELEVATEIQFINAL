@@ -626,10 +626,25 @@ async function loadEmpOverview() {
  * 
  * @async
  */
-async function markCheckIn() {
-    const res = await apiCall("/attendance/checkin", "POST");
-    document.getElementById("attendanceTimerStatus").textContent = res.message;
-    alert(res.message);
+async function markCheckIn(btn) {
+    let originalText = "";
+    if (btn) {
+        btn.disabled = true;
+        originalText = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner"></span> Loading...`;
+    }
+    try {
+        const res = await apiCall("/attendance/checkin", "POST");
+        document.getElementById("attendanceTimerStatus").textContent = res.message;
+        alert(res.message);
+    } catch (err) {
+        alert(err.message || "Failed to mark check-in");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
 }
 
 /**
@@ -637,10 +652,25 @@ async function markCheckIn() {
  * 
  * @async
  */
-async function markCheckOut() {
-    const res = await apiCall("/attendance/checkout", "POST");
-    document.getElementById("attendanceTimerStatus").textContent = res.message;
-    alert(res.message);
+async function markCheckOut(btn) {
+    let originalText = "";
+    if (btn) {
+        btn.disabled = true;
+        originalText = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner"></span> Loading...`;
+    }
+    try {
+        const res = await apiCall("/attendance/checkout", "POST");
+        document.getElementById("attendanceTimerStatus").textContent = res.message;
+        alert(res.message);
+    } catch (err) {
+        alert(err.message || "Failed to mark check-out");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
 }
 
 /**

@@ -94,6 +94,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   errorMsg.style.display = 'none';
   successMsg.style.display = 'none';
 
+  const submitBtn = document.querySelector('.auth-submit');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Logging in...';
+
   const payload = {
     email: document.getElementById('email').value,
     password: document.getElementById('password').value,
@@ -121,10 +126,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     } else {
       errorMsg.textContent = data.error || 'Invalid email or password.';
       errorMsg.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
     }
   } catch (err) {
     errorMsg.textContent = 'Could not reach the server. Make sure the backend is running.';
     errorMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   }
 });
 </script>

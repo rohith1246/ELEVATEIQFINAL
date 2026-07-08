@@ -139,7 +139,7 @@ def create_app():
             f"img-src 'self' data:; "
             f"font-src 'self' https://fonts.gstatic.com; "
             f"connect-src 'self'; "
-            f"frame-src 'none'; "
+            f"frame-src 'self' https://www.google.com https://maps.google.com; "
             f"object-src 'none'"
         )
         response.headers["Content-Security-Policy"] = csp
