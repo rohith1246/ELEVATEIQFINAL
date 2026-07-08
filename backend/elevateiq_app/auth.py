@@ -11,6 +11,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Track which tables have been checked to avoid repeated CREATE TABLE IF NOT EXISTS
+_tables_checked = set()
+
 ACCESS_TOKEN_MAX_AGE = 900
 REFRESH_TOKEN_MAX_AGE = 604800
 
@@ -23,6 +26,8 @@ TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE
 CSRF_TOKEN_LENGTH = 32
 
 def _ensure_csrf_table():
+    if 'csrf_tokens' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -31,6 +36,7 @@ def _ensure_csrf_table():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (user_id, token))""")
         conn.commit()
+        _tables_checked.add('csrf_tokens')
     except Exception:
         conn.rollback()
     finally:
@@ -105,6 +111,8 @@ BRUTE_FORCE_THRESHOLD = 5
 BRUTE_FORCE_WINDOW_MINUTES = 15
 
 def _ensure_lockout_tables():
+    if 'login_attempts' in _tables_checked and 'account_lockouts' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -117,6 +125,8 @@ def _ensure_lockout_tables():
             locked_until TIMESTAMP NOT NULL,
             attempt_count INT DEFAULT 0)""")
         conn.commit()
+        _tables_checked.add('login_attempts')
+        _tables_checked.add('account_lockouts')
     except Exception:
         conn.rollback()
     finally:
@@ -148,6 +158,29 @@ def record_failed_attempt(user_id, ip_address):
         c.close()
         conn.close()
 
+def record_failed_attempt_conn(conn, user_id, ip_address):
+    _ensure_lockout_tables()
+    c = conn.cursor()
+    try:
+        c.execute("INSERT INTO login_attempts (user_id, ip_address) VALUES (%s, %s)", (user_id, ip_address))
+        c.execute("""SELECT COUNT(*) FROM login_attempts
+            WHERE user_id = %s AND attempted_at > NOW() - INTERVAL '%s minutes'""",
+            (user_id, BRUTE_FORCE_WINDOW_MINUTES))
+        count = c.fetchone()[0]
+        if count >= BRUTE_FORCE_THRESHOLD:
+            c.execute("""INSERT INTO account_lockouts (user_id, locked_until, attempt_count)
+                VALUES (%s, NOW() + INTERVAL '%s minutes', %s)
+                ON CONFLICT (user_id) DO UPDATE
+                SET locked_until = NOW() + INTERVAL '%s minutes', attempt_count = %s""",
+                (user_id, BRUTE_FORCE_WINDOW_MINUTES, count,
+                 BRUTE_FORCE_WINDOW_MINUTES, count))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Failed attempt record error: {e}")
+    finally:
+        c.close()
+
 def is_account_locked(user_id):
     _ensure_lockout_tables()
     conn = get_connection()
@@ -162,6 +195,19 @@ def is_account_locked(user_id):
     finally:
         c.close()
         conn.close()
+
+def is_account_locked_conn(conn, user_id):
+    _ensure_lockout_tables()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT locked_until FROM account_lockouts WHERE user_id = %s AND locked_until > NOW()", (user_id,))
+        row = c.fetchone()
+        return (True, row[0]) if row else (False, None)
+    except Exception as e:
+        logger.error(f"Lock check error: {e}")
+        return False, None
+    finally:
+        c.close()
 
 def reset_login_attempts(user_id):
     conn = get_connection()
@@ -181,6 +227,8 @@ def reset_login_attempts(user_id):
 PASSWORD_HISTORY_COUNT = 5
 
 def _ensure_password_history_table():
+    if 'password_history' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -189,6 +237,7 @@ def _ensure_password_history_table():
             password_hash VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
+        _tables_checked.add('password_history')
     except Exception:
         conn.rollback()
     finally:
@@ -235,6 +284,8 @@ def store_password_history(user_id, password_hash):
 # ─── Audit Log ─────────────────────────────────────────────────
 
 def _ensure_audit_log_table():
+    if 'audit_log' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -245,6 +296,7 @@ def _ensure_audit_log_table():
             details TEXT, ip_address VARCHAR(45),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
+        _tables_checked.add('audit_log')
     except Exception:
         conn.rollback()
     finally:
@@ -299,6 +351,8 @@ def get_audit_logs(limit=100, offset=0):
 # ─── Refresh Token Rotation ────────────────────────────────────
 
 def _ensure_refresh_tokens_table():
+    if 'refresh_tokens' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -309,6 +363,7 @@ def _ensure_refresh_tokens_table():
             revoked BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
+        _tables_checked.add('refresh_tokens')
     except Exception:
         conn.rollback()
     finally:
@@ -377,6 +432,81 @@ def revoke_all_refresh_tokens(user_id):
         c.close()
         conn.close()
 
+# Connection-aware helpers (for sharing a connection across multiple operations)
+def issue_refresh_token_conn(conn, user_id):
+    token = secrets.token_urlsafe(64)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    c = conn.cursor()
+    try:
+        c.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = %s AND revoked = FALSE", (user_id,))
+        c.execute("""INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+            VALUES (%s, %s, NOW() + INTERVAL '7 days')""", (user_id, token_hash))
+        conn.commit()
+        return token
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Refresh token issue error: {e}")
+        return None
+    finally:
+        c.close()
+
+def get_csrf_token_conn(conn, user_id):
+    _ensure_csrf_table()
+    c = conn.cursor()
+    try:
+        token = secrets.token_hex(CSRF_TOKEN_LENGTH)
+        c.execute("INSERT INTO csrf_tokens (user_id, token) VALUES (%s, %s)", (user_id, token))
+        conn.commit()
+        return token
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"CSRF gen error: {e}")
+        return None
+    finally:
+        c.close()
+
+def seed_default_permissions_conn(conn):
+    _ensure_permissions_table()
+    c = conn.cursor()
+    try:
+        role_perms = {
+            "admin": list(PERMISSIONS.keys()),
+            "employee": [
+                "leaves:read",
+                "chat:read", "chat:write",
+                "tickets:read", "tickets:write",
+                "recruitment:read",
+            ],
+            "candidate": [
+                "recruitment:read",
+            ],
+            "client": [
+                "crm:read",
+                "chat:read", "chat:write",
+            ],
+        }
+        for role, perms in role_perms.items():
+            for p in perms:
+                c.execute("INSERT INTO role_permissions (role, permission) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    (role, p))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Seed permissions error: {e}")
+    finally:
+        c.close()
+
+def reset_login_attempts_conn(conn, user_id):
+    c = conn.cursor()
+    try:
+        c.execute("DELETE FROM login_attempts WHERE user_id = %s", (user_id,))
+        c.execute("DELETE FROM account_lockouts WHERE user_id = %s", (user_id,))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        c.close()
+
 # ─── Token Helpers ─────────────────────────────────────────────
 
 def get_current_user():
@@ -396,13 +526,28 @@ def get_current_user():
     except (SignatureExpired, BadSignature):
         return None
 
-def blacklist_token(token):
+def _ensure_blacklist_table():
+    if 'token_blacklist' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
         c.execute("""CREATE TABLE IF NOT EXISTS token_blacklist (
             token_hash VARCHAR(255) PRIMARY KEY,
             blacklisted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+        conn.commit()
+        _tables_checked.add('token_blacklist')
+    except Exception:
+        conn.rollback()
+    finally:
+        c.close()
+        conn.close()
+
+def blacklist_token(token):
+    _ensure_blacklist_table()
+    conn = get_connection()
+    c = conn.cursor()
+    try:
         c.execute("INSERT INTO token_blacklist (token_hash) VALUES (%s) ON CONFLICT DO NOTHING",
             (hashlib.sha256(token.encode()).hexdigest(),))
         conn.commit()
@@ -413,12 +558,10 @@ def blacklist_token(token):
         conn.close()
 
 def is_token_blacklisted(token):
+    _ensure_blacklist_table()
     conn = get_connection()
     c = conn.cursor()
     try:
-        c.execute("""CREATE TABLE IF NOT EXISTS token_blacklist (
-            token_hash VARCHAR(255) PRIMARY KEY,
-            blacklisted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         c.execute("SELECT 1 FROM token_blacklist WHERE token_hash = %s",
             (hashlib.sha256(token.encode()).hexdigest(),))
         return c.fetchone() is not None
@@ -468,6 +611,8 @@ PERMISSIONS = {
 }
 
 def _ensure_permissions_table():
+    if 'role_permissions' in _tables_checked:
+        return
     conn = get_connection()
     c = conn.cursor()
     try:
@@ -476,6 +621,7 @@ def _ensure_permissions_table():
             permission VARCHAR(100) NOT NULL,
             PRIMARY KEY (role, permission))""")
         conn.commit()
+        _tables_checked.add('role_permissions')
     except Exception:
         conn.rollback()
     finally:

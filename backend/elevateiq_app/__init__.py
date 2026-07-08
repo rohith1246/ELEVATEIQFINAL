@@ -146,6 +146,11 @@ def create_app():
         response.headers["X-Nonce"] = nonce
         if app.config.get("FLASK_ENV") == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # Cache static assets (images, CSS, JS, fonts) for 1 year
+        if response.status_code == 200:
+            content_type = response.headers.get("Content-Type", "").lower()
+            if any(ext in content_type for ext in ("image", "font", "text/css", "javascript")):
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         return response
 
     import gzip

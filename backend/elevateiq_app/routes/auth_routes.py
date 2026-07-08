@@ -29,6 +29,9 @@ from ..auth import (
     audit_log, get_audit_logs,
     BRUTE_FORCE_THRESHOLD, BRUTE_FORCE_WINDOW_MINUTES,
     PASSWORD_HISTORY_COUNT,
+    is_account_locked_conn, record_failed_attempt_conn,
+    reset_login_attempts_conn, issue_refresh_token_conn,
+    get_csrf_token_conn, seed_default_permissions_conn,
 )
 from ..config import Config, safe_error
 
@@ -216,7 +219,7 @@ def login():
 
         user_id = user_record["id"]
 
-        locked, locked_until = is_account_locked(user_id)
+        locked, locked_until = is_account_locked_conn(conn, user_id)
         if locked:
             remaining = int((locked_until - datetime.now()).total_seconds()) if locked_until else BRUTE_FORCE_WINDOW_MINUTES * 60
             return jsonify({
@@ -224,7 +227,7 @@ def login():
             }), 429
 
         if bcrypt.checkpw(password.encode("utf-8"), user_record["password"].encode("utf-8")):
-            reset_login_attempts(user_id)
+            reset_login_attempts_conn(conn, user_id)
             requested_portal = data.get("portal", "elevateiq")
             user_portal = user_record.get("portal") or "elevateiq"
             
@@ -241,8 +244,8 @@ def login():
                 "client_db_id": user_record.get("client_db_id"),
             }
             token = serializer.dumps(payload)
-            refresh_token = issue_refresh_token(user_id)
-            csrf_token = get_csrf_token(user_id)
+            refresh_token = issue_refresh_token_conn(conn, user_id)
+            csrf_token = get_csrf_token_conn(conn, user_id)
             response = jsonify({
                 "message": "Login successful",
                 "token": token,
@@ -262,13 +265,14 @@ def login():
                 samesite="Strict", path="/api/auth/refresh",
                 max_age=REFRESH_TOKEN_MAX_AGE
             )
-            seed_default_permissions()
+            seed_default_permissions_conn(conn)
             return response, 200
         else:
             ip = request.headers.get("X-Forwarded-For", request.remote_addr) or "unknown"
-            record_failed_attempt(user_id, ip)
+            record_failed_attempt_conn(conn, user_id, ip)
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e:
+        conn.rollback()
         logger.error(f"Login error: {e}")
         return jsonify(safe_error()), 500
     finally:
