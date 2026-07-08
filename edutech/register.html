@@ -262,6 +262,35 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+
+  /* Password eye button styles */
+  .password-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .password-wrapper input {
+    padding-right: 46px !important;
+  }
+  .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    z-index: 10;
+    transition: color 0.2s;
+  }
+  .password-toggle:hover {
+    color: var(--text);
+  }
 </style>
 </head>
 <body>
@@ -296,7 +325,10 @@
       </div>
       <div class="field">
         <label for="password">Password</label>
-        <input type="password" id="password" minlength="6" placeholder="At least 6 characters" required>
+        <div class="password-wrapper">
+          <input type="password" id="password" minlength="6" placeholder="At least 6 characters" required>
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)">👁️</button>
+        </div>
       </div>
       
       <div class="terms-check">
@@ -368,6 +400,17 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     submitBtn.innerHTML = originalText;
   }
 });
+
+function togglePasswordVisibility(fieldId, btn) {
+  const pwdInput = document.getElementById(fieldId);
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    pwdInput.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
 </script>
 
 </body>

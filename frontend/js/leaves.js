@@ -153,10 +153,12 @@ function renderEmployeesTable(list) {
                 <td>${emp.department}</td>
                 <td>${emp.designation}</td>
                 <td><span class="badge ${emp.status.toLowerCase()}">${emp.status}</span></td>
-                <td>
-                    <button onclick="viewEmployeeDetails(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-approve" style="background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3);">View</button>
-                    <button onclick="editEmployeePopup(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-edit">Edit</button>
-                    <button onclick="deleteEmployee(${emp.id})" class="btn-action btn-reject">Delete</button>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button onclick="viewEmployeeDetails(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-approve" style="background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3); margin: 0;">View</button>
+                        <button onclick="editEmployeePopup(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-edit" style="margin: 0;">Edit</button>
+                        <button onclick="deleteEmployee(${emp.id})" class="btn-action btn-reject" style="margin: 0;">Delete</button>
+                    </div>
                 </td>
             </tr>
         `;

@@ -49,10 +49,12 @@ async function loadAdminRecruitment() {
                 <td><a href="#" onclick="viewResumeFile('${a.resume_filename}')" style="color:var(--blue); text-decoration:none;">📄 View Resume</a></td>
                 <td>${date}</td>
                 <td><span class="badge ${a.status.toLowerCase()}">${a.status}</span></td>
-                <td>
-                    <button onclick="updateAppStatus(${a.id}, 'Shortlisted')" class="btn-action btn-approve" style="background:rgba(230,230,75,0.2); color:#ffffaa; border-color:rgba(230,230,75,0.4)">Shortlist</button>
-                    <button onclick="updateAppStatus(${a.id}, 'Accepted')" class="btn-action btn-approve">Accept</button>
-                    <button onclick="updateAppStatus(${a.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button onclick="updateAppStatus(${a.id}, 'Shortlisted')" class="btn-action btn-approve" style="background:rgba(230,230,75,0.2); color:#ffffaa; border-color:rgba(230,230,75,0.4); margin: 0;">Shortlist</button>
+                        <button onclick="updateAppStatus(${a.id}, 'Accepted')" class="btn-action btn-approve" style="margin: 0;">Accept</button>
+                        <button onclick="updateAppStatus(${a.id}, 'Rejected')" class="btn-action btn-reject" style="margin: 0;">Reject</button>
+                    </div>
                 </td>
             </tr>
         `;

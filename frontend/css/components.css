@@ -513,3 +513,14 @@ tr:hover td {
     background: var(--orange-dark) !important;
     box-shadow: 0 4px 15px rgba(255, 138, 61, 0.3) !important;
 }
+
+/* Fix table action columns overflowing/overlapping */
+table td:last-child {
+    white-space: nowrap !important;
+}
+.btn-action {
+    margin: 2px 4px !important;
+}
+.btn-reject {
+    margin-left: 4px !important;
+}

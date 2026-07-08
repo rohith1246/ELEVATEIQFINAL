@@ -34,15 +34,17 @@ async function loadCRM() {
             const timeStr = new Date(c.created_at).toLocaleDateString();
             
             let actions = `
-                <button onclick="openEditLeadModal(${c.id})" class="btn-action btn-edit" style="margin-right:4px;">Edit</button>
-                <button onclick="openInteractionsModal(${c.id}, '${escapeHTML(c.company_name)}')" class="btn-action btn-approve" style="background:rgba(0,230,118,0.15); color:#00e676; border-color:rgba(0,230,118,0.3); margin-right:4px;">Log</button>
+                <div style="display: flex; gap: 6px; align-items: center; white-space: nowrap;">
+                    <button onclick="openEditLeadModal(${c.id})" class="btn-action btn-edit" style="margin: 0;">Edit</button>
+                    <button onclick="openInteractionsModal(${c.id}, '${escapeHTML(c.company_name)}')" class="btn-action btn-approve" style="background:rgba(0,230,118,0.15); color:#00e676; border-color:rgba(0,230,118,0.3); margin: 0;">Log</button>
             `;
             
             if (!c.user_id && c.status === "Active Client") {
-                actions += `<button onclick="openProvisionModal(${c.id}, '${escapeHTML(c.email || '')}')" class="btn-action btn-approve">Access</button>`;
+                actions += `<button onclick="openProvisionModal(${c.id}, '${escapeHTML(c.email || '')}')" class="btn-action btn-approve" style="margin: 0;">Access</button>`;
             } else if (c.user_id) {
-                actions += `<span style="font-size:11px; color:var(--ink-faint); margin-left:4px;">Access Set</span>`;
+                actions += `<span style="font-size:11px; color:var(--ink-faint); margin: 0;">Access Set</span>`;
             }
+            actions += `</div>`;
             
             const badgeClass = c.status.toLowerCase().replace(" ", "-");
             
@@ -57,7 +59,7 @@ async function loadCRM() {
                     <td style="font-weight:600; color:#fff;">₹${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     <td><span class="badge ${badgeClass}">${escapeHTML(c.status)}</span></td>
                     <td style="font-size:11px; color:var(--ink-faint);">${timeStr}</td>
-                    <td>${actions}</td>
+                    <td style="white-space: nowrap;">${actions}</td>
                 </tr>
             `;
         });

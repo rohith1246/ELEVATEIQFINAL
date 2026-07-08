@@ -56,7 +56,13 @@
 
     <form id="loginForm">
       <div class="field"><label for="email">Email address or Employee ID</label><input type="text" id="email" required></div>
-      <div class="field"><label for="password">Password</label><input type="password" id="password" required></div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" required>
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)">👁️</button>
+        </div>
+      </div>
       
       <button type="submit" class="btn-primary auth-submit">Log in</button>
     </form>
@@ -136,6 +142,17 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     submitBtn.innerHTML = originalText;
   }
 });
+
+function togglePasswordVisibility(fieldId, btn) {
+  const pwdInput = document.getElementById(fieldId);
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    pwdInput.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
 </script>
 
 </body>
