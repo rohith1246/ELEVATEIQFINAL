@@ -1,0 +1,2884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — EduTech Academy</title>
+<link rel="shortcut icon" href="logo.png" type="image/png">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="alert-override.js"></script>
+<style>
+  :root {
+    --primary: #ff7a00;
+    --secondary: #0096ff;
+    --accent: #ff8a00;
+    --success: #22C55E;
+    --bg: #020617;
+    --bg-soft: #050b1f;
+    --card: rgba(15, 23, 36, 0.6);
+    --card-hover: rgba(20, 35, 60, 0.8);
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --line: rgba(148, 163, 184, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --orange-glow: rgba(255, 122, 0, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Backdrop gradient effects */
+  .bg-canvas {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 50%, var(--bg-soft) 0%, var(--bg) 100%);
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.1;
+  }
+  .orb1 { top: -10%; left: -10%; width: 45%; height: 45%; background: var(--primary); }
+  .orb2 { bottom: -10%; right: -10%; width: 50%; height: 50%; background: var(--secondary); }
+
+  /* Navigation */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(2, 6, 23, 0.6);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .logo img {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+  }
+  .logo span {
+    font-size: 8px;
+    color: #3FD0FF;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .user-greeting {
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .btn-logout {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    transition: all 0.3s ease;
+  }
+  .btn-logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+
+  /* Dashboard Container */
+  .dash-container {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 30px;
+    gap: 30px;
+  }
+
+  /* Sidebar styling */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: fit-content;
+  }
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .sidebar-link:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .sidebar-link.active {
+    color: white;
+    background: linear-gradient(135deg, rgba(255, 122, 0, 0.18), rgba(0, 150, 255, 0.15));
+    border: 1px solid rgba(255, 122, 0, 0.2);
+    box-shadow: 0 4px 15px -4px var(--orange-glow);
+  }
+  .sidebar-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Content Workspace */
+  .dash-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .dash-header {
+    margin-bottom: 24px;
+  }
+  .dash-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .dash-header p {
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  /* Dynamic panels */
+  .section-panel {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .section-panel.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Components: Glass Card */
+  .glass-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* Tables */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(15, 23, 36, 0.3);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13.5px;
+  }
+  th {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 14px 16px;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge.beginner { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .badge.intermediate { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+  .badge.advanced { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+  .badge.active { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .badge.pending { background: rgba(234, 179, 8, 0.1); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.2); }
+
+  /* Course Card Grid */
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .course-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+  }
+  .course-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 122, 0, 0.25);
+    background: var(--card-hover);
+    box-shadow: 0 10px 30px -10px var(--orange-glow);
+  }
+  .course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .course-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255, 122, 0, 0.1);
+    border: 1px solid rgba(255, 122, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .course-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: white;
+  }
+  .course-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+  }
+  .course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    margin-top: 10px;
+  }
+  .course-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+  }
+  .course-price-old {
+    font-size: 13px;
+    text-decoration: line-through;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  /* Form Elements */
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  .field select option {
+    background: #0f172a;
+    color: #ffffff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--secondary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .field select option {
+    background: #0b1528;
+    color: white;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    font-size: 13.5px;
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.25);
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    opacity: 0.95;
+  }
+  .btn-ghost {
+    padding: 10px 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.01);
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .btn-danger {
+    padding: 6px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+  }
+
+  /* Grid details stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .stat-card h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-card .val {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Modals */
+  .modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal.open {
+    display: flex;
+  }
+  .modal-content {
+    background: #0b1220;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.5);
+  }
+  .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 22px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .modal-close:hover {
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<nav>
+  <a href="/" class="logo">
+    <img src="logo.png" alt="EduTech Logo">
+    <span>EduTech</span>
+  </a>
+  <div class="nav-right">
+    <span class="user-greeting" id="userGreeting">-</span>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+</nav>
+
+<div class="dash-container">
+  <!-- Sidebar Menu (Populated based on user role) -->
+  <div class="sidebar" id="sidebarMenu">
+    <!-- Links injected dynamically -->
+  </div>
+
+  <!-- Content panels -->
+  <div class="dash-content">
+    <div class="dash-header">
+      <h1 id="dashTitle">My Workspace</h1>
+      <p id="dashSub">Welcome to your educational dashboard portal</p>
+    </div>
+
+    <div id="panelContainer">
+      <!-- Dynamic panels injected dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== POPUP MODALS ==================== -->
+
+<!-- Add/Edit Course Modal -->
+<div class="modal" id="courseModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('courseModal')">&times;</span>
+    <h2 id="courseModalTitle" style="margin-bottom: 20px;">Add New Course</h2>
+    <form id="courseForm">
+      <input type="hidden" id="courseId">
+      <div class="field">
+        <label>Course Title</label>
+        <input type="text" id="courseTitle" placeholder="e.g. Kotlin Mobile App Dev" required>
+      </div>
+      <div class="field">
+        <label>Difficulty Level</label>
+        <select id="courseLevel" required>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Duration (weeks/hours)</label>
+        <input type="text" id="courseDuration" placeholder="e.g. 14 weeks" required>
+      </div>
+      <div class="field">
+        <label>Price (₹)</label>
+        <input type="number" id="coursePrice" placeholder="e.g. 35000" required>
+      </div>
+      <div class="field">
+        <label>Old Price (₹, optional)</label>
+        <input type="number" id="courseOldPrice" placeholder="e.g. 42000">
+      </div>
+      <div class="field">
+        <label>Theme Icon Category</label>
+        <select id="courseIcon">
+          <option value="layers">Layers (Default)</option>
+          <option value="code">Code Editor</option>
+          <option value="coffee">Coffee (Java/Backend)</option>
+          <option value="brain">Brain (AI/ML)</option>
+          <option value="chart">Chart (Data Science)</option>
+          <option value="cloud">Cloud (DevOps)</option>
+          <option value="server">Server (Database)</option>
+          <option value="shield">Shield (Security)</option>
+          <option value="palette">Palette (UI/UX)</option>
+        </select>
+      </div>
+      <div class="field" id="courseActiveField" style="display:none; flex-direction:row; align-items:center; gap:8px;">
+        <input type="checkbox" id="courseActive" style="width:auto; cursor:pointer;" checked>
+        <label for="courseActive" style="margin-bottom:0; cursor:pointer;">Course is Active</label>
+      </div>
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button type="button" class="btn-ghost" onclick="closeModal('courseModal')" style="flex:1;">Cancel</button>
+        <button type="submit" class="btn-primary" style="flex:1;">Save Course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/Edit Employee Modal -->
+<div class="modal" id="employeeModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <span class="modal-close" onclick="closeModal('employeeModal')">&times;</span>
+    <h2 id="employeeModalTitle" style="margin-bottom: 20px;">Register New Employee</h2>
+    <form id="employeeForm" onsubmit="submitEmployee(event)">
+      <input type="hidden" id="empId">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="field">
+          <label>Employee ID</label>
+          <input type="text" id="empCorpId" placeholder="e.g. EMP001" required>
+        </div>
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="empName" placeholder="e.g. Robert Martin" required>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="empEmail" placeholder="e.g. unclebob@example.com" required>
+        </div>
+        <div class="field">
+          <label>Password (optional for new)</label>
+          <input type="password" id="empPassword" placeholder="Auto-generated if blank">
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="text" id="empPhone" placeholder="e.g. +91 9999999999">
+        </div>
+        <div class="field">
+          <label>Department</label>
+          <input type="text" id="empDept" placeholder="e.g. Academy" required>
+        </div>
+        <div class="field">
+          <label>Designation</label>
+          <select id="empDesg" required>
+            <!-- Loaded dynamically from designations -->
+          </select>
+        </div>
+        <div class="field">
+          <label>Date of Joining</label>
+          <input type="date" id="empJoinDate">
+        </div>
+      </div>
+      <div class="field" id="empStatusField" style="display:none; margin-bottom:10px;">
+        <label>Employee Status</label>
+        <select id="empStatus">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button type="button" class="btn-ghost" onclick="closeModal('employeeModal')" style="flex:1;">Cancel</button>
+        <button type="submit" class="btn-primary" style="flex:1;">Save Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== JAVASCRIPT LOGIC ==================== -->
+<script>
+// Check Authentication session state
+const API_BASE = window.location.origin;
+const token = localStorage.getItem("edutech_token");
+const user = JSON.parse(localStorage.getItem("edutech_user") || "null");
+
+if (!token || !user) {
+    window.location.href = "login.html";
+}
+
+// Display Name greeting
+if (user) {
+    document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${(user.role || '').toUpperCase()})`;
+}
+
+// Global API Call wrapper
+async function apiCall(endpoint, method = "GET", body = null) {
+    const options = {
+        method,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    };
+    if (body) options.body = JSON.stringify(body);
+    
+    try {
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        let data = null;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            data = await res.json();
+        }
+        if (!res.ok) {
+            const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
+            throw new Error(errMsg);
+        }
+        return data;
+    } catch (err) {
+        alert(err.message);
+        throw err;
+    }
+}
+
+function logout() {
+    localStorage.removeItem("edutech_token");
+    localStorage.removeItem("edutech_user");
+    window.location.href = "index.html";
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+// Vector icon mappings for Lucide rendering
+const iconSVGs = {
+  layers: '<i data-lucide="layers" class="sidebar-icon"></i>',
+  code: '<i data-lucide="code-2" class="sidebar-icon"></i>',
+  coffee: '<i data-lucide="coffee" class="sidebar-icon"></i>',
+  brain: '<i data-lucide="brain" class="sidebar-icon"></i>',
+  chart: '<i data-lucide="bar-chart" class="sidebar-icon"></i>',
+  cloud: '<i data-lucide="cloud" class="sidebar-icon"></i>',
+  server: '<i data-lucide="server" class="sidebar-icon"></i>',
+  shield: '<i data-lucide="shield" class="sidebar-icon"></i>',
+  palette: '<i data-lucide="palette" class="sidebar-icon"></i>'
+};
+
+function formatRupee(n) {
+  return "₹" + Number(n).toLocaleString("en-IN");
+}
+
+// Layout definitions based on role
+const layouts = {
+  // STUDENT VIEW LAYOUTS
+  student_courses: `
+    <div class="glass-card" style="padding: 30px; background: linear-gradient(135deg, rgba(255,122,0,0.05), rgba(0,150,255,0.03));">
+      <h2 style="font-size: 20px; font-weight:700; margin-bottom: 8px;">My Learning Dashboard</h2>
+      <p style="color:var(--muted); font-size:14px;">Study path and course certifications linked to your learning account.</p>
+    </div>
+    <h3 style="font-size:16px; font-weight:600; margin-bottom:15px;">Your Enrolled Classes</h3>
+    <div class="course-grid" id="myCoursesGrid">
+      <!-- Injected dynamically -->
+    </div>
+  `,
+  explore_courses: `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="font-size:18px; margin:0;">Explore Technical Programs</h2>
+    </div>
+    <div class="course-grid" id="exploreCoursesGrid">
+      <!-- Injected dynamically -->
+    </div>
+  `,
+  student_live_classes: `
+    <h2 style="font-size:18px; margin-bottom:15px;">Upcoming Cohort Live Screenings</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Course Program</th>
+            <th>Class Topic</th>
+            <th>Platform</th>
+            <th>Scheduled Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="studentLiveTableBody">
+          <!-- Loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+  `,
+  student_profile: `
+    <div class="glass-card" style="max-width: 500px; margin: 0 auto;">
+      <h2 style="font-size:18px; margin-bottom:20px;">Student Profile Settings</h2>
+      <form id="studentProfileForm" onsubmit="saveProfile(event)">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="profName" required>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="profEmail" disabled>
+        </div>
+        <div class="field">
+          <label>New Password (leave blank to keep current)</label>
+          <input type="password" id="profPassword" minlength="6">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Save Profile</button>
+      </form>
+    </div>
+  `,
+
+  // ADMIN / EMPLOYEE VIEW LAYOUTS
+  admin_courses: `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="font-size:18px; margin:0;">Courses Catalog Administration</h2>
+      <button class="btn-primary" onclick="showAddCourseModal()"><i data-lucide="plus-circle" style="width:16px;height:16px;"></i> Add New Course</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Difficulty</th>
+            <th>Duration</th>
+            <th>Price</th>
+            <th>Old Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminCoursesTableBody">
+          <!-- Loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+  `,
+  admin_enrollments: `
+    <h2 style="font-size:18px; margin-bottom:15px;">Student Cohort Registrations</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Enrollments</h3>
+        <div class="val" id="statTotalEnrollments">-</div>
+      </div>
+      <div class="stat-card" id="revenueCard">
+        <h3>Total Revenue Collected</h3>
+        <div class="val" id="statRevenue">-</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Student Details</th>
+            <th>Email</th>
+            <th>Course Title</th>
+            <th id="thPricePaid">Price Paid</th>
+            <th>Enrolled Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="adminEnrollTableBody">
+          <!-- Loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+  `,
+  admin_live: `
+    <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px;">
+      <div class="glass-card">
+        <h2 style="font-size:18px; margin-bottom:20px;">Schedule Cohort Live Class</h2>
+        <form id="liveClassForm" onsubmit="submitLiveClass(event)">
+          <div class="field">
+            <label>Target Course</label>
+            <select id="liveCourseSelect" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="field">
+            <label>Class Topic / Title</label>
+            <input type="text" id="liveTitle" placeholder="e.g. Intro to Async/Await" required>
+          </div>
+          <div class="field">
+            <label>Meeting Platform</label>
+            <select id="livePlatform" required>
+              <option value="Zoom">Zoom</option>
+              <option value="Google Meet">Google Meet</option>
+              <option value="Microsoft Teams">Microsoft Teams</option>
+              <option value="Slack">Slack Huddle</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Meeting URL Link</label>
+            <input type="url" id="liveLink" placeholder="e.g. https://zoom.us/j/..." required>
+          </div>
+          <div class="field">
+            <label>Scheduled Date & Time</label>
+            <input type="datetime-local" id="liveTime" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Schedule Class Session</button>
+        </form>
+      </div>
+      <div>
+        <h2 style="font-size:18px; margin-bottom:15px;">Active Scheduled Screenings</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course Program</th>
+                <th>Topic</th>
+                <th>Platform</th>
+                <th>Date & Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminLiveTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `,
+  admin_employees: `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+      <input type="text" id="empSearch" placeholder="Search staff by name/ID..." onkeyup="filterAdminEmployees()" style="padding:10px 16px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; width:280px; outline:none;">
+      <button class="btn-primary" onclick="showAddEmployeeModal()"><i data-lucide="plus-circle" style="width:16px;height:16px;"></i> Add New Employee</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminEmployeesTableBody">
+          <!-- Loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+  `,
+  admin_designations: `
+    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:30px;">
+      <div class="glass-card">
+        <h2 style="font-size:18px; margin-bottom:20px;">Register Designation</h2>
+        <form id="designationForm" onsubmit="submitDesignation(event)">
+          <div class="field">
+            <label>Designation Label</label>
+            <input type="text" id="desgName" placeholder="e.g. Python Trainer" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Save Designation</button>
+        </form>
+      </div>
+      <div>
+        <h2 style="font-size:18px; margin-bottom:15px;">Active Designations</h2>
+        <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Designation Name</th>
+              </tr>
+            </thead>
+            <tbody id="adminDesignationsTableBody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `,
+  admin_payroll: `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <label style="font-weight:600; color:var(--ink-soft);">Select Cycle:</label>
+            <input type="month" id="edu_payrollMonthFilter" onchange="loadEdutechPayroll(this.value)" style="padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; outline:none;">
+        </div>
+        <button onclick="runEdutechBulkPayrun()" class="btn-primary" style="margin-top:0;">🚀 Run Bulk Payrun</button>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
+        <div class="stat-card">
+            <h3>Active Cycle</h3>
+            <div class="val" id="edu_stat_pay_cycle" style="font-size: 18px;">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Salary Pool</h3>
+            <div class="val" id="edu_stat_total_pool" style="font-family: monospace;">-</div>
+        </div>
+        <div class="stat-card" style="border: 1px solid rgba(255, 122, 0, 0.2); background: rgba(255, 122, 0, 0.02);">
+            <h3 style="color:var(--orange);">Accrued Spend (Live)</h3>
+            <div class="val" id="edu_stat_total_accrued" style="font-family: monospace; color:var(--orange); font-size:24px;">$0.00000</div>
+        </div>
+        <div class="stat-card">
+            <h3>Burn Rate</h3>
+            <div class="val" id="edu_stat_burn_rate" style="font-family: monospace;">-</div>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.01); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border);">
+        <div style="text-align: center;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Paid Cycles</div>
+            <div style="font-size: 20px; font-weight: 700; color: #00e676; margin-top: 5px;" id="edu_stat_paid_amount">$0.00</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;"><span id="edu_stat_paid_count">0</span> staff paid</div>
+        </div>
+        <div style="text-align: center; border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border);">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Processing Cycles</div>
+            <div style="font-size: 20px; font-weight: 700; color: #ffeb3b; margin-top: 5px;" id="edu_stat_proc_count">0</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">staff in queue</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Unprocessed / Pending</div>
+            <div style="font-size: 20px; font-weight: 700; color: #ff9100; margin-top: 5px;" id="edu_stat_pend_count">0</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">staff pending</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name & Designation</th>
+                    <th>Department</th>
+                    <th>Base Salary</th>
+                    <th>Accrued This Month (Live)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="edu_payrollTableBody">
+                <tr><td colspan="7" style="text-align:center;">Loading payroll register...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- individual process payroll modal -->
+    <div class="modal" id="edu_processPayrollModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal-content" style="max-width: 700px; text-align: left; background:#07101a; border:1px solid var(--glass-border); padding: 25px; border-radius: 12px; position: relative;">
+            <button class="close-modal" onclick="closeModal('edu_processPayrollModal')" style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+            <h2 style="margin-bottom: 20px; display:flex; align-items:center; gap:10px; font-size: 20px;">
+                <span style="color:var(--orange);">📊</span>
+                <span>Salary Calculator & Pay Processing</span>
+            </h2>
+            <div style="font-size:13px; color:var(--muted); margin-bottom:15px;">
+                Staff Member: <strong id="edu_calcEmpName" style="color:white;">-</strong> (<span id="edu_calcEmpId">-</span>)
+            </div>
+            
+            <form id="edu_processPayrollForm" onsubmit="submitEdutechPayroll(event)">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; margin-bottom:20px;">
+                    <!-- Earnings Column -->
+                    <div class="glass-card" style="padding:15px; background:rgba(0,230,118,0.01); border:1px solid rgba(0,230,118,0.15); border-radius:8px;">
+                        <h3 style="font-size:14px; margin-bottom:15px; color:#00e676; border-bottom:1px solid rgba(0,230,118,0.15); padding-bottom:5px;">Earnings & Allowances</h3>
+                        
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Base Monthly Salary ($)</label>
+                            <input type="number" id="edu_calcBaseSalary" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;" required>
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">House Rent Allowance (HRA 10%) ($)</label>
+                            <input type="number" id="edu_calcHra" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Dearness Allowance (DA 5%) ($)</label>
+                            <input type="number" id="edu_calcDa" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Medical Allowance ($)</label>
+                            <input type="number" id="edu_calcMedical" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Performance Bonus / Custom ($)</label>
+                            <input type="number" id="edu_calcBonus" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div style="text-align:right; font-weight:700; font-size:13px; margin-top:10px; color:#00e676;">
+                            Total Earnings: <span id="edu_calcTotalAllowances">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Deductions Column -->
+                    <div class="glass-card" style="padding:15px; background:rgba(239,68,68,0.01); border:1px solid rgba(239,68,68,0.15); border-radius:8px;">
+                        <h3 style="font-size:14px; margin-bottom:15px; color:#ef4444; border-bottom:1px solid rgba(239,68,68,0.15); padding-bottom:5px;">Deductions & Taxes</h3>
+                        
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Provident Fund (PF 12%) ($)</label>
+                            <input type="number" id="edu_calcPf" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Professional Tax (PT 2%) ($)</label>
+                            <input type="number" id="edu_calcPt" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Loss of Pay (LOP proration) ($)</label>
+                            <div style="font-size:10px; color:var(--muted); margin-bottom:4px;" id="edu_calcAbsentDays">0 day(s) absent</div>
+                            <input type="number" id="edu_calcLop" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Custom Deductions ($)</label>
+                            <input type="number" id="edu_calcCustomDeduction" step="0.01" oninput="updateEdutechCalculatorTotals()" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--glass-border); background:#0c1928; color:white; outline:none;">
+                        </div>
+                        <div style="text-align:right; font-weight:700; font-size:13px; margin-top:40px; color:#ef4444;">
+                            Total Deductions: <span id="edu_calcTotalDeductions">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Result Summary Row -->
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <div>
+                        <span style="font-size:11px; color:var(--muted); text-transform:uppercase;">Net Payable Take-Home</span>
+                        <div id="edu_calcNetPay" style="font-size:24px; font-weight:700; color:#00e676; font-family:monospace; margin-top:4px;">$0.00</div>
+                        <input type="hidden" id="edu_calcNetPayRaw">
+                    </div>
+                    <div class="field" style="margin-bottom:0; width:180px;">
+                        <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--muted);">Payment Run Status</label>
+                        <select id="edu_calcStatus" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:#0c1928; color:white;">
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" onclick="closeModal('edu_processPayrollModal')" class="btn-ghost" style="padding:10px 20px; font-size:13px; color:white; border-color:var(--glass-border);">Cancel</button>
+                    <button type="submit" class="btn-primary" style="margin-top:0; padding:10px 20px; font-size:13px;">💾 Save & Process Run</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dynamic Printable Payslip Modal -->
+    <div class="modal" id="edu_payslipViewModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; overflow-y:auto;">
+        <div class="modal-content" style="max-width: 680px; text-align: left; background: transparent; box-shadow: none; border: none; padding:0; position:relative;">
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button class="btn-primary" style="margin-top:0; padding:6px 12px; font-size:12px;" onclick="printEdutechPayslip()">🖨️ Print Payslip</button>
+                <button class="btn-ghost" style="margin-left: 8px; padding:6px 12px; font-size:12px; color:white; border-color:white;" onclick="closeModal('edu_payslipViewModal')">Close</button>
+            </div>
+            <div id="edu_payslipPrintArea">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+  `,
+  admin_assignments: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Create Course Assignment</h3>
+        <form id="adminAssignmentForm" onsubmit="submitAdminAssignment(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="assignCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Assignment Title</label>
+            <input type="text" id="assignTitle" placeholder="e.g. Build REST API" required>
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea id="assignDesc" rows="4" placeholder="Assignment details..." required></textarea>
+          </div>
+          <div class="field">
+            <label>Due Date</label>
+            <input type="datetime-local" id="assignDueDate" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Create Assignment</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Active Assignments</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Title</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody id="adminAssignmentsTableBody">
+              <tr><td colspan="3">Loading assignments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `,
+  admin_quizzes: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Create Technical Quiz</h3>
+        <form id="adminQuizForm" onsubmit="submitAdminQuiz(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="quizCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Quiz Title</label>
+            <input type="text" id="quizTitle" placeholder="e.g. Javascript Loops" required>
+          </div>
+          <div class="field">
+            <label>Duration (Minutes)</label>
+            <input type="number" id="quizDuration" value="15" min="1" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Create Quiz</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Active Quizzes Database</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Quiz Title</th>
+                <th>Duration</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminQuizzesTableBody">
+              <tr><td colspan="4">Loading quizzes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Question Builder Modal -->
+    <div class="modal" id="adminQuestionModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="modal-content" style="max-width:480px;">
+        <span class="modal-close" onclick="closeModal('adminQuestionModal')">&times;</span>
+        <h2 style="font-size:18px; margin-bottom:15px;">Add Quiz Question</h2>
+        <form id="adminQuestionForm" onsubmit="submitAdminQuestion(event)">
+          <input type="hidden" id="qQuizId">
+          <div class="field">
+            <label>Question Text</label>
+            <input type="text" id="qText" placeholder="e.g. What is the scope of 'const'?" required>
+          </div>
+          <div class="field">
+            <label>Option A</label>
+            <input type="text" id="qOptA" required>
+          </div>
+          <div class="field">
+            <label>Option B</label>
+            <input type="text" id="qOptB" required>
+          </div>
+          <div class="field">
+            <label>Option C</label>
+            <input type="text" id="qOptC" required>
+          </div>
+          <div class="field">
+            <label>Option D</label>
+            <input type="text" id="qOptD" required>
+          </div>
+          <div class="field">
+            <label>Correct Option</label>
+            <select id="qCorrect" required>
+              <option value="A">Option A</option>
+              <option value="B">Option B</option>
+              <option value="C">Option C</option>
+              <option value="D">Option D</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Add Question</button>
+        </form>
+      </div>
+    </div>
+  `,
+  admin_resources: `
+    <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Publish Cohort Resource</h3>
+        <form id="adminResourceForm" onsubmit="submitAdminResource(event)">
+          <div class="field">
+            <label>Course Cohort</label>
+            <select id="resCourseSelect" required></select>
+          </div>
+          <div class="field">
+            <label>Resource Title</label>
+            <input type="text" id="resTitle" placeholder="e.g. React lifecycle chart" required>
+          </div>
+          <div class="field">
+            <label>Resource Type</label>
+            <select id="resType" required>
+              <option value="PDF">PDF Document</option>
+              <option value="Slides">Slides / Presentation</option>
+              <option value="Video">Video Tutorial Link</option>
+              <option value="Cheatsheet">Cheat Sheet / Reference</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Resource Asset Link / URL</label>
+            <input type="url" id="resUrl" placeholder="https://drive.google.com/..." required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Publish Resource</button>
+        </form>
+      </div>
+      <div class="glass-card" style="padding:20px;">
+        <h3 style="font-size:16px; margin-bottom:15px;">Published Resources</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Resource Name</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="adminResourcesTableBody">
+              <tr><td colspan="3">Loading resources...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  `,
+  admin_student_leaves: `
+    <div class="glass-card" style="padding:20px;">
+      <h3 style="font-size:16px; margin-bottom:15px;">Pending Student Leave Applications</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Email</th>
+              <th>Leave Type</th>
+              <th>Duration</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action / Reviewer</th>
+            </tr>
+          </thead>
+          <tbody id="adminStudentLeavesTableBody">
+            <tr><td colspan="7" style="text-align:center;">Loading leave records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `,
+  tickets: `
+    <div id="adminTicketsView" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <h3 style="font-size:16px; margin:0;">Platform Support Tickets</h3>
+        <select id="ticketStatusFilter" onchange="loadAdminTickets()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg-soft); color:white; outline:none; font-size:13px;">
+          <option value="">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User Details</th>
+              <th>Portal / Role</th>
+              <th>Subject</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Created At</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTicketsTableBody">
+            <tr><td colspan="8" style="text-align:center;">Loading all support tickets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="userTicketsView" style="display:none;">
+      <div class="grid-two-cols" style="display:grid; grid-template-columns:1fr 1.6fr; gap:20px; align-items:start;">
+        <!-- Submit Ticket Form -->
+        <div class="glass-card" style="padding:20px; margin-bottom:0;">
+          <h3 style="font-size:16px; margin-bottom:15px;">Create Support Ticket</h3>
+          <form id="createTicketForm" onsubmit="submitTicket(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="field">
+              <label>Subject / Short Title</label>
+              <input type="text" id="ticketTitle" placeholder="e.g. Mentor schedule sync issue" required>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select id="ticketCategory" required>
+                <option value="Technical">Technical</option>
+                <option value="Billing">Billing</option>
+                <option value="HR">HR / Workplace</option>
+                <option value="Academic">Academic / Mentorship</option>
+                <option value="General">General / Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Priority</label>
+              <select id="ticketPriority" required>
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Description of Issue</label>
+              <textarea id="ticketDescription" rows="4" placeholder="Please describe the problem in detail..." required></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Submit Ticket</button>
+          </form>
+        </div>
+
+        <!-- Ticket History List -->
+        <div class="glass-card" style="padding:20px; margin-bottom:0;">
+          <h3 style="font-size:16px; margin-bottom:15px;">My Ticket History</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject & Description</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Created At</th>
+                  <th>Status</th>
+                  <th>Resolution Details</th>
+                </tr>
+              </thead>
+              <tbody id="userTicketsTableBody">
+                <tr><td colspan="6" style="text-align:center;">Loading ticket history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolve Ticket Modal -->
+    <div class="modal" id="resolveTicketModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="modal-content" style="max-width:480px;">
+        <span class="modal-close" onclick="closeModal('resolveTicketModal')">&times;</span>
+        <h2 style="font-size:18px; margin-bottom:15px;">Resolve Support Ticket</h2>
+        <form id="resolveTicketForm" onsubmit="submitResolveTicket(event)">
+          <input type="hidden" id="resolveTicketId">
+          <div class="field">
+            <label>Ticket Subject</label>
+            <div id="resolveTicketSubject" style="font-weight:600; padding:8px 0; color:#fff;"></div>
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <div id="resolveTicketDesc" style="color:var(--muted); font-size:13px; max-height:80px; overflow-y:auto; background:rgba(255,255,255,0.02); padding:8px; border-radius:8px; border:1px solid var(--glass-border); line-height:1.4;"></div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label>Update Status</label>
+            <select id="resolveTicketStatus" required>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved" selected>Resolved</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Admin Resolution Notes / Comments</label>
+            <textarea id="resolveTicketNotes" rows="4" placeholder="Enter resolution details or next steps..." required></textarea>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:20px;">
+            <button type="button" onclick="closeModal('resolveTicketModal')" class="btn-ghost" style="flex:1;">Cancel</button>
+            <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Resolution</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `
+};
+
+// Render panels into DOM
+const panelContainer = document.getElementById("panelContainer");
+Object.keys(layouts).forEach(panelId => {
+  const div = document.createElement("div");
+  div.id = `panel_${panelId}`;
+  div.className = "section-panel";
+  div.innerHTML = layouts[panelId];
+  panelContainer.appendChild(div);
+});
+
+// Switching sidebar tabs controller
+function switchTab(panelId) {
+  document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+  document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
+
+  const targetLink = document.getElementById(`link_${panelId}`);
+  if (targetLink) targetLink.classList.add("active");
+
+  const targetPanel = document.getElementById(`panel_${panelId}`);
+  if (targetPanel) {
+    targetPanel.classList.add("active");
+    loadPanelData(panelId);
+  }
+
+  // Update header text based on page tab
+  const headers = {
+    student_courses: { title: "My Workspace", sub: "Review your enrolled technical cohort tracks." },
+    explore_courses: { title: "Explore Catalog", sub: "Register for active academy classes and roadmaps." },
+    student_live_classes: { title: "Upcoming Live Classes", sub: "Join active mentor screen shares and reviews." },
+    student_profile: { title: "Profile Management", sub: "Update your system profile details." },
+    admin_courses: { title: "Manage Courses", sub: "Configure and update EduTech catalog pricing models." },
+    admin_enrollments: { title: "Track Enrollments", sub: "Inspect cohort enrollments and statistics." },
+    admin_live: { title: "Live Cohort Classes", sub: "Manage and broadcast platform screen-share sessions." },
+    admin_employees: { title: "Manage Staff/Trainers", sub: "Register and manage academy staff profiles." },
+    admin_designations: { title: "Designations Registry", sub: "Configure custom designation roles for employees." },
+    admin_payroll: { title: "Payroll Suite", sub: "Review live accrued staff payroll, process pay runs, and generate printable statements." },
+    admin_assignments: { title: "Manage Assignments", sub: "Configure technical cohort assignments coursework." },
+    admin_quizzes: { title: "Manage Quizzes", sub: "Create assessments and quiz question databases." },
+    admin_resources: { title: "Manage Resources", sub: "Publish decks, slides, and syllabus guides." },
+    admin_student_leaves: { title: "Student Leaves Review", sub: "Inspect, approve, or reject student leave requests." },
+    tickets: { title: "Support Tickets", sub: "Manage, review, or submit platform support issues." }
+  };
+
+  if (headers[panelId]) {
+    document.getElementById("dashTitle").textContent = headers[panelId].title;
+    document.getElementById("dashSub").textContent = headers[panelId].sub;
+  }
+}
+
+// Side menu composition
+function renderSidebar() {
+  const sidebar = document.getElementById("sidebarMenu");
+  sidebar.innerHTML = "";
+  
+  if (!user) return;
+  
+  let tabs = [];
+  if (user.role === 'admin') {
+    tabs = [
+      { id: "admin_courses", label: "Manage Courses", icon: "book-open" },
+      { id: "admin_enrollments", label: "Enrollments Manager", icon: "users" },
+      { id: "admin_live", label: "Live Classes Mgmt", icon: "video" },
+      { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
+      { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
+      { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
+      { id: "admin_student_leaves", label: "Student Leaves", icon: "calendar" },
+      { id: "admin_employees", label: "Manage Staff/Trainers", icon: "users-2" },
+      { id: "admin_designations", label: "Designations Registry", icon: "briefcase" },
+      { id: "admin_payroll", label: "Payroll Suite", icon: "wallet" },
+      { id: "tickets", label: "Support Tickets", icon: "help-circle" },
+      { id: "student_profile", label: "My Profile", icon: "user" }
+    ];
+  } else if (user.role === 'employee') {
+    tabs = [
+      { id: "admin_courses", label: "Manage Courses", icon: "book-open" },
+      { id: "admin_enrollments", label: "Enrollments Manager", icon: "users" },
+      { id: "admin_live", label: "Live Classes Mgmt", icon: "video" },
+      { id: "admin_assignments", label: "Manage Assignments", icon: "clipboard-list" },
+      { id: "admin_quizzes", label: "Manage Quizzes", icon: "brain" },
+      { id: "admin_resources", label: "Manage Resources", icon: "folder-open" },
+      { id: "admin_student_leaves", label: "Student Leaves", icon: "calendar" },
+      { id: "tickets", label: "Support Tickets", icon: "help-circle" },
+      { id: "student_profile", label: "My Profile", icon: "user" }
+    ];
+  } else {
+    tabs = [
+      { id: "student_courses", label: "My Enrolled Courses", icon: "graduation-cap" },
+      { id: "explore_courses", label: "Explore Programs", icon: "compass" },
+      { id: "student_live_classes", label: "Upcoming Live Classes", icon: "video" },
+      { id: "student_profile", label: "My Profile", icon: "user" }
+    ];
+  }
+
+  tabs.forEach(tab => {
+    const a = document.createElement("a");
+    a.id = `link_${tab.id}`;
+    a.className = "sidebar-link";
+    a.innerHTML = `<i data-lucide="${tab.icon}" class="sidebar-icon"></i><span>${tab.label}</span>`;
+    a.onclick = () => switchTab(tab.id);
+    sidebar.appendChild(a);
+  });
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+  if (tabs.length > 0) {
+    switchTab(tabs[0].id);
+  }
+}
+
+// Dynamic Panel Controllers loader
+function loadPanelData(panelId) {
+  if (panelId === "student_courses") loadStudentCourses();
+  else if (panelId === "explore_courses") loadExploreCourses();
+  else if (panelId === "student_live_classes") loadStudentLiveClasses();
+  else if (panelId === "student_profile") loadProfileData();
+  else if (panelId === "admin_courses") loadAdminCourses();
+  else if (panelId === "admin_enrollments") loadAdminEnrollments();
+  else if (panelId === "admin_live") loadAdminLive();
+  else if (panelId === "admin_employees") loadAdminEmployees();
+  else if (panelId === "admin_designations") loadAdminDesignations();
+  else if (panelId === "admin_payroll") loadEdutechPayroll();
+  else if (panelId === "admin_assignments") loadAdminAssignments();
+  else if (panelId === "admin_quizzes") loadAdminQuizzes();
+  else if (panelId === "admin_resources") loadAdminResources();
+  else if (panelId === "admin_student_leaves") loadAdminStudentLeaves();
+  else if (panelId === "tickets") loadTicketsPanel();
+}
+
+// ==================== PANEL METHODS ====================
+
+// 1. STUDENT VIEW: My Enrolled Courses
+async function loadStudentCourses() {
+  const grid = document.getElementById("myCoursesGrid");
+  grid.innerHTML = "<p>Loading your courses...</p>";
+  
+  try {
+    const list = await apiCall("/api/edutech/my-courses");
+    if (!list.length) {
+      grid.innerHTML = `
+        <div class="glass-card" style="grid-column: 1/-1; text-align:center; padding:40px;">
+          <p style="color:var(--muted); margin-bottom: 15px;">You are currently not enrolled in any technical cohorts.</p>
+          <button class="btn-primary" onclick="switchTab('explore_courses')">Browse Programs</button>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(c => `
+      <div class="course-card">
+        <div class="course-header">
+          <div class="course-icon-box">
+            <i data-lucide="${getIconName(c.icon)}" style="width:20px;height:20px;"></i>
+          </div>
+          <span class="badge ${c.level.toLowerCase()}">${c.level}</span>
+        </div>
+        <div>
+          <h3 class="course-title">${c.title}</h3>
+          <div class="course-meta">
+            <span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>${c.duration}</span>
+            <span><i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;color:#facc15;"></i>${c.rating}</span>
+          </div>
+        </div>
+        <div class="course-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div style="font-size:12px; color:var(--muted)">Paid: <strong>${formatRupee(c.price_paid)}</strong></div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a href="invoice.html?enrollment_id=${c.enrollment_id || c.id}" target="_blank" class="btn-ghost" style="padding:4px 8px; font-size:11px; text-decoration:none; display:inline-block; border-color:rgba(0,150,255,0.3); color:var(--secondary)">Invoice</a>
+            <span class="badge active" style="font-size:10px; margin-top:0;">${c.enrollment_status}</span>
+          </div>
+        </div>
+      </div>
+    `).join("");
+    lucide.createIcons();
+  } catch (err) {
+    grid.innerHTML = "<p style='color:#ef4444;'>Failed to load enrolled courses.</p>";
+  }
+}
+
+// 2. STUDENT VIEW: Explore Catalog
+async function loadExploreCourses() {
+  const grid = document.getElementById("exploreCoursesGrid");
+  grid.innerHTML = "<p>Loading active program catalog...</p>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    const enrolled = await apiCall("/api/edutech/my-courses");
+    const enrolledIds = enrolled.map(e => e.id);
+ 
+    if (!courses.length) {
+      grid.innerHTML = "<p style='color:var(--muted);'>No active programs found in catalog.</p>";
+      return;
+    }
+ 
+    grid.innerHTML = courses.map(c => {
+      const isEnrolled = enrolledIds.includes(c.id);
+      return `
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-icon-box">
+              <i data-lucide="${getIconName(c.icon)}" style="width:20px;height:20px;"></i>
+            </div>
+            <span class="badge ${c.level.toLowerCase()}">${c.level}</span>
+          </div>
+          <div>
+            <h3 class="course-title">${c.title}</h3>
+            <div class="course-meta">
+              <span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>${c.duration}</span>
+              <span><i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;color:#facc15;"></i>${c.rating}</span>
+            </div>
+          </div>
+          <div class="course-footer">
+            <div>
+              <span class="course-price">${formatRupee(c.price)}</span>
+              ${c.old_price ? `<span class="course-price-old">${formatRupee(c.old_price)}</span>` : ''}
+            </div>
+            ${isEnrolled 
+              ? `<button class="btn-ghost" style="padding:6px 12px; font-size:12px; color:var(--success); border-color:rgba(34,197,94,0.3)" disabled>✓ Enrolled</button>`
+              : `<button class="btn-primary" style="padding:6px 12px; font-size:12px;" onclick="window.location.href='payment.html?course_id=${c.id}'">Enroll Now</button>`
+            }
+          </div>
+        </div>
+      `;
+    }).join("");
+    lucide.createIcons();
+  } catch (err) {
+    grid.innerHTML = "<p style='color:#ef4444;'>Failed to load program catalog.</p>";
+  }
+}
+
+async function enrollStudent(courseId) {
+  if (confirm("Confirm registration enrollment in this tech program?")) {
+    try {
+      const res = await apiCall("/api/edutech/enroll", "POST", { course_id: courseId });
+      alert("Successfully enrolled in cohort!");
+      loadExploreCourses();
+    } catch(e) {}
+  }
+}
+
+// 3. STUDENT VIEW: Upcoming live classes
+async function loadStudentLiveClasses() {
+  const tbody = document.getElementById("studentLiveTableBody");
+  tbody.innerHTML = "<tr><td colspan='5'>Loading cohort schedules...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/my-live-classes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;color:var(--muted);'>No upcoming live sessions found for your enrolled tracks.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td style="font-weight:600;color:white;">${c.course_title}</td>
+        <td>${c.title}</td>
+        <td><span style="color:#0096ff;font-weight:500;">${c.platform}</span></td>
+        <td>${formatDate(c.scheduled_at)}</td>
+        <td>
+          <a href="${c.meeting_link}" target="_blank" class="btn-primary" style="padding:6px 12px; font-size:12px; text-decoration:none;">
+            <i data-lucide="video" style="width:12px;height:12px;margin-right:4px;"></i> Join Class
+          </a>
+        </td>
+      </tr>
+    `).join("");
+    lucide.createIcons();
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='5' style='color:#ef4444;'>Failed to load live sessions.</td></tr>";
+  }
+}
+
+// 4. COMMON PROFILE LOAD/SAVE
+async function loadProfileData() {
+  document.getElementById("profName").value = user.name;
+  document.getElementById("profEmail").value = user.email;
+}
+
+async function saveProfile(e) {
+  e.preventDefault();
+  const name = document.getElementById("profName").value.strip ? document.getElementById("profName").value.strip() : document.getElementById("profName").value;
+  const password = document.getElementById("profPassword").value;
+  
+  const payload = { name };
+  if (password) payload.password = password;
+
+  try {
+    const res = await apiCall("/auth/profile", "PUT", payload);
+    alert("Profile settings saved successfully!");
+    
+    // Update local storage representation
+    user.name = name;
+    localStorage.setItem("edutech_user", JSON.stringify(user));
+    document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
+    document.getElementById("profPassword").value = "";
+  } catch(e) {}
+}
+
+
+// 5. ADMIN VIEW: Manage courses CRUD
+async function loadAdminCourses() {
+  const tbody = document.getElementById("adminCoursesTableBody");
+  tbody.innerHTML = "<tr><td colspan='8'>Loading database catalog...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/courses");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Courses catalog is empty. Create one now.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td>#${c.id}</td>
+        <td style="font-weight:600;color:white;">${c.title}</td>
+        <td><span class="badge ${c.level.toLowerCase()}">${c.level}</span></td>
+        <td>${c.duration}</td>
+        <td style="font-weight:600;">${formatRupee(c.price)}</td>
+        <td>${c.old_price ? formatRupee(c.old_price) : '-'}</td>
+        <td><span class="badge ${c.is_active ? 'active' : 'pending'}">${c.is_active ? 'Active' : 'Archived'}</span></td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="editCourseModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">Edit</button>
+            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCourse(${c.id})">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='8' style='color:#ef4444;'>Failed to load course listings.</td></tr>";
+  }
+}
+
+function showAddCourseModal() {
+  document.getElementById("courseModalTitle").textContent = "Add New Course";
+  document.getElementById("courseId").value = "";
+  document.getElementById("courseTitle").value = "";
+  document.getElementById("courseLevel").value = "Beginner";
+  document.getElementById("courseDuration").value = "";
+  document.getElementById("coursePrice").value = "";
+  document.getElementById("courseOldPrice").value = "";
+  document.getElementById("courseIcon").value = "layers";
+  document.getElementById("courseActiveField").style.display = "none";
+  openModal("courseModal");
+}
+
+function editCourseModal(course) {
+  document.getElementById("courseModalTitle").textContent = "Edit Program Details";
+  document.getElementById("courseId").value = course.id;
+  document.getElementById("courseTitle").value = course.title;
+  document.getElementById("courseLevel").value = course.level;
+  document.getElementById("courseDuration").value = course.duration;
+  document.getElementById("coursePrice").value = course.price;
+  document.getElementById("courseOldPrice").value = course.old_price || "";
+  document.getElementById("courseIcon").value = course.icon;
+  document.getElementById("courseActive").checked = course.is_active;
+  document.getElementById("courseActiveField").style.display = "flex";
+  openModal("courseModal");
+}
+
+document.getElementById("courseForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const id = document.getElementById("courseId").value;
+  const title = document.getElementById("courseTitle").value;
+  const level = document.getElementById("courseLevel").value;
+  const duration = document.getElementById("courseDuration").value;
+  const price = Number(document.getElementById("coursePrice").value);
+  const oldPriceVal = document.getElementById("courseOldPrice").value;
+  const old_price = oldPriceVal ? Number(oldPriceVal) : null;
+  const icon = document.getElementById("courseIcon").value;
+  const is_active = document.getElementById("courseActive").checked;
+
+  const payload = { title, level, duration, price, old_price, icon, is_active };
+  
+  try {
+    if (id) {
+      await apiCall(`/api/edutech/courses/${id}`, "PUT", payload);
+      alert("Course updated successfully!");
+    } else {
+      await apiCall("/api/edutech/courses", "POST", payload);
+      alert("New course added to catalog!");
+    }
+    closeModal("courseModal");
+    loadAdminCourses();
+  } catch(e) {}
+});
+
+async function deleteCourse(id) {
+  if (confirm("Are you sure you want to permanently delete this course? Warning: This will delete associated enrollments.")) {
+    try {
+      await apiCall(`/api/edutech/courses/${id}`, "DELETE");
+      alert("Course deleted successfully!");
+      loadAdminCourses();
+    } catch(e) {}
+  }
+}
+
+// 6. ADMIN VIEW: Enrollments Track
+async function loadAdminEnrollments() {
+  const tbody = document.getElementById("adminEnrollTableBody");
+  const isEmployee = user && user.role === 'employee';
+  tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}">Loading student listings...</td></tr>`;
+  
+  try {
+    const list = await apiCall("/api/edutech/enrollments");
+    document.getElementById("statTotalEnrollments").textContent = list.length;
+    
+    if (isEmployee) {
+      document.getElementById("revenueCard").style.display = "none";
+      document.getElementById("thPricePaid").style.display = "none";
+    } else {
+      document.getElementById("revenueCard").style.display = "block";
+      document.getElementById("thPricePaid").style.display = "table-cell";
+      const revenue = list.reduce((acc, curr) => acc + (curr.price_paid || 0), 0);
+      document.getElementById("statRevenue").textContent = formatRupee(revenue);
+    }
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}" style="text-align:center;">No cohort student enrollments recorded.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(e => `
+      <tr>
+        <td>#${e.id}</td>
+        <td style="font-weight:600;color:white;">${e.student_name}</td>
+        <td>${e.student_email}</td>
+        <td style="color:var(--secondary);font-weight:500;">${e.course_title}</td>
+        ${isEmployee ? '' : `<td style="font-weight:600;">${formatRupee(e.price_paid)}</td>`}
+        <td>${formatDate(e.enrolled_at)}</td>
+        <td><span class="badge active">${e.status}</span></td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}" style="color:#ef4444;">Failed to load student enrollments.</td></tr>`;
+  }
+}
+
+// 7. ADMIN VIEW: Schedule live class
+async function loadAdminLive() {
+  // Populate target course selector
+  const select = document.getElementById("liveCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Cohort --</option>" + 
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    // Load scheduled classes list
+    loadAdminLiveClassesList();
+  } catch(e) {
+    select.innerHTML = "<option value=''>-- Failed to Load Courses --</option>";
+  }
+}
+
+async function loadAdminLiveClassesList() {
+  const tbody = document.getElementById("adminLiveTableBody");
+  tbody.innerHTML = "<tr><td colspan='5'>Loading cohort schedules...</td></tr>";
+  
+  try {
+    const list = await apiCall("/api/edutech/live-classes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;color:var(--muted);'>No live class screenings scheduled.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td style="font-weight:600;color:white;">${c.course_title}</td>
+        <td>${c.title}</td>
+        <td><span style="color:#0096ff;font-weight:500;">${c.platform}</span></td>
+        <td>${formatDate(c.scheduled_at)}</td>
+        <td>
+          <button class="btn-danger" onclick="cancelLiveClass(${c.id})">Cancel</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch(e) {
+    tbody.innerHTML = "<tr><td colspan='5' style='color:#ef4444;'>Failed to load live sessions.</td></tr>";
+  }
+}
+
+async function submitLiveClass(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("liveCourseSelect").value);
+  const title = document.getElementById("liveTitle").value;
+  const platform = document.getElementById("livePlatform").value;
+  const meeting_link = document.getElementById("liveLink").value;
+  const scheduled_at = document.getElementById("liveTime").value;
+
+  const payload = { course_id, title, platform, meeting_link, scheduled_at };
+
+  try {
+    await apiCall("/api/edutech/live-classes", "POST", payload);
+    alert("Live class scheduled successfully!");
+    
+    // Reset form
+    document.getElementById("liveTitle").value = "";
+    document.getElementById("liveLink").value = "";
+    document.getElementById("liveTime").value = "";
+    
+    loadAdminLiveClassesList();
+  } catch(e) {}
+}
+
+async function cancelLiveClass(id) {
+  if (confirm("Are you sure you want to cancel and remove this scheduled live class session?")) {
+    try {
+      await apiCall(`/api/edutech/live-classes/${id}`, "DELETE");
+      alert("Live class screening session cancelled.");
+      loadAdminLiveClassesList();
+    } catch(e) {}
+  }
+}
+
+
+// ==================== HELPER METHODS ====================
+
+function getIconName(cat) {
+  const map = {
+    layers: 'layers',
+    code: 'code-2',
+    coffee: 'coffee',
+    brain: 'brain',
+    chart: 'bar-chart',
+    cloud: 'cloud',
+    server: 'server',
+    shield: 'shield',
+    palette: 'palette'
+  };
+  return map[cat] || 'layers';
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return "-";
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
+  } catch(e) {
+    return isoStr;
+  }
+}
+
+// 8. ADMIN VIEW: Manage staff (CRUD)
+let cachedEmployeesList = [];
+
+async function loadAdminEmployees() {
+  const tbody = document.getElementById("adminEmployeesTableBody");
+  tbody.innerHTML = "<tr><td colspan='7'>Loading staff details...</td></tr>";
+  
+  try {
+    const list = await apiCall("/employees?portal=edutech");
+    cachedEmployeesList = list;
+    renderEmployeesTable(list);
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='7' style='color:#ef4444;'>Failed to load employees.</td></tr>";
+  }
+}
+
+function renderEmployeesTable(list) {
+  const tbody = document.getElementById("adminEmployeesTableBody");
+  if (!list.length) {
+    tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;color:var(--muted);'>No employees found.</td></tr>";
+    return;
+  }
+  tbody.innerHTML = list.map(e => `
+    <tr>
+      <td style="font-weight:600;color:white;">${e.employee_id}</td>
+      <td style="font-weight:600;">${e.name}</td>
+      <td>${e.email}</td>
+      <td>${e.department || '-'}</td>
+      <td><span style="color:#ff7a00;font-weight:500;">${e.designation || '-'}</span></td>
+      <td><span class="badge ${e.status.toLowerCase() === 'active' ? 'active' : 'pending'}">${e.status}</span></td>
+      <td>
+        <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="showEditEmployeeModal(${JSON.stringify(e).replace(/"/g, '&quot;')})">Edit</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function filterAdminEmployees() {
+  const q = document.getElementById("empSearch").value.toLowerCase().trim();
+  if (!q) {
+    renderEmployeesTable(cachedEmployeesList);
+    return;
+  }
+  const filtered = cachedEmployeesList.filter(e => 
+    e.name.toLowerCase().includes(q) || 
+    e.employee_id.toLowerCase().includes(q) ||
+    (e.department && e.department.toLowerCase().includes(q)) ||
+    (e.designation && e.designation.toLowerCase().includes(q))
+  );
+  renderEmployeesTable(filtered);
+}
+
+async function populateDesignationsDropdown(targetSelectId, selectedValue = "") {
+  const select = document.getElementById(targetSelectId);
+  select.innerHTML = "<option value=''>-- Loading Designations --</option>";
+  try {
+    const list = await apiCall("/designations");
+    select.innerHTML = "<option value=''>-- Select Designation --</option>" + 
+      list.map(d => `<option value="${d.name}" ${d.name === selectedValue ? 'selected' : ''}>${d.name}</option>`).join("");
+  } catch(e) {
+    select.innerHTML = "<option value=''>-- Error Loading --</option>";
+  }
+}
+
+async function showAddEmployeeModal() {
+  document.getElementById("employeeModalTitle").textContent = "Register New Employee";
+  document.getElementById("empId").value = "";
+  document.getElementById("empCorpId").value = "";
+  document.getElementById("empCorpId").disabled = false;
+  document.getElementById("empName").value = "";
+  document.getElementById("empEmail").value = "";
+  document.getElementById("empEmail").disabled = false;
+  document.getElementById("empPassword").value = "";
+  document.getElementById("empPassword").placeholder = "Auto-generated if blank";
+  document.getElementById("empPhone").value = "";
+  document.getElementById("empDept").value = "Academy";
+  document.getElementById("empJoinDate").value = new Date().toISOString().split('T')[0];
+  document.getElementById("empStatusField").style.display = "none";
+  
+  await populateDesignationsDropdown("empDesg");
+  openModal("employeeModal");
+}
+
+async function showEditEmployeeModal(emp) {
+  document.getElementById("employeeModalTitle").textContent = "Edit Employee Details";
+  document.getElementById("empId").value = emp.id;
+  document.getElementById("empCorpId").value = emp.employee_id;
+  document.getElementById("empCorpId").disabled = true;
+  document.getElementById("empName").value = emp.name;
+  document.getElementById("empEmail").value = emp.email;
+  document.getElementById("empEmail").disabled = true;
+  document.getElementById("empPassword").value = "";
+  document.getElementById("empPassword").placeholder = "Leave blank to keep current";
+  document.getElementById("empPhone").value = emp.phone_number || "";
+  document.getElementById("empDept").value = emp.department || "";
+  document.getElementById("empJoinDate").value = emp.date_of_joining ? emp.date_of_joining.split('T')[0] : "";
+  document.getElementById("empStatus").value = emp.status || "Active";
+  document.getElementById("empStatusField").style.display = "block";
+  
+  await populateDesignationsDropdown("empDesg", emp.designation);
+  openModal("employeeModal");
+}
+
+async function submitEmployee(e) {
+  e.preventDefault();
+  const id = document.getElementById("empId").value;
+  const employee_id = document.getElementById("empCorpId").value;
+  const name = document.getElementById("empName").value.trim();
+  const email = document.getElementById("empEmail").value.trim();
+  const password = document.getElementById("empPassword").value;
+  const phone_number = document.getElementById("empPhone").value.trim();
+  const department = document.getElementById("empDept").value.trim();
+  const designation = document.getElementById("empDesg").value;
+  const date_of_joining = document.getElementById("empJoinDate").value;
+  const status = document.getElementById("empStatus").value;
+
+  if (!designation) {
+    alert("Please select a designation.");
+    return;
+  }
+
+  const payload = { name, phone_number, department, designation, date_of_joining, status, portal: "edutech" };
+  if (password) payload.password = password;
+
+  try {
+    if (id) {
+      await apiCall(`/employees/${id}`, "PUT", payload);
+      alert("Employee details updated successfully!");
+    } else {
+      payload.employee_id = employee_id;
+      payload.email = email;
+      const res = await apiCall("/employees", "POST", payload);
+      alert(res.message || "Employee registered successfully!");
+    }
+    closeModal("employeeModal");
+    loadAdminEmployees();
+  } catch(e) {}
+}
+
+
+// 9. ADMIN VIEW: Manage designations CRUD
+async function loadAdminDesignations() {
+  const tbody = document.getElementById("adminDesignationsTableBody");
+  tbody.innerHTML = "<tr><td colspan='2'>Loading designations...</td></tr>";
+  
+  try {
+    const list = await apiCall("/designations");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>No designations found.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(d => `
+      <tr>
+        <td>#${d.id}</td>
+        <td style="font-weight:600;color:white;">${d.name}</td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='2' style='color:#ef4444;'>Failed to load designations.</td></tr>";
+  }
+}
+
+async function submitDesignation(e) {
+  e.preventDefault();
+  const name = document.getElementById("desgName").value.trim();
+  
+  try {
+    await apiCall("/designations", "POST", { name });
+    alert("New designation registered successfully!");
+    document.getElementById("desgName").value = "";
+    loadAdminDesignations();
+  } catch(e) {}
+}
+
+// ==================== EDUTECH REALTIME PAYROLL MODULE ====================
+
+let edutechPayrollTickerInterval = null;
+let currentEdutechPayrollMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+let cachedEdutechPayrollLedger = [];
+let cachedEdutechPayrollSummary = null;
+
+async function loadEdutechPayroll(selectedMonth = null) {
+  if (selectedMonth) {
+    currentEdutechPayrollMonth = selectedMonth;
+  }
+  
+  const monthInput = document.getElementById("edu_payrollMonthFilter");
+  if (monthInput) monthInput.value = currentEdutechPayrollMonth;
+  
+  try {
+    cachedEdutechPayrollSummary = await apiCall(`/api/payroll/summary?month=${currentEdutechPayrollMonth}&portal=edutech`);
+    cachedEdutechPayrollLedger = await apiCall(`/api/payroll/ledger?month=${currentEdutechPayrollMonth}&portal=edutech`);
+    
+    renderEdutechPayrollSummary(cachedEdutechPayrollSummary);
+    renderEdutechPayrollLedger(cachedEdutechPayrollLedger);
+    startEdutechPayrollTickers(cachedEdutechPayrollSummary, cachedEdutechPayrollLedger);
+  } catch (err) {
+    console.error("Failed to load Edutech payroll:", err);
+  }
+}
+
+function renderEdutechPayrollSummary(summary) {
+  document.getElementById("edu_stat_pay_cycle").textContent = formatMonthLabel(summary.month);
+  document.getElementById("edu_stat_total_pool").textContent = formatCurrency(summary.total_monthly_payroll);
+  document.getElementById("edu_stat_burn_rate").textContent = `${formatCurrency(summary.burn_rate_sec)}/sec`;
+  document.getElementById("edu_stat_paid_amount").textContent = formatCurrency(summary.paid_amount);
+  
+  const c = summary.status_counts;
+  document.getElementById("edu_stat_paid_count").textContent = c.Paid || 0;
+  document.getElementById("edu_stat_proc_count").textContent = c.Processing || 0;
+  document.getElementById("edu_stat_pend_count").textContent = c.Pending || 0;
+}
+
+function startEdutechPayrollTickers(summary, ledger) {
+  if (edutechPayrollTickerInterval) {
+    clearInterval(edutechPayrollTickerInterval);
+  }
+  
+  const totalAccruedElem = document.getElementById("edu_stat_total_accrued");
+  const burnRate = summary.burn_rate_sec;
+  const elapsedSeconds = summary.elapsed_seconds;
+  const startTime = Date.now();
+  
+  const daysInMonth = getDaysInMonthString(summary.month);
+  const secsInMonth = daysInMonth * 24 * 3600;
+  
+  edutechPayrollTickerInterval = setInterval(() => {
+    const deltaSeconds = (Date.now() - startTime) / 1000;
+    const totalElapsed = elapsedSeconds + deltaSeconds;
+    
+    const cappedElapsed = Math.min(totalElapsed, secsInMonth);
+    
+    const accruedTotal = cappedElapsed * burnRate;
+    if (totalAccruedElem) {
+      totalAccruedElem.innerHTML = `<span class="ticker-prefix">$</span>${accruedTotal.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
+    }
+    
+    ledger.forEach(emp => {
+      const empTicker = document.getElementById(`edu_emp_ticker_${emp.employee_db_id}`);
+      if (empTicker) {
+        const empRate = emp.base_salary / secsInMonth;
+        const empAccrued = cappedElapsed * empRate;
+        empTicker.textContent = formatCurrency(empAccrued, 4);
+      }
+    });
+  }, 100);
+}
+
+function renderEdutechPayrollLedger(ledger) {
+  const tbody = document.getElementById("edu_payrollTableBody");
+  if (!tbody) return;
+  
+  if (!ledger.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted);">No active staff found.</td></tr>`;
+    return;
+  }
+  
+  tbody.innerHTML = ledger.map(emp => {
+    const statusClass = emp.status.toLowerCase();
+    const actionBtn = emp.status === 'Paid' 
+      ? `<button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="viewEdutechPayslipModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Payslip</button>`
+      : `<button class="btn-primary" style="padding:4px 8px; font-size:11px; margin-top:0;" onclick="openEdutechPayModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Process</button>
+         <button class="btn-ghost" style="padding:4px 8px; font-size:11px; margin-left:5px;" onclick="viewEdutechPayslipModal(${JSON.stringify(emp).replace(/"/g, '&quot;')})">Preview</button>`;
+         
+    return `
+      <tr>
+        <td style="font-weight:600; color:white;">${emp.employee_id}</td>
+        <td>
+          <div style="font-weight:600; color:white;">${emp.name}</div>
+          <div style="font-size:10px; color:var(--muted);">${emp.designation || '-'}</div>
+        </td>
+        <td>${emp.department || '-'}</td>
+        <td style="font-weight:600;">${formatCurrency(emp.base_salary)}</td>
+        <td id="edu_emp_ticker_${emp.employee_db_id}" style="font-family:monospace; color:var(--orange); font-weight:600;">$0.0000</td>
+        <td><span class="badge ${statusClass === 'paid' ? 'active' : 'pending'}">${emp.status}</span></td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+let selectedEdutechEmployeePay = null;
+function openEdutechPayModal(emp) {
+  selectedEdutechEmployeePay = emp;
+  
+  document.getElementById("edu_calcEmpName").textContent = emp.name;
+  document.getElementById("edu_calcEmpId").textContent = emp.employee_id;
+  document.getElementById("edu_calcBaseSalary").value = emp.base_salary;
+  
+  let calc = emp.calc_details || {};
+  document.getElementById("edu_calcHra").value = (calc.hra || (emp.base_salary * 0.10)).toFixed(2);
+  document.getElementById("edu_calcDa").value = (calc.da || (emp.base_salary * 0.05)).toFixed(2);
+  document.getElementById("edu_calcMedical").value = (calc.flat || 1250.00).toFixed(2);
+  document.getElementById("edu_calcBonus").value = "0.00";
+  
+  document.getElementById("edu_calcPf").value = (calc.pf || (emp.base_salary * 0.12)).toFixed(2);
+  document.getElementById("edu_calcPt").value = (calc.pt || (emp.base_salary * 0.02)).toFixed(2);
+  
+  const absentDays = emp.absent_days_count || 0;
+  const daysInMonth = getDaysInMonthString(currentEdutechPayrollMonth);
+  const calculatedLop = absentDays * (emp.base_salary / daysInMonth);
+  document.getElementById("edu_calcAbsentDays").textContent = `${absentDays} day(s) absent`;
+  document.getElementById("edu_calcLop").value = calculatedLop.toFixed(2);
+  document.getElementById("edu_calcCustomDeduction").value = "0.00";
+  
+  document.getElementById("edu_calcStatus").value = emp.status === 'Pending' ? 'Processing' : emp.status;
+  
+  updateEdutechCalculatorTotals();
+  openModal("edu_processPayrollModal");
+}
+
+function updateEdutechCalculatorTotals() {
+  const base = parseFloat(document.getElementById("edu_calcBaseSalary").value) || 0.0;
+  
+  const hra = parseFloat(document.getElementById("edu_calcHra").value) || 0.0;
+  const da = parseFloat(document.getElementById("edu_calcDa").value) || 0.0;
+  const med = parseFloat(document.getElementById("edu_calcMedical").value) || 0.0;
+  const bonus = parseFloat(document.getElementById("edu_calcBonus").value) || 0.0;
+  const totalAllowances = hra + da + med + bonus;
+  
+  const pf = parseFloat(document.getElementById("edu_calcPf").value) || 0.0;
+  const pt = parseFloat(document.getElementById("edu_calcPt").value) || 0.0;
+  const lop = parseFloat(document.getElementById("edu_calcLop").value) || 0.0;
+  const customDed = parseFloat(document.getElementById("edu_calcCustomDeduction").value) || 0.0;
+  const totalDeductions = pf + pt + lop + customDed;
+  
+  const netPay = base + totalAllowances - totalDeductions;
+  
+  document.getElementById("edu_calcTotalAllowances").textContent = formatCurrency(totalAllowances);
+  document.getElementById("edu_calcTotalDeductions").textContent = formatCurrency(totalDeductions);
+  document.getElementById("edu_calcNetPay").textContent = formatCurrency(netPay);
+  document.getElementById("edu_calcNetPayRaw").value = netPay.toFixed(2);
+}
+
+async function submitEdutechPayroll(event) {
+  if (event) event.preventDefault();
+  if (!selectedEdutechEmployeePay) return;
+  
+  const base = parseFloat(document.getElementById("edu_calcBaseSalary").value) || 0.0;
+  const hra = parseFloat(document.getElementById("edu_calcHra").value) || 0.0;
+  const da = parseFloat(document.getElementById("edu_calcDa").value) || 0.0;
+  const med = parseFloat(document.getElementById("edu_calcMedical").value) || 0.0;
+  const bonus = parseFloat(document.getElementById("edu_calcBonus").value) || 0.0;
+  const totalAllowances = hra + da + med + bonus;
+  
+  const pf = parseFloat(document.getElementById("edu_calcPf").value) || 0.0;
+  const pt = parseFloat(document.getElementById("edu_calcPt").value) || 0.0;
+  const lop = parseFloat(document.getElementById("edu_calcLop").value) || 0.0;
+  const customDed = parseFloat(document.getElementById("edu_calcCustomDeduction").value) || 0.0;
+  const totalDeductions = pf + pt + lop + customDed;
+  
+  const netPay = parseFloat(document.getElementById("edu_calcNetPayRaw").value) || 0.0;
+  const status = document.getElementById("edu_calcStatus").value;
+  
+  try {
+    const res = await apiCall("/api/payroll/process", "POST", {
+      employee_db_id: selectedEdutechEmployeePay.employee_db_id,
+      month: currentEdutechPayrollMonth,
+      base_salary: base,
+      allowances: totalAllowances,
+      deductions: totalDeductions,
+      net_pay: netPay,
+      status: status
+    });
+    
+    alert(res.message || "Payroll processed successfully!");
+    closeModal("edu_processPayrollModal");
+    loadEdutechPayroll(currentEdutechPayrollMonth);
+  } catch(err) {
+    console.error("Failed to save Edutech payroll run:", err);
+  }
+}
+
+async function runEdutechBulkPayrun() {
+  if (!confirm(`Are you sure you want to run bulk payroll for ${formatMonthLabel(currentEdutechPayrollMonth)}? This will auto-generate runs for all pending active Edutech staff.`)) {
+    return;
+  }
+  
+  try {
+    const res = await apiCall("/api/payroll/bulk-process", "POST", {
+      month: currentEdutechPayrollMonth,
+      status: "Paid",
+      portal: "edutech"
+    });
+    
+    alert(res.message);
+    loadEdutechPayroll(currentEdutechPayrollMonth);
+  } catch (err) {
+    console.error("Failed to run bulk payroll:", err);
+  }
+}
+
+function viewEdutechPayslipModal(emp) {
+  const slipArea = document.getElementById("edu_payslipPrintArea");
+  if (!slipArea) return;
+  
+  const monthLabel = formatMonthLabel(currentEdutechPayrollMonth);
+  const isPreview = !emp.is_generated;
+  
+  let allowancesBreakdown = "";
+  let deductionsBreakdown = "";
+  
+  if (isPreview) {
+    const calc = emp.calc_details || {};
+    allowancesBreakdown = `
+      <tr><td>Basic Salary</td><td style="text-align:right;">${formatCurrency(emp.base_salary)}</td></tr>
+      <tr><td>House Rent Allowance (HRA 10%)</td><td style="text-align:right;">${formatCurrency(calc.hra || (emp.base_salary * 0.10))}</td></tr>
+      <tr><td>Dearness Allowance (DA 5%)</td><td style="text-align:right;">${formatCurrency(calc.da || (emp.base_salary * 0.05))}</td></tr>
+      <tr><td>Medical Allowance</td><td style="text-align:right;">${formatCurrency(calc.flat || 1250.00)}</td></tr>
+    `;
+    deductionsBreakdown = `
+      <tr><td>Provident Fund (PF 12%)</td><td style="text-align:right;">${formatCurrency(calc.pf || (emp.base_salary * 0.12))}</td></tr>
+      <tr><td>Professional Tax (PT 2%)</td><td style="text-align:right;">${formatCurrency(calc.pt || (emp.base_salary * 0.02))}</td></tr>
+      <tr><td>Loss of Pay (LOP) [${emp.absent_days_count || 0} Absent Days]</td><td style="text-align:right;">${formatCurrency(calc.lop || 0.00)}</td></tr>
+    `;
+  } else {
+    allowancesBreakdown = `
+      <tr><td>Basic Salary</td><td style="text-align:right;">${formatCurrency(emp.base_salary)}</td></tr>
+      <tr><td>Allowances & Bonuses</td><td style="text-align:right;">${formatCurrency(emp.allowances)}</td></tr>
+    `;
+    deductionsBreakdown = `
+      <tr><td>Provident Fund, PT & LOP</td><td style="text-align:right;">${formatCurrency(emp.deductions)}</td></tr>
+    `;
+  }
+  
+  slipArea.innerHTML = `
+    <div style="border: 2px solid var(--glass-border); padding: 30px; border-radius: 12px; background: rgba(12, 25, 40, 0.95); color: white; max-width: 600px; margin: auto; font-family: sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--glass-border); padding-bottom: 20px; margin-bottom: 20px;">
+        <div>
+          <h2 style="margin: 0; font-size: 22px; color: var(--orange); font-weight: 700; letter-spacing: 0.5px;">EDUTECH ACADEMY</h2>
+          <p style="margin: 3px 0 0 0; font-size: 11px; color: var(--muted); text-transform: uppercase;">Staff Pay Slip</p>
+        </div>
+        <div style="text-align: right;">
+          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #fff;">Pay Cycle: ${monthLabel}</p>
+          <span style="display: inline-block; margin-top: 5px; font-size: 10px; background:rgba(255,122,0,0.15); color:var(--orange); padding:4px 8px; border-radius:4px; font-weight:bold;">${emp.status.toUpperCase()}</span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px; line-height: 1.5; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border);">
+        <div>
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block;">Employee Details</span>
+          <strong style="font-size: 14px; color:#fff; display:block; margin-top:3px;">${emp.name}</strong>
+          <span style="color:var(--muted);">${emp.designation || '-'}</span><br>
+          <span style="color:var(--muted);">Dept: ${emp.department || '-'}</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block;">Employee ID</span>
+          <strong style="font-size: 14px; color:#fff; display:block; margin-top:3px;">${emp.employee_id}</strong>
+          <span style="color: var(--muted); text-transform: uppercase; font-size: 10px; display:block; margin-top: 10px;">Email ID</span>
+          <span style="color:var(--muted); font-family: monospace;">${emp.email}</span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+        <div>
+          <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; color: var(--orange); font-size: 13px;">Earnings & Allowances</h4>
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+            ${allowancesBreakdown}
+          </table>
+        </div>
+        <div>
+          <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; color: #ef4444; font-size: 13px;">Deductions</h4>
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+            ${deductionsBreakdown}
+          </table>
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+        <div>
+          <span style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Net Take-Home Pay</span>
+          <div style="font-size: 26px; font-weight: 700; color: #00e676; margin-top: 4px; font-family: monospace;">${formatCurrency(emp.net_pay)}</div>
+        </div>
+        <div style="text-align: right; font-size: 10px; color: var(--muted); max-width: 150px; line-height: 1.4;">
+          * Generated statement for EduTech Academy.
+        </div>
+      </div>
+    </div>
+  `;
+  
+  openModal("edu_payslipViewModal");
+}
+
+function printEdutechPayslip() {
+  const printContent = document.getElementById("edu_payslipPrintArea").innerHTML;
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(`
+    <html>
+    <head>
+      <title>Payslip - EduTech Academy</title>
+      <style>
+        body { background: #000; color: #fff; padding: 20px; font-family: sans-serif; }
+      </style>
+    </head>
+    <body>
+      ${printContent}
+      <script>window.onload = function() { window.print(); }</` + `script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+function formatMonthLabel(monthStr) {
+  if (!monthStr) return "";
+  const parts = monthStr.split("-");
+  const dateObj = new Date(parts[0], parts[1] - 1, 1);
+  return dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function formatCurrency(val, decimals = 2) {
+  if (val === undefined || val === null) val = 0;
+  return "$" + parseFloat(val).toLocaleString("en-US", { 
+    minimumFractionDigits: decimals, 
+    maximumFractionDigits: decimals 
+  });
+}
+
+function getDaysInMonthString(monthStr) {
+  try {
+    const parts = monthStr.split("-");
+    return new Date(parts[0], parts[1], 0).getDate();
+  } catch(e) {
+    return 30;
+  }
+}
+
+// ==================== ADMIN: ACADEMICS MANAGEMENT (ASSIGNMENTS, QUIZZES, RESOURCES) ====================
+
+// 1. MANAGE ASSIGNMENTS
+async function loadAdminAssignments() {
+  const tbody = document.getElementById("adminAssignmentsTableBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading assignments...</td></tr>";
+  
+  // Populate course selector
+  const select = document.getElementById("assignCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/assignments");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No assignments created yet.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(a => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${a.course_title}</td>
+        <td style="font-weight:600; color:white;">${a.title}</td>
+        <td>${formatDate(a.due_date)}</td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='3' style='color:#ef4444;'>Failed to load assignments listings.</td></tr>";
+  }
+}
+
+async function submitAdminAssignment(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("assignCourseSelect").value);
+  const title = document.getElementById("assignTitle").value.trim();
+  const description = document.getElementById("assignDesc").value.trim();
+  const due_date = document.getElementById("assignDueDate").value;
+  
+  try {
+    await apiCall("/api/edutech/assignments", "POST", { course_id, title, description, due_date });
+    alert("Assignment successfully assigned to cohort!");
+    document.getElementById("assignTitle").value = "";
+    document.getElementById("assignDesc").value = "";
+    document.getElementById("assignDueDate").value = "";
+    loadAdminAssignments();
+  } catch(err) {
+    alert("Failed to create assignment: " + err.message);
+  }
+}
+
+// 2. MANAGE QUIZZES
+async function loadAdminQuizzes() {
+  const tbody = document.getElementById("adminQuizzesTableBody");
+  tbody.innerHTML = "<tr><td colspan='4'>Loading technical quizzes...</td></tr>";
+  
+  const select = document.getElementById("quizCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/quizzes");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No technical quizzes registered.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(q => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${q.course_title}</td>
+        <td style="font-weight:600; color:white;">${q.title}</td>
+        <td>${q.duration_minutes} mins</td>
+        <td>
+          <button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openQuestionBuilderModal(${q.quiz_id}, '${q.title.replace(/'/g, "\\'")}')">+ Question</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='4' style='color:#ef4444;'>Failed to load technical quizzes.</td></tr>";
+  }
+}
+
+async function submitAdminQuiz(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("quizCourseSelect").value);
+  const title = document.getElementById("quizTitle").value.trim();
+  const duration_minutes = Number(document.getElementById("quizDuration").value);
+  
+  try {
+    await apiCall("/api/edutech/quizzes", "POST", { course_id, title, duration_minutes });
+    alert("Quiz successfully created!");
+    document.getElementById("quizTitle").value = "";
+    loadAdminQuizzes();
+  } catch(err) {
+    alert("Failed to create quiz: " + err.message);
+  }
+}
+
+function openQuestionBuilderModal(quizId, quizTitle) {
+  document.getElementById("qQuizId").value = quizId;
+  document.getElementById("qText").value = "";
+  document.getElementById("qOptA").value = "";
+  document.getElementById("qOptB").value = "";
+  document.getElementById("qOptC").value = "";
+  document.getElementById("qOptD").value = "";
+  document.getElementById("qCorrect").value = "A";
+  openModal("adminQuestionModal");
+}
+
+async function submitAdminQuestion(e) {
+  e.preventDefault();
+  const quizId = document.getElementById("qQuizId").value;
+  const question_text = document.getElementById("qText").value.trim();
+  const option_a = document.getElementById("qOptA").value.trim();
+  const option_b = document.getElementById("qOptB").value.trim();
+  const option_c = document.getElementById("qOptC").value.trim();
+  const option_d = document.getElementById("qOptD").value.trim();
+  const correct_option = document.getElementById("qCorrect").value;
+  
+  try {
+    await apiCall(`/api/edutech/quizzes/${quizId}/questions`, "POST", {
+      question_text, option_a, option_b, option_c, option_d, correct_option
+    });
+    alert("Question added to quiz database successfully!");
+    closeModal("adminQuestionModal");
+  } catch(err) {
+    alert("Failed to add question: " + err.message);
+  }
+}
+
+// 3. MANAGE RESOURCES
+async function loadAdminResources() {
+  const tbody = document.getElementById("adminResourcesTableBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading curriculum materials...</td></tr>";
+  
+  const select = document.getElementById("resCourseSelect");
+  select.innerHTML = "<option value=''>-- Loading Courses --</option>";
+  
+  try {
+    const courses = await apiCall("/api/edutech/courses");
+    select.innerHTML = "<option value=''>-- Select Course Track --</option>" +
+      courses.map(c => `<option value="${c.id}">${c.title} (${c.level})</option>`).join("");
+      
+    const list = await apiCall("/api/edutech/resources");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No study resources cataloged.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(r => `
+      <tr>
+        <td style="color:var(--secondary); font-weight:500;">${r.course_title}</td>
+        <td style="font-weight:600; color:white;">${r.title}</td>
+        <td><span class="badge intermediate" style="font-size:9.5px;">${r.resource_type}</span></td>
+      </tr>
+    `).join("");
+  } catch(err) {
+    tbody.innerHTML = "<tr><td colspan='3' style='color:#ef4444;'>Failed to load resources listings.</td></tr>";
+  }
+}
+
+async function submitAdminResource(e) {
+  e.preventDefault();
+  const course_id = Number(document.getElementById("resCourseSelect").value);
+  const title = document.getElementById("resTitle").value.trim();
+  const resource_type = document.getElementById("resType").value;
+  const resource_url = document.getElementById("resUrl").value.trim();
+  
+  try {
+    await apiCall("/api/edutech/resources", "POST", { course_id, title, resource_type, resource_url });
+    alert("Curriculum reference resources published successfully!");
+    document.getElementById("resTitle").value = "";
+    document.getElementById("resUrl").value = "";
+    loadAdminResources();
+  } catch(err) {
+    alert("Failed to publish resource: " + err.message);
+  }
+}
+
+function escapeHTML(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// 4. STUDENT LEAVES REVIEW
+async function loadAdminStudentLeaves() {
+  const tbody = document.getElementById("adminStudentLeavesTableBody");
+  tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>Loading student leave records...</td></tr>";
+  try {
+    const list = await apiCall("/api/edutech/trainer/leaves");
+    if (!list.length) {
+      tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:var(--muted);'>No student leave applications registered.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = list.map(l => {
+      const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+      const start = new Date(l.start_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const end = new Date(l.end_date).toLocaleDateString("en-IN", {dateStyle: "medium"});
+      const reviewer = l.approved_by_name || "-";
+      
+      let actionBtn = "";
+      if (l.status === "Pending") {
+        actionBtn = `
+          <button onclick="reviewStudentLeave(${l.id}, 'Approved')" class="btn-primary" style="padding:4px 8px; font-size:11px; background:var(--success); box-shadow:none;">Approve</button>
+          <button onclick="reviewStudentLeave(${l.id}, 'Rejected')" class="btn-ghost" style="padding:4px 8px; font-size:11px; border-color:#ef4444; color:#ef4444;">Reject</button>
+        `;
+      } else {
+        actionBtn = `<span style="font-size:12px; color:var(--muted);">${reviewer}</span>`;
+      }
+      
+      return `
+        <tr>
+          <td><strong>${escapeHTML(l.student_name)}</strong></td>
+          <td>${escapeHTML(l.student_email)}</td>
+          <td>${l.leave_type}</td>
+          <td>
+            <div style="font-weight:600; color:white;">${leaveDays} Days</div>
+            <div style="font-size:10px; color:var(--muted);">${start} to ${end}</div>
+          </td>
+          <td style="max-width:200px; word-break:break-word;">${escapeHTML(l.reason || "-")}</td>
+          <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='7' style='color:#ef4444; text-align:center;'>Failed to load student leaves.</td></tr>";
+  }
+}
+
+async function reviewStudentLeave(id, action) {
+  if (confirm(`Are you sure you want to set this leave application to ${action}?`)) {
+    try {
+      await apiCall(`/api/edutech/trainer/leaves/${id}`, "PUT", { status: action });
+      alert(`Leave request ${action.toLowerCase()} successfully.`);
+      loadAdminStudentLeaves();
+    } catch(err) {
+      alert("Failed to update status: " + err.message);
+    }
+  }
+}
+
+// --- Support Ticketing System JS Controllers ---
+
+async function loadTicketsPanel() {
+  if (user.role === 'admin') {
+    document.getElementById("adminTicketsView").style.display = "block";
+    document.getElementById("userTicketsView").style.display = "none";
+    loadAdminTickets();
+  } else {
+    document.getElementById("adminTicketsView").style.display = "none";
+    document.getElementById("userTicketsView").style.display = "block";
+    loadUserTickets();
+  }
+}
+
+async function loadAdminTickets() {
+  const tbody = document.getElementById("adminTicketsTableBody");
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading all support tickets...</td></tr>';
+  
+  try {
+    const filterVal = document.getElementById("ticketStatusFilter").value;
+    const list = await apiCall("/api/tickets?scope=all");
+    
+    const filtered = filterVal ? list.filter(t => t.status === filterVal) : list;
+    
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--muted);">No support tickets found.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = filtered.map(t => {
+      const statusClass = t.status.toLowerCase().replace(" ", "-");
+      const priorityClass = t.priority.toLowerCase();
+      const actionBtn = (t.status === 'Resolved' || t.status === 'Closed')
+        ? `<span style="font-size:12px; color:var(--muted);">Resolved by ${t.resolved_by_name || 'Admin'}</span>`
+        : `<button onclick="openResolveTicketModal(${JSON.stringify(t).replace(/"/g, '&quot;')})" class="btn-primary" style="padding:4px 8px; font-size:11px; margin:0;">Resolve</button>`;
+        
+      const userPortalLabel = t.user_portal === 'edutech' ? 'EduTech' : 'ElevateIQ';
+      const userRoleLabel = t.user_role.toUpperCase();
+      
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600; color:#fff;">${escapeHTML(t.user_name)}</div>
+            <div style="font-size:11px; color:var(--muted);">${escapeHTML(t.user_email)}</div>
+          </td>
+          <td>
+            <div style="font-weight:500;">${userPortalLabel}</div>
+            <div style="font-size:10px; color:var(--primary);">${userRoleLabel}</div>
+          </td>
+          <td><div style="font-weight:600; color:#fff; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHTML(t.title)}">${escapeHTML(t.title)}</div></td>
+          <td>${t.category}</td>
+          <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString("en-IN")}</td>
+          <td><span class="badge ${statusClass}">${t.status}</span></td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
+    
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load tickets. Please try again later.</td></tr>`;
+  }
+}
+
+async function loadUserTickets() {
+  const tbody = document.getElementById("userTicketsTableBody");
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading ticket history...</td></tr>';
+  
+  try {
+    const list = await apiCall("/api/tickets");
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">You have not submitted any support tickets.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(t => {
+      const statusClass = t.status.toLowerCase().replace(" ", "-");
+      const priorityClass = t.priority.toLowerCase();
+      const resolution = t.admin_notes 
+        ? `<div style="font-size:11.5px; color:#00e676; max-width:220px;" title="${escapeHTML(t.admin_notes)}">${escapeHTML(t.admin_notes)}</div>` 
+        : `<span style="font-size:11px; color:var(--muted);">Awaiting review</span>`;
+        
+      return `
+        <tr>
+          <td><strong>${escapeHTML(t.title)}</strong><div style="font-size:10.5px; color:var(--muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHTML(t.description)}">${escapeHTML(t.description)}</div></td>
+          <td>${t.category}</td>
+          <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString("en-IN")}</td>
+          <td><span class="badge ${statusClass}">${t.status}</span></td>
+          <td>${resolution}</td>
+        </tr>
+      `;
+    }).join("");
+    
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#ef4444; text-align:center;">Failed to load tickets. Please try again later.</td></tr>`;
+  }
+}
+
+async function submitTicket(e) {
+  e.preventDefault();
+  const title = document.getElementById("ticketTitle").value.trim();
+  const category = document.getElementById("ticketCategory").value;
+  const priority = document.getElementById("ticketPriority").value;
+  const description = document.getElementById("ticketDescription").value.trim();
+  
+  try {
+    await apiCall("/api/tickets", "POST", { title, category, priority, description });
+    alert("Support ticket submitted successfully!");
+    document.getElementById("createTicketForm").reset();
+    loadUserTickets();
+  } catch(err) {
+    alert("Failed to submit ticket: " + err.message);
+  }
+}
+
+let activeResolveTicket = null;
+function openResolveTicketModal(ticket) {
+  activeResolveTicket = ticket;
+  document.getElementById("resolveTicketId").value = ticket.id;
+  document.getElementById("resolveTicketSubject").textContent = ticket.title;
+  document.getElementById("resolveTicketDesc").textContent = ticket.description;
+  document.getElementById("resolveTicketNotes").value = ticket.admin_notes || "";
+  document.getElementById("resolveTicketStatus").value = "Resolved";
+  openModal("resolveTicketModal");
+}
+
+async function submitResolveTicket(e) {
+  e.preventDefault();
+  const id = document.getElementById("resolveTicketId").value;
+  const status = document.getElementById("resolveTicketStatus").value;
+  const admin_notes = document.getElementById("resolveTicketNotes").value.trim();
+  
+  try {
+    await apiCall(`/api/tickets/${id}`, "PUT", { status, admin_notes });
+    alert("Ticket resolution saved successfully.");
+    closeModal("resolveTicketModal");
+    loadAdminTickets();
+  } catch(err) {
+    alert("Failed to resolve ticket: " + err.message);
+  }
+}
+
+// Trigger initial rendering
+renderSidebar();
+</script>
+
+</body>
+</html>

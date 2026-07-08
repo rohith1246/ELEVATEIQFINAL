@@ -1,0 +1,33 @@
+/* ==========================================================================
+   DESIGN TOKENS & DYNAMIC CSS VARIABLE DEFINITIONS
+   ========================================================================== */
+
+/* Load Poppins web font from Google Fonts API */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Branding Accent Color Gradients */
+  --orange: #FF8A3D;
+  --orange-dark: #F2701C;
+  --blue: #3FD0FF;
+  --blue-dark: #16A6E0;
+  --pink: #EC2F7B;
+  --pink-light: #F86BA5;
+
+  /* Typography & Foreground Palette */
+  --ink: #EAF2FF;
+  --muted: #9FB0CC;
+  
+  /* Borders and Dividers */
+  --line: rgba(255,255,255,0.12);
+  
+  /* Glassmorphism Structural Tokens */
+  --card-bg: rgba(14,20,38,0.60);
+  --glass-bg: rgba(14,20,38,0.60);
+  --glass-border: rgba(255,255,255,0.12);
+  
+  /* Muted Foreground Typography Shades */
+  --ink-soft: #9FB0CC;
+  --ink-faint: #7E8CA8;
+}
+

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>document.documentElement.classList.add('js');</script>
+<!-- ============ HTML HEAD & SEO METRICS ============ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElevateIQ — Learn Skills That Get You Hired</title>
+<meta name="description" content="ElevateIQ is a career-first tech academy: full stack, AI/ML, cloud & data programs built with hiring partners, mentors, and real placement outcomes.">
+
+<!-- SEO / Social Sharing OpenGraph Meta Targets -->
+<meta property="og:title" content="ElevateIQ — Learn Skills That Get You Hired">
+<meta property="og:description" content="Career-first tech programs in Full Stack, AI/ML, Cloud, Data & Design — built with 200+ hiring partners.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#020617">
+<!-- Favicon -->
+<link rel="shortcut icon" href="logo.png" type="image/png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+
+<!-- GFM Structured Schema Metadata -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "ElevateIQ",
+  "description": "Career-first tech academy offering Full Stack, AI/ML, Cloud, Data Science and Design programs.",
+  "sameAs": []
+}
+</script>
+</head>
+<body>
+
+<!-- ============ PRELOADER ============ -->
+<div id="preloader">
+  <div class="mark">EDUTECH</div>
+  <div class="bar"><i id="preload-bar"></i></div>
+</div>
+
+<!-- ============ NAVIGATION HEADER ============ -->
+<header id="navbar">
+  <div class="container nav-inner">
+<a href="/" class="logo" style="text-decoration: none;">
+  <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+    <img src="logo.png" alt="EduTech Logo" style="height: 32px; width: auto; border-radius: 0; object-fit: contain; margin-bottom: 2px;">
+    <span style="font-size: 9px; color: #3FD0FF; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-align: center;">EduTech</span>
+  </div>
+</a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#courses" class="nav-link">Courses</a>
+      <a href="#roadmap" class="nav-link">Roadmap</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#placements" class="nav-link">Placements</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="#contact" class="nav-link">Contact</a>
+      <a href="login.html" id="navLoginLink" class="nav-link nav-login-btn">Login</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#courses" class="btn btn-primary btn-sm magnetic">Explore Courses</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO SECTION ============ -->
+<section id="hero">
+  <div class="mesh-blob b1"></div>
+  <div class="mesh-blob b2"></div>
+  <div class="mesh-blob b3"></div>
+
+  <div class="container hero-inner" style="max-width: 1040px;">
+    <div class="hero-badge">
+      <div class="avatars">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='20' cy='14' r='9' fill='%239aa0a6'/><rect x='8' y='26' width='24' height='8' rx='4' fill='%239aa0a6'/></svg>" alt="">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='20' cy='14' r='9' fill='%239aa0a6'/><rect x='8' y='26' width='24' height='8' rx='4' fill='%239aa0a6'/></svg>" alt="">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='20' cy='14' r='9' fill='%239aa0a6'/><rect x='8' y='26' width='24' height='8' rx='4' fill='%239aa0a6'/></svg>" alt="">
+      </div>
+      <span>Empowering over 42,000+ candidates globally</span>
+    </div>
+
+    <h1>
+      <span class="hero-line"><span>Learn skills that</span></span>
+      <span class="hero-line"><span class="grad-text">actually get you</span></span>
+      <span class="hero-line"><span class="grad-text">hired.</span></span>
+    </h1>
+
+    <p class="sub">ElevateIQ combines industry-built curriculums with 1:1 mentorship, live corporate projects, and an placement team that works until you receive an offer.</p>
+
+    <div class="hero-ctas" style="margin-bottom: 50px;">
+      <a href="#courses" class="btn btn-primary magnetic">
+        Explore Career Tracks
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="#roadmap" class="btn btn-ghost magnetic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        See Curriculum Roadmap
+      </a>
+      <a href="../index.html" class="btn btn-ghost magnetic" style="color: var(--secondary); border-color: rgba(0, 150, 255, 0.35);">
+        Enterprise Solutions
+      </a>
+    </div>
+
+    <!-- macOS Browser Mockup Viewport -->
+    <div class="browser-mockup reveal" style="text-align: left; margin-bottom: 60px;">
+      <div class="browser-header">
+        <div class="browser-dots">
+          <div class="browser-dot red"></div>
+          <div class="browser-dot yellow"></div>
+          <div class="browser-dot green"></div>
+        </div>
+        <div class="browser-address">lms.elevateiq.com/candidate/workspace</div>
+      </div>
+      <div class="browser-body" style="padding: 30px; display: grid; grid-template-columns: 220px 1fr; gap: 30px;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="height: 14px; width: 90px; background: var(--primary); border-radius: 4px;"></div>
+          <div style="height: 8px; width: 120px; background: rgba(255,255,255,0.15); border-radius: 4px; margin-top: 10px;"></div>
+          <div style="height: 8px; width: 100px; background: rgba(255,255,255,0.06); border-radius: 4px;"></div>
+          <div style="height: 8px; width: 110px; background: rgba(255,255,255,0.06); border-radius: 4px;"></div>
+          <div style="height: 8px; width: 85px; background: rgba(255,255,255,0.06); border-radius: 4px;"></div>
+          <div style="height: 30px; border-radius: 8px; border: 1px dashed var(--line); margin-top: auto; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted);">AI Advisor Live</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px;">
+            <div>
+              <div style="font-size: 16px; font-weight: 700; color: white; margin-bottom: 4px;">Technical Dashboard</div>
+              <div style="font-size: 11.5px; color: var(--muted);">Cohort Track: Full Stack Development</div>
+            </div>
+            <div style="font-size: 11.5px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; padding: 4px 12px; border-radius: 100px; font-weight: 600;">ACTIVE LEARNER</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--line); padding: 16px; border-radius: 12px;">
+              <div style="font-size: 10px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Syllabus Progress</div>
+              <div style="font-size: 20px; font-weight: 700; color: white;">78% Completed</div>
+              <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 8px; overflow: hidden;"><div style="height: 100%; width: 78%; background: var(--primary);"></div></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--line); padding: 16px; border-radius: 12px;">
+              <div style="font-size: 10px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Assessments &amp; Quizzes</div>
+              <div style="font-size: 20px; font-weight: 700; color: white;">14 Passed</div>
+              <div style="font-size: 11px; color: var(--success); margin-top: 6px;">Avg Score: 92%</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--line); padding: 16px; border-radius: 12px;">
+              <div style="font-size: 10px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Daily Coding Streak</div>
+              <div style="font-size: 20px; font-weight: 700; color: #ff8a00;">🔥 14 Days</div>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Target: 21 Days</div>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--line); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-size: 13px; font-weight: 600; color: white;">Next Milestone: Placement Mock Interview</div>
+              <div style="font-size: 11px; color: var(--secondary);">Scheduled: Tomorrow, 2:00 PM</div>
+            </div>
+            <div style="height: 6px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 3px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><div class="num">4,200+</div><div class="label">Students Placed</div></div>
+      <div class="stat"><div class="num">₹18.5 LPA</div><div class="label">Highest Package</div></div>
+      <div class="stat"><div class="num">210+</div><div class="label">Hiring Partners</div></div>
+      <div class="stat"><div class="num">94%</div><div class="label">Placement Rate</div></div>
+    </div>
+  </div>
+
+  <div class="scroll-cue"><span>Scroll</span><div class="wheel"><i></i></div></div>
+
+  <!-- WhatsApp Floating Widget Button -->
+  <a class="whatsapp-fab" href="https://wa.me/916300855710" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-3.1-11.6 8.38 8.38 0 0 1 3.1 1.5"/>
+      <path d="M22 2v6M22 2l-6 6"/>
+    </svg>
+  </a>
+</section>
+
+<!-- ============ TRUSTED PARTNERS MARQUEE ============ -->
+<section style="padding:56px 0; border-bottom:1px solid var(--line);">
+  <div class="container" style="text-align:center; margin-bottom:26px;">
+    <span style="font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);">Our graduates now work at</span>
+  </div>
+  <div class="marquee-wrap">
+    <div class="marquee-track" id="marqueeTrack1">
+      <span>Nexora</span><span>Bluewave</span><span>Fintra</span><span>Orbital</span><span>Cloudnine Labs</span><span>Vertex Systems</span><span>Pinnacle</span><span>Quantum Retail</span>
+      <span>Nexora</span><span>Bluewave</span><span>Fintra</span><span>Orbital</span><span>Cloudnine Labs</span><span>Vertex Systems</span><span>Pinnacle</span><span>Quantum Retail</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT US SECTION ============ -->
+<section id="about" class="section">
+  <div class="container about-grid">
+    <div>
+      <div class="eyebrow reveal">Who We Are</div>
+      <h2 class="reveal">Built by hiring managers, not just teachers.</h2>
+      <p class="reveal" style="color:var(--muted); margin-top:16px; font-size:16px;">ElevateIQ started in 2019 when a group of engineering leads got tired of watching bootcamp graduates struggle in real interviews. So we rebuilt the curriculum backwards — starting from what companies actually screen for.</p>
+
+      <div class="value-list">
+        <div class="value-item reveal">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div><h4>Mission</h4><p>Close the gap between classroom learning and the job market with outcome-driven programs.</p></div>
+        </div>
+        <div class="value-item reveal">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div><h4>Vision</h4><p>A world where your skills — not your degree or zip code — decide your career ceiling.</p></div>
+        </div>
+        <div class="value-item reveal">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div><h4>Core Values</h4><p>Mentor-led, project-first, brutally honest feedback, and zero tolerance for filler content.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Timeline Progress -->
+    <div class="timeline reveal">
+      <div class="timeline-item">
+        <div class="yr">2019</div>
+        <h4>Founded in a co-working space</h4>
+        <p>Launched with a single 12-week Full Stack cohort of 24 students.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="yr">2021</div>
+        <h4>First 1,000 placements</h4>
+        <p>Crossed 1,000 alumni placed, with average time-to-offer under 45 days.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="yr">2023</div>
+        <h4>210+ hiring partners onboarded</h4>
+        <p>Formalized direct hiring pipelines with product, service, and startup partners.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="yr">2026</div>
+        <h4>AI-assisted learning paths launched</h4>
+        <p>Personalized roadmaps, resume analysis, and mock interviews powered by AI mentors.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INTERACTIVE PATH FINDER QUIZ ============ -->
+<section id="pathfinder" class="section reveal" style="border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:radial-gradient(circle at 50% 50%, rgba(63,208,255,0.04), transparent 60%); padding: 80px 0;">
+  <div class="container" style="max-width:800px; margin:auto;">
+    <div class="section-head center" style="margin-bottom:32px;">
+      <div class="eyebrow">Interactive Quiz</div>
+      <h2>Find your perfect learning track in 30 seconds</h2>
+      <p>Answer two simple questions, and our placement algorithm will match you to the ideal program.</p>
+    </div>
+
+    <div class="glass-card" style="padding: 40px; border-radius: 20px; border:1px solid var(--glass-border); box-shadow: 0 16px 40px rgba(0,0,0,0.3); position:relative;" id="quizBox">
+      
+      <!-- Step 1: Background -->
+      <div id="quizStep1" class="quiz-step">
+        <h3 style="font-size:19px; color:#fff; margin-bottom:20px; font-weight:600;">Step 1 of 2: What is your current coding background?</h3>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <button class="quiz-btn" onclick="selectStep1('beginner', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Absolute Beginner:</strong> I have zero coding experience and want to learn from scratch.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep1('basic', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Basic Knowledge:</strong> I know loops/variables, but want real project-building skills.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep1('experienced', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Experienced:</strong> I can code comfortably and want to specialize in AI, DevOps, or design.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Goal -->
+      <div id="quizStep2" class="quiz-step" style="display:none;">
+        <h3 style="font-size:19px; color:#fff; margin-bottom:20px; font-weight:600;">Step 2 of 2: What area of tech excites you most?</h3>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <button class="quiz-btn" onclick="selectStep2('visual', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Visual & Creative:</strong> Designing interfaces, coding responsive websites & mobile apps.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep2('analytical', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Data & Intelligence:</strong> Training machine models, AI automation, and database pipelines.</span>
+          </button>
+          <button class="quiz-btn" onclick="selectStep2('cloud', this)" style="display:flex; align-items:center; gap:16px; padding:18px 24px; border-radius:12px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; cursor:pointer; text-align:left; transition:all 0.25s ease; font-size:15px; font-weight:500; width: 100%;">
+            <span class="quiz-radio" style="width:16px; height:16px; min-width:16px; border-radius:50%; border:2px solid var(--muted); display:inline-block; transition:all 0.25s;"></span>
+            <span><strong>Infrastructure & Architecture:</strong> Cloud servers, secure networking, and DevOps pipelines.</span>
+          </button>
+        </div>
+        <button onclick="backToStep1()" style="margin-top:20px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; font-weight:500; display:flex; align-items:center; gap:4px; transition:color 0.25s;">
+          ← Back to Step 1
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div id="quizResult" class="quiz-step" style="display:none; text-align:center; animation: fadeIn 0.5s ease;">
+        <div style="font-size:48px; margin-bottom:12px;">🎉</div>
+        <h3 style="font-size:22px; color:#fff; margin-bottom:10px; font-weight:700;">Your Recommended Program is:</h3>
+        <h2 style="font-size:30px; background:linear-gradient(135deg, var(--blue), var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:16px; font-weight:800;" id="recTitle">Full Stack Web Development</h2>
+        <p style="color:var(--muted); max-width:550px; margin:0 auto 26px auto; font-size:15px; line-height:1.6;" id="recDesc">Get job-ready from scratch. Master frontend UI engineering (React) and backend services (Node.js/SQL) alongside direct hiring pipelines.</p>
+        
+        <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <a href="#courses" class="btn btn-primary" onclick="highlightCourseCard(event)" style="display:inline-flex; align-items:center; gap:8px;">View Program Details</a>
+          <button onclick="resetQuiz()" class="btn btn-ghost">Retake Quiz</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROGRAMS COURSES SECTION ============ -->
+<section id="courses" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Programs</div>
+      <h2>Pick a track. Ship real projects. Get interviewed.</h2>
+      <p>Every program ends with a capstone project reviewed by working engineers from partner companies.</p>
+    </div>
+
+    <!-- Course dynamic list search and filter pills -->
+    <div class="course-controls reveal">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="courseSearch" placeholder="Search programs…">
+      </div>
+      <div class="filter-pills" id="filterPills">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="Beginner">Beginner</button>
+        <button class="pill" data-filter="Intermediate">Intermediate</button>
+        <button class="pill" data-filter="Advanced">Advanced</button>
+      </div>
+    </div>
+
+    <!-- Dynamic Courses target card grid with skeleton loaders -->
+    <div class="courses-grid" id="coursesGrid">
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+      <div class="glass-card course-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line text"></div>
+          <div class="skeleton-line button"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE PATH ROADMAP RAIL ============ -->
+<section id="roadmap" class="section" style="background:var(--bg-soft);">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">The Path</div>
+      <h2 class="reveal">One continuous thread from zero to offer letter.</h2>
+      <p class="reveal">This is the exact sequence every ElevateIQ student moves through — the line fills in as you scroll, just like your progress will.</p>
+    </div>
+
+    <!-- Interactive vertical SVG progress rail -->
+    <div class="roadmap-rail">
+      <div class="rail-line"><i id="railFill"></i></div>
+
+      <div class="rail-node" data-node>
+        <div class="rail-dot">01</div>
+        <div class="rail-content"><div class="tag">Week 1–2</div><h4>Beginner Foundations</h4><p>Programming fundamentals, logic building, and the tools you'll live in — Git, terminal, and your first IDE setup.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">02</div>
+        <div class="rail-content"><div class="tag">Week 3–8</div><h4>Core Programming Track</h4><p>Deep dive into your chosen stack — Python, Java, or MERN — with weekly graded assignments and code reviews.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">03</div>
+        <div class="rail-content"><div class="tag">Week 9–13</div><h4>Live Projects</h4><p>Ship two production-style projects in small teams, using the exact workflow of a real engineering team.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">04</div>
+        <div class="rail-content"><div class="tag">Week 14–16</div><h4>Internship</h4><p>Apply your skills on a real client or partner engagement, with a dedicated engineering mentor reviewing your work.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">05</div>
+        <div class="rail-content"><div class="tag">Week 17</div><h4>Mock Interviews</h4><p>Structured technical and behavioral mock rounds with recorded feedback, run by our AI advisor and human mentors.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">06</div>
+        <div class="rail-content"><div class="tag">Week 18</div><h4>Resume &amp; Portfolio Building</h4><p>1:1 resume audits, ATS optimization, and a portfolio site built from your actual capstone work.</p></div>
+      </div>
+      <div class="rail-node" data-node>
+        <div class="rail-dot">07</div>
+        <div class="rail-content"><div class="tag">Week 19+</div><h4>Placement</h4><p>Direct introductions to our 210+ hiring partners, with our placement team supporting you until you sign an offer.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY CHOOSE US MATRIX ============ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">The Difference</div>
+      <h2 class="reveal">Traditional learning wasn't built for the job market.</h2>
+      <p class="reveal">Here's what actually changes when you learn with a placement team attached to the curriculum.</p>
+    </div>
+
+    <!-- Comparative Columns -->
+    <div class="compare-wrap">
+      <div class="glass-card compare-col trad reveal">
+        <h3>Traditional Learning</h3>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>Pre-recorded videos with no feedback loop</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>Generic projects copied by thousands of students</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>Certificate handed out, no placement support</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>One-size-fits-all pace</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>Interview prep is a single generic PDF</div>
+      </div>
+      <div class="glass-card compare-col us reveal">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/></svg>With ElevateIQ</h3>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Live sessions with mentors who review your code weekly</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Original client-style projects tied to your capstone</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Placement team works with you until you're hired</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Personalized roadmap based on your target role</div>
+        <div class="compare-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Role-specific mock interviews with recorded feedback</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLACEMENT OUTCOMES SECTION ============ -->
+<section id="placements" class="section" style="background:var(--bg-soft);">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">Outcomes</div>
+      <h2 class="reveal">The numbers our placement team is measured on.</h2>
+    </div>
+
+    <!-- Quantitative Stats Grid -->
+    <div class="placement-stats">
+      <div class="glass-card pstat reveal"><div class="num" data-count="18.5" data-decimal="1" data-prefix="₹" data-suffix=" LPA">0</div><div class="label">Highest Package</div></div>
+      <div class="glass-card pstat reveal"><div class="num" data-count="6.2" data-decimal="1" data-prefix="₹" data-suffix=" LPA">0</div><div class="label">Average Package</div></div>
+      <div class="glass-card pstat reveal"><div class="num" data-count="210" data-suffix="+">0</div><div class="label">Hiring Partners</div></div>
+      <div class="glass-card pstat reveal"><div class="num" data-count="94" data-suffix="%">0</div><div class="label">Placement Rate</div></div>
+    </div>
+
+    <!-- Right to left logo marquee line -->
+    <div class="marquee-wrap">
+      <div class="marquee-track" id="marqueeTrack2">
+        <span>Nexora</span><span>Bluewave</span><span>Fintra</span><span>Orbital</span><span>Cloudnine Labs</span><span>Vertex Systems</span><span>Pinnacle</span><span>Quantum Retail</span><span>Solstice</span><span>Harborlight</span>
+        <span>Nexora</span><span>Bluewave</span><span>Fintra</span><span>Orbital</span><span>Cloudnine Labs</span><span>Vertex Systems</span><span>Pinnacle</span><span>Quantum Retail</span><span>Solstice</span><span>Harborlight</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STUDENT TESTIMONIALS SLIDER ============ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">Student Stories</div>
+      <h2 class="reveal">42,000 students. A few of their words.</h2>
+    </div>
+
+    <!-- Testimonials Slider Track -->
+    <div class="test-track-wrap">
+      <div class="test-track" id="testTrack">
+        <div class="glass-card test-card">
+          <div class="test-quote">"I switched from a support role to a backend engineering job in five months. The mock interviews were harder than my actual interview."</div>
+              <div class="test-person"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='40' cy='24' r='16' fill='%239aa0a6'/><rect x='16' y='48' width='48' height='20' rx='10' fill='%239aa0a6'/></svg>" alt=""><div><h5>Ritika Sharma</h5><span>Backend Engineer, Fintra</span></div></div>
+        </div>
+        <div class="glass-card test-card">
+          <div class="test-quote">"My mentor caught issues in my code that three online courses never mentioned. That feedback loop is the whole product."</div>
+              <div class="test-person"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='40' cy='24' r='16' fill='%239aa0a6'/><rect x='16' y='48' width='48' height='20' rx='10' fill='%239aa0a6'/></svg>" alt=""><div><h5>Arjun Mehta</h5><span>Full Stack Developer, Orbital</span></div></div>
+        </div>
+        <div class="glass-card test-card">
+          <div class="test-quote">"I had zero CS background. Eighteen weeks later I was debugging cloud infrastructure at a Series B startup."</div>
+              <div class="test-person"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='40' cy='24' r='16' fill='%239aa0a6'/><rect x='16' y='48' width='48' height='20' rx='10' fill='%239aa0a6'/></svg>" alt=""><div><h5>Sana Iqbal</h5><span>Cloud Engineer, Cloudnine Labs</span></div></div>
+        </div>
+        <div class="glass-card test-card">
+          <div class="test-quote">"The placement team followed up weekly. I never felt like a number in a batch of 200 students."</div>
+              <div class="test-person"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='40' cy='24' r='16' fill='%239aa0a6'/><rect x='16' y='48' width='48' height='20' rx='10' fill='%239aa0a6'/></svg>" alt=""><div><h5>Devansh Rao</h5><span>Data Analyst, Vertex Systems</span></div></div>
+        </div>
+        <div class="glass-card test-card">
+          <div class="test-quote">"Best decision I made was picking the AI/ML track. My capstone project is literally in my portfolio interviewers ask about."</div>
+              <div class="test-person"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%230f1724'/><circle cx='40' cy='24' r='16' fill='%239aa0a6'/><rect x='16' y='48' width='48' height='20' rx='10' fill='%239aa0a6'/></svg>" alt=""><div><h5>Priya Nair</h5><span>ML Engineer, Pinnacle</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="test-nav">
+      <button id="testPrev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+      <button id="testNext" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING PLANS SECTION ============ -->
+<section id="pricing" class="pricing-section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">Pricing Plans</div>
+      <h2 class="reveal">Flexible plans built around your career goals</h2>
+      <p class="reveal">Select the track that matches your learning pace and budget. Sponsored corporate models are also available.</p>
+    </div>
+    
+    <div class="pricing-grid">
+      <!-- Self-Paced Starter Card -->
+      <div class="pricing-card reveal">
+        <h3>Starter Track</h3>
+        <p style="color: var(--muted); font-size: 13.5px;">Best for self-starters exploring fundamentals.</p>
+        <div class="price">₹18,000 <span>one-time fee</span></div>
+        <ul class="features-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Full access to syllabus content</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Sandbox practice environments</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Peer-to-peer forum support</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Module certificates of completion</li>
+        </ul>
+        <a href="#courses" class="btn btn-ghost btn-pricing">Explore Courses</a>
+      </div>
+
+      <!-- Recommended Cohort Card -->
+      <div class="pricing-card recommended reveal">
+        <h3>Cohort Academy</h3>
+        <p style="color: var(--muted); font-size: 13.5px;">Full outcomes-focused track with intensive mentoring.</p>
+        <div class="price">₹45,000 <span>one-time (or ISA options)</span></div>
+        <ul class="features-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> <strong>1:1 Industry mentor reviews</strong></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Live cohort web sessions weekly</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Custom portfolio project reviews</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> <strong>Placement pipeline referral guarantee</strong></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> AI resume audits &amp; mock interviews</li>
+        </ul>
+        <a href="#courses" class="btn btn-primary btn-pricing">Get Started</a>
+      </div>
+
+      <!-- Custom Enterprise Card -->
+      <div class="pricing-card reveal">
+        <h3>Enterprise Sponsor</h3>
+        <p style="color: var(--muted); font-size: 13.5px;">For corporations hiring top candidate talent pools.</p>
+        <div class="price">Custom <span>rates / sponsorships</span></div>
+        <ul class="features-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Dedicated brand hiring hackathons</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Pre-screened candidates roster</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Customized syllabus integrations</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg> Employee certificate sponsor channels</li>
+        </ul>
+        <a href="#contact" class="btn btn-ghost btn-pricing">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FREQUENTLY ASKED QUESTIONS ============ -->
+<section id="faq" class="section">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">Questions</div>
+      <h2 class="reveal">Everything you're probably wondering.</h2>
+    </div>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ADVISOR FORM ============ -->
+<section id="contact" class="section" style="background:var(--bg-soft);">
+  <div class="container">
+    <div class="section-head center">
+      <div class="eyebrow reveal">Get In Touch</div>
+      <h2 class="reveal">Talk to an advisor before you commit to anything.</h2>
+      <p class="reveal">Fifteen minutes, no pressure — we'll tell you honestly if a program fits where you're headed.</p>
+    </div>
+
+    <!-- Contact details and submission form -->
+    <div class="contact-grid">
+      <div class="glass-card contact-info-card reveal">
+        <div class="contact-row">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></div>
+          <div><h5>Call us</h5><span>08647-459254</span></div>
+        </div>
+        <div class="contact-row">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m22 6-10 7L2 6"/></svg></div>
+          <div><h5>Email</h5><span>hr.support@elevateiq-softech.com</span></div>
+        </div>
+        <div class="contact-row">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 6.5a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z"/><path d="M12 11.5V21m-4-3 4 3 4-3"/></svg></div>
+          <div><h5>WhatsApp</h5><span>Chat with an advisor now</span></div>
+        </div>
+        <div class="contact-row">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><h5>Campus</h5><span>Narasaropet, Palnadu District, Andhra Pradesh</span></div>
+        </div>
+        <div class="contact-socials">
+          <a href="https://www.instagram.com/elevateiq_soft_tech/" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/></svg></a>
+        </div>
+      </div>
+
+      <form class="glass-card form-card reveal" id="contactForm" novalidate>
+        <div class="form-grid">
+          <div class="field" id="f-name">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" placeholder="name">
+            <span class="err"></span>
+          </div>
+          <div class="field" id="f-email">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" placeholder="you@email.com">
+            <span class="err"></span>
+          </div>
+          <div class="field" id="f-phone">
+            <label for="phone">Phone number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+91 00000 00000">
+            <span class="err"></span>
+          </div>
+          <div class="field" id="f-track">
+            <label for="track">Interested track</label>
+            <select id="track" name="track">
+              <option value="">Select a program</option>
+              <option>Full Stack Development</option>
+              <option>AI &amp; Machine Learning</option>
+              <option>Data Science</option>
+              <option>Cloud &amp; DevOps</option>
+              <option>Cyber Security</option>
+              <option>UI/UX Design</option>
+            </select>
+            <span class="err"></span>
+          </div>
+          <div class="field full" id="f-message">
+            <label for="message">What are you hoping to achieve?</label>
+            <textarea id="message" name="message" rows="4" placeholder="Tell us a bit about your background and goals…"></textarea>
+            <span class="err"></span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary magnetic" style="width:100%;">
+          Send Message
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <div class="form-success" id="formSuccess">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>
+          Thanks — an advisor will reach out within one business day.
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER & NEWSLETTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col footer-brand">
+<a href="#hero" class="logo green"><span class="dot"></span>ElevateIQ</a>
+        <p>A career-first tech academy building the bridge between learning and hiring.</p>
+        <div class="footer-socials">
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/><path d="M10 9v12M10 13a4 4 0 0 1 8 0v8"/></svg></a>
+          <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C4 15.5 2 11 3 6c2.2 2.6 5.4 4.2 9 4.4C11.1 6 15 3.5 18 5.6c1.1 0 3-1.6 3-1.6Z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 8.5a3 3 0 0 0-2-2.1C18 6 12 6 12 6s-6 0-8 .4a3 3 0 0 0-2 2.1 31 31 0 0 0 0 7 3 3 0 0 0 2 2.1c2 .4 8 .4 8 .4s6 0 8-.4a3 3 0 0 0 2-2.1 31 31 0 0 0 0-7Z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col"><h5>Programs</h5><ul>
+        <li><a href="#courses">Full Stack Dev</a></li>
+        <li><a href="#courses">AI &amp; ML</a></li>
+        <li><a href="#courses">Data Science</a></li>
+        <li><a href="#courses">Cloud &amp; DevOps</a></li>
+      </ul></div>
+      <div class="footer-col"><h5>Company</h5><ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#team">Mentors</a></li>
+        <li><a href="#placements">Placements</a></li>
+        <li><a href="#contact">Careers</a></li>
+      </ul></div>
+      <div class="footer-col"><h5>Resources</h5><ul>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Events</a></li>
+        <li><a href="#">Webinars</a></li>
+      </ul></div>
+      <div class="footer-col"><h5>Legal</h5><ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Refund Policy</a></li>
+      </ul></div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> ElevateIQ Technologies. All rights reserved.</span>
+      <span>Designed &amp; built for people who ship.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ AI ADVISOR WIDGET ============ -->
+<div id="ai-widget">
+  <div id="ai-panel">
+    <div class="ai-head">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M9 13v2M15 13v2"/></svg>
+      <div><b>Ascend Advisor</b><span>AI course &amp; career guide</span></div>
+      <div class="ai-status"></div>
+    </div>
+    <div class="ai-body" id="aiBody">
+      <div class="ai-msg bot">Hey! I can help you pick a track, explain the roadmap, or point you to pricing. What are you exploring?</div>
+    </div>
+    <div class="ai-quick">
+      <button data-q="Which course fits a beginner?">Best for beginners?</button>
+      <button data-q="How long is the program?">Program length?</button>
+      <button data-q="Do you help with placement?">Placement support?</button>
+    </div>
+    <div class="ai-input">
+      <input type="text" id="aiInput" placeholder="Ask something…">
+      <button id="aiSend" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
+    </div>
+  </div>
+  <button id="ai-toggle" aria-label="Open AI Advisor">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M9 13v2M15 13v2"/></svg>
+  </button>
+</div>
+
+<!-- ============ COURSE DETAILED OVERVIEW MODAL ============ -->
+<div class="modal" id="courseDetailModal" style="z-index:1005;">
+  <div class="modal-content" style="max-width: 580px; width: 90%; background: #0c1222; border: 1px solid var(--glass-border); border-radius: 24px; padding: 32px; position: relative;">
+    <span class="modal-close" onclick="closeModal('courseDetailModal')" style="position: absolute; top: 20px; right: 20px; font-size: 24px; color: var(--muted); cursor: pointer;">&times;</span>
+    
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+      <div id="modalCourseIcon" style="width: 52px; height: 52px; border-radius: 12px; background: rgba(255, 122, 0, 0.1); border: 1px solid rgba(255, 122, 0, 0.25); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size:22px;">
+      </div>
+      <div>
+        <h2 id="modalCourseTitle" style="font-size: 20px; color: white; margin: 0; font-family:'Space Grotesk', sans-serif;"></h2>
+        <span id="modalCourseLevel" class="badge active" style="margin-top: 4px; display: inline-block; font-size:11px; padding:3px 10px; border-radius:100px; background:rgba(0,150,255,0.1); border:1px solid rgba(0,150,255,0.25); color:#3fd0ff;"></span>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 18px;">
+      <h4 style="font-size: 13.5px; color: var(--muted); margin-bottom: 6px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Program Overview</h4>
+      <p id="modalCourseDesc" style="font-size: 14.5px; line-height: 1.6; color: #cbd5e1; margin:0;"></p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h4 style="font-size: 13.5px; color: var(--muted); margin-bottom: 8px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Curriculum Specifications</h4>
+      <ul id="modalCourseSyllabus" style="font-size: 14px; color: #cbd5e1; padding-left: 20px; list-style-type: disc; display: grid; gap: 6px; margin:0;">
+      </ul>
+    </div>
+
+    <!-- Mode Selection (Online vs Offline) -->
+    <div style="margin-bottom: 24px; background: rgba(255,255,255,0.01); border: 1px solid var(--line); padding: 18px; border-radius: 16px;">
+      <h4 style="font-size: 14px; color: white; margin-bottom: 12px; font-weight: 600; font-family:'Space Grotesk', sans-serif;">Select Preferred Training Mode:</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <!-- Online mode option -->
+        <label class="mode-card selected" id="lblModeOnline" style="display: block; position: relative; border: 1.5px solid var(--primary); padding: 14px; border-radius: 12px; cursor: pointer; transition: all 0.3s; background: rgba(255, 122, 0, 0.05);">
+          <input type="radio" name="enrollMode" value="Online" checked onclick="toggleModeSelection('Online')" style="position: absolute; top: 14px; right: 14px; accent-color: var(--primary);">
+          <div style="font-weight: 700; color: white; font-size: 14.5px; margin-bottom: 4px;">Online Mode</div>
+          <div style="font-size: 11.5px; color: var(--muted); line-height:1.4;">Live web classes, digital sandboxes, flexible hours.</div>
+        </label>
+        
+        <!-- Offline mode option -->
+        <label class="mode-card" id="lblModeOffline" style="display: block; position: relative; border: 1.5px solid var(--line); padding: 14px; border-radius: 12px; cursor: pointer; transition: all 0.3s; background: rgba(255,255,255,0.01);">
+          <input type="radio" name="enrollMode" value="Offline" onclick="toggleModeSelection('Offline')" style="position: absolute; top: 14px; right: 14px; accent-color: var(--primary);">
+          <div style="font-weight: 700; color: white; font-size: 14.5px; margin-bottom: 4px;">Offline Mode</div>
+          <div style="font-size: 11.5px; color: var(--muted); line-height:1.4;">Physical classrooms, lab mentors, center workspace.</div>
+        </label>
+      </div>
+    </div>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 20px;">
+      <div>
+        <span style="font-size: 12px; color: var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Program Tuition</span>
+        <div id="modalCoursePrice" style="font-size: 20px; font-weight: 700; color: white; font-family: 'Space Grotesk';"></div>
+      </div>
+      <button onclick="proceedToEnroll()" class="btn btn-primary" style="margin: 0; padding: 12px 28px;">Confirm &amp; Enroll</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TO TOP INTERACTIVE ANCHOR ============ -->
+<button id="to-top" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+</button>
+
+<!-- ============ SCRIPT IMPORTS ============ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

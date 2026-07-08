@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Elevate IQ</title>
+<link rel="shortcut icon" href="images/logo.png" type="image/png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+<!-- ==================== BACKGROUND VISUALS ==================== -->
+<!-- Ambient Background Video -->
+<video autoplay muted loop playsinline class="video-bg">
+  <source src="logo_animated.mp4" type="video/mp4">
+</video>
+
+<!-- Dynamic backdrop gradient orbs -->
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+
+<!-- ==================== NAVIGATION BAR ==================== -->
+<nav>
+  <a href="/edutech/" class="logo">
+    <img src="images/logo.png" alt="Elevate IQ Logo">
+  </a>
+    <div class="menu-toggle" id="mobile-menu-btn" onclick="this.classList.toggle('active'); document.getElementById('navLinks').classList.toggle('active')">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+<ul id="navLinks" class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="openings.html">Careers</a></li>
+    <li><a href="index.html#services">Services</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="login.html" class="btn-login">Login</a>
+    <a href="register.html" class="btn-primary">Sign up</a>
+  </div>
+</nav>
+
+
+<!-- ==================== LOGIN FORM CARD ==================== -->
+<section class="auth-wrap">
+  <div class="auth-card">
+    <h1>Welcome Back</h1>
+    <p class="sub">Login to continue to your ElevateIQ account</p>
+
+    <form id="loginForm">
+      <div class="field"><label for="email">Email address or Employee ID</label><input type="text" id="email" required></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" required></div>
+      
+      <button type="submit" class="btn-primary auth-submit">Log in</button>
+    </form>
+
+    <!-- Error/Success status message display elements -->
+    <div class="msg error" id="errorMsg"></div>
+    <div class="msg success" id="successMsg"></div>
+
+    <div class="auth-foot">Don't have an account? <a href="register.html">Create one</a></div>
+  </div>
+</section>
+
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
+</footer>
+
+
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+// Determine backend API URL depending on current context (localhost vs production origin)
+const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
+
+// Auto-redirect to dashboard if token session is already active
+if (localStorage.getItem("token")) {
+  window.location.href = "dashboard.html";
+}
+
+// Handle form submission and authentication integration
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  errorMsg.style.display = 'none';
+  successMsg.style.display = 'none';
+
+  const payload = {
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+    portal: "elevateiq"
+  };
+
+  try {
+    // Send request payload to authentication service
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      successMsg.textContent = data.message || 'Login successful.';
+      successMsg.style.display = 'block';
+      // Cache token and user detail elements locally for persistent session state
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
+      if (data.csrf_token) localStorage.setItem("csrf_token", data.csrf_token);
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+    } else {
+      errorMsg.textContent = data.error || 'Invalid email or password.';
+      errorMsg.style.display = 'block';
+    }
+  } catch (err) {
+    errorMsg.textContent = 'Could not reach the server. Make sure the backend is running.';
+    errorMsg.style.display = 'block';
+  }
+});
+</script>
+
+</body>
+</html>
