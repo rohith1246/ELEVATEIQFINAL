@@ -802,16 +802,23 @@ select option {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--muted);
-  font-size: 16px;
+  color: #ff8a3d; /* Orange accent */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px;
   z-index: 10;
-  transition: color 0.2s;
+  transition: opacity 0.2s;
 }
 .password-toggle:hover {
-  color: var(--ink);
+  opacity: 0.8;
+}
+/* Hide default Edge reveal button to avoid duplicates */
+input[type="password"]::-ms-reveal {
+  display: none !important;
+}
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  filter: invert(62%) sepia(85%) saturate(1478%) hue-rotate(345deg) brightness(103%) contrast(101%) !important;
 }
 
