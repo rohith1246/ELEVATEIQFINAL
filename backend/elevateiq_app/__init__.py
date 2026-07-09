@@ -134,7 +134,7 @@ def create_app():
         nonce = getattr(request, "csp_nonce", secrets.token_urlsafe(16))
         csp = (
             f"default-src 'self'; "
-            f"script-src 'self' 'unsafe-inline'; "
+            f"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             f"img-src 'self' data:; "
             f"font-src 'self' https://fonts.gstatic.com; "

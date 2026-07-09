@@ -821,4 +821,149 @@ input[type="password"]::-webkit-contacts-auto-fill-button,
 input[type="password"]::-webkit-credentials-auto-fill-button {
   filter: invert(62%) sepia(85%) saturate(1478%) hue-rotate(345deg) brightness(103%) contrast(101%) !important;
 }
+
+/* =============================================
+   PRINT MEDIA RULES — Professional PDF / Paper Reporting
+   =============================================*/
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12px !important;
+  }
+
+  /* Hide headers, sidebars, background videos, search options, and navigation buttons */
+  nav, 
+  .sidebar, 
+  .video-bg, 
+  .bg-canvas,
+  button,
+  .btn-primary,
+  .btn-edit,
+  .btn-ghost,
+  .report-header-toolbar,
+  .sidebar-link,
+  .no-print,
+  #dashTitle,
+  #dashSub {
+    display: none !important;
+  }
+
+  /* Force all report elements, texts, and icons to solid black */
+  #reportOutputCard,
+  #reportOutputCard *,
+  #reportOutputCard h1,
+  #reportOutputCard h2,
+  #reportOutputCard h3,
+  #reportOutputCard h4,
+  #reportOutputCard p,
+  #reportOutputCard span,
+  #reportOutputCard div,
+  #reportOutputCard table,
+  #reportOutputCard th,
+  #reportOutputCard td {
+    color: #000000 !important;
+  }
+
+  /* Unfold primary wrappers */
+  .dash-container {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+  }
+
+  .dash-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Hide all dashboard pages except the reports parent view */
+  .section-panel {
+    display: none !important;
+  }
+  .section-panel#panel_reports {
+    display: block !important;
+  }
+
+  /* Expand the report wrapper cards */
+  #reportOutputCard.glass-card {
+    display: block !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #000000 !important;
+    width: 100% !important;
+  }
+
+  /* Display the print-only header template */
+  #reportOutputCard .print-header {
+    display: flex !important;
+  }
+
+  /* Inline visual graphs layout */
+  #reportChartsRow {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 15px !important;
+    margin-bottom: 25px !important;
+    page-break-inside: avoid;
+    width: 100% !important;
+  }
+
+  #chartWrapper1, 
+  #chartWrapper2 {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+    height: 250px !important;
+    flex: 1 1 45% !important;
+    box-shadow: none !important;
+  }
+
+  /* Table styling overrides for printers */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    color: #000000 !important;
+    margin-top: 15px !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border: 1px solid #d3d3d3 !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+    background: transparent !important;
+    text-align: left !important;
+  }
+
+  th {
+    background-color: #f7f7f7 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Badge styling overrides for monochrome paper printing */
+  .badge {
+    border: 1px solid #666666 !important;
+    background: transparent !important;
+    color: #000000 !important;
+    padding: 1px 6px !important;
+    font-size: 10px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+  }
+}
+
 

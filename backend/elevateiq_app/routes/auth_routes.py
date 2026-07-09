@@ -287,7 +287,18 @@ def refresh_token():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        cursor.execute(
+            """
+            SELECT u.*, 
+                   e.id as emp_db_id, e.employee_id,
+                   c.id as client_db_id, c.client_id, c.company_name
+            FROM users u
+            LEFT JOIN employees e ON u.id = e.user_id
+            LEFT JOIN clients c ON u.id = c.user_id
+            WHERE u.id = %s
+            """,
+            (user_id,)
+        )
         user_record = cursor.fetchone()
         if not user_record:
             return jsonify({"error": "User not found"}), 404
@@ -297,6 +308,9 @@ def refresh_token():
             "name": user_record["name"],
             "email": user_record["email"],
             "role": user_record["role"],
+            "employee_id": user_record.get("employee_id"),
+            "emp_db_id": user_record.get("emp_db_id"),
+            "client_db_id": user_record.get("client_db_id"),
         }
         new_access = serializer.dumps(payload)
         csrf_token = get_csrf_token(user_id)

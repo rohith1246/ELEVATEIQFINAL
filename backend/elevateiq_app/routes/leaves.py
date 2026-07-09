@@ -38,6 +38,11 @@ def get_leaves():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
+    # Only employees and admins can access leave data.
+    # Candidates and clients have no leave records and must be blocked.
+    if user["role"] not in ("admin", "employee"):
+        return jsonify({"error": "Forbidden: Leave data is only accessible to employees and admins"}), 403
+
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -46,16 +51,16 @@ def get_leaves():
         if user["role"] == "admin":
             is_approver = True
         else:
-            # Check designation for employee to verify leadership privileges
+            # Check designation for employee to verify leadership privileges (HR / Team Lead)
             cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
             res = cursor.fetchone()
             if res:
                 designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
                 designation = designation.lower()
-                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+                if "team leader" in designation or "hr" in designation or "human resource" in designation:
                     is_approver = True
 
-        # Grant access to all requests if requested scope is 'all' and user is authorized
+        # Grant full company-wide view only to admins and authorised approvers
         if (scope == "all" and is_approver) or user["role"] == "admin":
             cursor.execute(
                 """
@@ -67,12 +72,16 @@ def get_leaves():
                 ORDER BY l.status DESC, l.created_at DESC
                 """
             )
-        else:
-            # Fallback to fetching only the individual employee's own requests
+        elif user["role"] == "employee" and user.get("emp_db_id"):
+            # Regular employees only see their own leave records
             cursor.execute(
                 "SELECT * FROM leaves WHERE employee_id = %s ORDER BY created_at DESC",
                 (user["emp_db_id"],)
             )
+        else:
+            # Safety fallback — return empty list if emp_db_id is missing
+            return jsonify([]), 200
+
         records = cursor.fetchall()
         for rec in records:
             if rec.get("start_date"):
@@ -225,7 +234,7 @@ def review_leave(leave_id):
             if res:
                 designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
                 designation = designation.lower()
-                if "team leader" in designation or "lead" in designation or "hr" in designation or "human resource" in designation:
+                if "team leader" in designation or "hr" in designation or "human resource" in designation:
                     is_approver = True
 
         if not is_approver:
@@ -314,6 +323,10 @@ def get_attendance():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
 
+    # Attendance data is strictly for employees and admins only.
+    if user["role"] not in ("admin", "employee"):
+        return jsonify({"error": "Forbidden: Attendance data is only accessible to employees and admins"}), 403
+
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -359,6 +372,7 @@ def get_attendance():
     finally:
         cursor.close()
         conn.close()
+
 
 
 @leaves_bp.route("/attendance/checkin", methods=["POST"])

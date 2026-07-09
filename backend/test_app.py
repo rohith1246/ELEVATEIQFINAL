@@ -17,8 +17,8 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_get_conn.return_value = mock_conn
         mock_conn.cursor.return_value = mock_cursor
         
-        # Simulating that email is not registered
-        mock_cursor.fetchone.return_value = None
+        # Simulating email check (None) and then RETURNING id on insert
+        mock_cursor.fetchone.side_effect = [None, (1,)]
         
         response = self.client.post('/register', json={
             'name': 'Test User',
@@ -54,19 +54,17 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_cursor = MagicMock()
         mock_get_conn.return_value = mock_conn
         mock_conn.cursor.return_value = mock_cursor
-        
         hashed_pw = bcrypt.hashpw(b'password123', bcrypt.gensalt()).decode('utf-8')
-        # Simulate user record found directly in users table
+        # Simulate user record found directly in users table, and no lockouts
         mock_cursor.fetchone.side_effect = [
-            None, # Not employee
-            None, # Not client
             {
                 'id': 1,
                 'name': 'Test User',
                 'email': 'test@example.com',
                 'password': hashed_pw,
                 'role': 'candidate'
-            }
+            },
+            None # Not locked out
         ]
         
         response = self.client.post('/login', json={
@@ -93,7 +91,7 @@ class ElevateIQTestCase(unittest.TestCase):
         })
         
         self.assertEqual(response.status_code, 401)
-        self.assertIn(b'Invalid credentials', response.data)
+        self.assertIn(b'Invalid email or password', response.data)
 
     @patch('elevateiq_app.routes.auth_routes.get_connection')
     @patch('elevateiq_app.routes.auth_routes.get_current_user')
@@ -367,6 +365,39 @@ class ElevateIQTestCase(unittest.TestCase):
         
         response = self.client.get('/api/tickets')
         self.assertEqual(response.status_code, 200)
+
+    @patch('elevateiq_app.routes.auth_routes.get_connection')
+    @patch('elevateiq_app.routes.auth_routes.validate_and_rotate_refresh_token')
+    @patch('elevateiq_app.routes.auth_routes.get_csrf_token')
+    def test_refresh_token_success(self, mock_get_csrf, mock_validate_refresh, mock_get_conn):
+        mock_validate_refresh.return_value = (1, 'new_refresh_token_val')
+        mock_get_csrf.return_value = 'mock_csrf_val'
+        
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        
+        mock_cursor.fetchone.return_value = {
+            'id': 1,
+            'name': 'Employee User',
+            'email': 'emp@example.com',
+            'role': 'employee',
+            'employee_id': 'EMP001',
+            'emp_db_id': 10,
+            'client_db_id': None
+        }
+        
+        response = self.client.post('/api/auth/refresh', headers={
+            'X-Refresh-Token': 'old_refresh_token_val'
+        })
+        
+        self.assertEqual(response.status_code, 200)
+        json_data = response.get_json()
+        self.assertEqual(json_data['message'], 'Token refreshed')
+        self.assertEqual(json_data['user']['emp_db_id'], 10)
+        self.assertEqual(json_data['user']['employee_id'], 'EMP001')
+        self.assertEqual(json_data['user']['client_db_id'], None)
 
 if __name__ == '__main__':
     unittest.main()

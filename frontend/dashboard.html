@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Elevate IQ</title>
 <link rel="shortcut icon" href="images/logo.png" type="image/png">
-<link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/chat.css">
+<link rel="stylesheet" href="style.css?v=1.0.1">
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -819,16 +820,39 @@ const layouts = {
         </div>
     `,
     reports: `
-        <h2 style="font-size:18px; margin-bottom:20px;">Generate Standard Reports</h2>
-        <div style="display:flex; gap:14px; margin-bottom:40px; flex-wrap:wrap;">
-            <button onclick="generateReport('attendance')" class="btn-primary">Attendance Audit Report</button>
-            <button onclick="generateReport('employee')" class="btn-primary">Department Breakdown Report</button>
-            <button onclick="generateReport('recruitment')" class="btn-primary">Recruitment Funnel Report</button>
+        <div class="no-print">
+            <h2 style="font-size:18px; margin-bottom:20px;">Generate Standard Reports</h2>
+            <div style="display:flex; gap:14px; margin-bottom:30px; flex-wrap:wrap;">
+                <button onclick="generateReport('attendance')" class="btn-primary">Attendance Audit Report</button>
+                <button onclick="generateReport('employee')" class="btn-primary">Department Breakdown Report</button>
+                <button onclick="generateReport('recruitment')" class="btn-primary">Recruitment Funnel Report</button>
+            </div>
         </div>
         <div class="glass-card" id="reportOutputCard" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:15px;">
+            <!-- Print-Only Header -->
+            <div class="print-header" style="display:none; align-items:center; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:25px; color:#000;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <img src="images/logo.png" alt="ElevateIQ Logo" style="height:45px; border-radius:6px;">
+                    <div>
+                        <h1 style="font-size:20px; font-weight:700; margin:0; color:#000; font-family:'Poppins', sans-serif;">ElevateIQ Portal</h1>
+                        <p style="font-size:11px; margin:2px 0 0 0; color:#555;">Corporate Analytics & Performance Audits</p>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <h3 style="font-size:14px; font-weight:600; margin:0; color:#333;" id="printReportName">System Report</h3>
+                    <p style="font-size:11px; margin:4px 0 0 0; color:#777;" id="printReportDate">Date: --</p>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:20px;" class="report-header-toolbar">
                 <h3 id="reportTitle" style="font-size:18px;">Report View</h3>
-                <button onclick="window.print()" class="btn-edit" style="padding: 6px 14px; border-radius:8px; font-size:12px;">Print / Save PDF</button>
+            </div>
+            <div id="reportChartsRow" style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
+                <div id="chartWrapper1" style="flex:1 1 500px; min-width:300px; background:rgba(255,255,255,0.03); border-radius:14px; padding:20px; border:1px solid var(--glass-border); height:320px;">
+                    <canvas id="reportChart1"></canvas>
+                </div>
+                <div id="chartWrapper2" style="flex:1 1 350px; min-width:260px; background:rgba(255,255,255,0.03); border-radius:14px; padding:20px; border:1px solid var(--glass-border); height:320px;">
+                    <canvas id="reportChart2"></canvas>
+                </div>
             </div>
             <div id="reportContainer"></div>
         </div>
@@ -1362,7 +1386,7 @@ Object.keys(layouts).forEach(panelId => {
 <script src="js/chat.js"></script>
 <script src="js/crm.js"></script>
 <script src="js/recruitment.js"></script>
-<script src="js/leaves.js"></script>
+<script src="js/leaves.js?v=1.0.1"></script>
 <script src="js/payroll.js"></script>
 
 

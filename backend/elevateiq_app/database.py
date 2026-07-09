@@ -248,6 +248,20 @@ def get_connection():
         try:
             conn = db_pool.getconn(key=key)
             if conn.closed == 0:
+                # Verify connection health with a lightweight query before handing it off
+                try:
+                    c = conn.cursor()
+                    c.execute("SELECT 1")
+                    c.fetchone()
+                    c.close()
+                except Exception:
+                    # Connection is dead; discard and put it back to close it
+                    try:
+                        db_pool.putconn(conn, key=key, close=True)
+                    except Exception:
+                        pass
+                    continue
+
                 # Reset connection state if it was left in an error/aborted transaction
                 if conn.info.transaction_status != 0:  # 0 = IDLE
                     conn.rollback()

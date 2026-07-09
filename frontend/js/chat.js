@@ -675,7 +675,8 @@ async function refreshOversightList() {
     try {
         let list = [];
         if (currentUser.role === 'admin') {
-            list = await apiCall("/chat/admin/all");
+            const rawList = await apiCall("/chat/admin/all");
+            list = rawList.filter(c => c.type === 'group');
         } else {
             list = await apiCall("/chat/team-leader/groups");
         }

@@ -837,12 +837,15 @@ def check_is_team_leader(user, cursor):
             d = res.get("designation") or ""
         elif isinstance(res, (tuple, list)):
             d = res[0] or ""
-        if "team leader" in d.lower() or "lead" in d.lower():
+        if "team leader" in d.lower():
             return True
     return False
 
 def check_is_crm_manager(user, cursor):
     if not user:
+        return False
+    # Candidates and clients must never access CRM management data
+    if user.get("role") in ("candidate", "client"):
         return False
     if user.get("role") == "admin":
         return True
@@ -855,9 +858,10 @@ def check_is_crm_manager(user, cursor):
         elif isinstance(res, (tuple, list)):
             d = res[0] or ""
         d = d.lower()
-        if "team leader" in d or "lead" in d or "hr" in d or "human resource" in d:
+        if "team leader" in d or "hr" in d or "human resource" in d:
             return True
     return False
+
 
 def check_is_recruitment_manager(user, cursor):
     if not user:

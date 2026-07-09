@@ -432,7 +432,11 @@ if (announcementForm) {
  * @async
  * @param {string} type - Report category key ('attendance', 'employee', or 'recruitment').
  */
-async function generateReport(type) {
+let reportChartInstances = {};
+let currentActiveReportType = null;
+
+async function generateReport(type, forcePrintColors = false) {
+    currentActiveReportType = type;
     const data = await apiCall(`/reports/${type}`);
     const card = document.getElementById("reportOutputCard");
     const title = document.getElementById("reportTitle");
@@ -441,8 +445,140 @@ async function generateReport(type) {
     card.style.display = "block";
     container.innerHTML = "";
 
+    // Set Print-only header metadata
+    const reportTitleText = type === "attendance" ? "Attendance Audit Report" : 
+                            type === "employee" ? "Department Breakdown Report" : "Recruitment Funnel Report";
+    document.getElementById("printReportName").textContent = reportTitleText;
+    document.getElementById("printReportDate").textContent = "Generated: " + new Date().toLocaleDateString(undefined, { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+
+    // Reset previous charts
+    if (reportChartInstances.chart1) {
+        reportChartInstances.chart1.destroy();
+    }
+    if (reportChartInstances.chart2) {
+        reportChartInstances.chart2.destroy();
+    }
+
+    const ctx1 = document.getElementById("reportChart1").getContext("2d");
+    const ctx2 = document.getElementById("reportChart2").getContext("2d");
+
+    const isPrintMode = forcePrintColors || window.matchMedia('print').matches;
+
+    // Colors matching style.css theme
+    const colors = {
+        present: "#22C55E",
+        halfDay: "#FF8A3D",
+        absent: "#EC2F7B",
+        leave: "#3FD0FF",
+        blue: "#3FD0FF",
+        orange: "#FF8A3D",
+        pink: "#EC2F7B",
+        border: isPrintMode ? "#d3d3d3" : "rgba(255, 255, 255, 0.12)",
+        text: isPrintMode ? "#000000" : "#EAF2FF",
+        grid: isPrintMode ? "rgba(0, 0, 0, 0.08)" : "rgba(255, 255, 255, 0.05)"
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: colors.text,
+                    font: { family: 'Poppins', size: 11 }
+                }
+            },
+            tooltip: {
+                backgroundColor: "rgba(10, 15, 30, 0.95)",
+                titleColor: "#fff",
+                bodyColor: "#fff",
+                borderColor: "rgba(255,255,255,0.12)",
+                borderWidth: 1
+            }
+        }
+    };
+
     if (type === "attendance") {
         title.innerHTML = "📊 Company Attendance History (Recent 30 Days)";
+        
+        // Group data by date
+        const dateGroups = {};
+        data.forEach(r => {
+            if (!dateGroups[r.date]) {
+                dateGroups[r.date] = { Present: 0, "Half Day": 0, Absent: 0, Leave: 0 };
+            }
+            dateGroups[r.date][r.status] = r.count;
+        });
+
+        // Sort dates chronologically
+        const sortedDates = Object.keys(dateGroups).sort();
+        const datasetPresent = [];
+        const datasetHalfDay = [];
+        const datasetAbsent = [];
+        const datasetLeave = [];
+
+        sortedDates.forEach(d => {
+            datasetPresent.push(dateGroups[d].Present);
+            datasetHalfDay.push(dateGroups[d]["Half Day"]);
+            datasetAbsent.push(dateGroups[d].Absent);
+            datasetLeave.push(dateGroups[d].Leave);
+        });
+
+        // Chart 1: Stacked Bar Chart for day-wise counts
+        reportChartInstances.chart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: sortedDates,
+                datasets: [
+                    { label: 'Present', data: datasetPresent, backgroundColor: colors.present },
+                    { label: 'Half Day', data: datasetHalfDay, backgroundColor: colors.halfDay },
+                    { label: 'Absent', data: datasetAbsent, backgroundColor: colors.absent },
+                    { label: 'Leave', data: datasetLeave, backgroundColor: colors.leave }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, stepSize: 1 }
+                    }
+                }
+            }
+        });
+
+        // Aggregate counts for Donut Chart
+        let totalPresent = 0, totalHalfDay = 0, totalAbsent = 0, totalLeave = 0;
+        data.forEach(r => {
+            if (r.status === "Present") totalPresent += r.count;
+            else if (r.status === "Half Day") totalHalfDay += r.count;
+            else if (r.status === "Absent") totalAbsent += r.count;
+            else if (r.status === "Leave") totalLeave += r.count;
+        });
+
+        // Chart 2: Donut Chart for overall distribution
+        reportChartInstances.chart2 = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Half Day', 'Absent', 'Leave'],
+                datasets: [{
+                    data: [totalPresent, totalHalfDay, totalAbsent, totalLeave],
+                    backgroundColor: [colors.present, colors.halfDay, colors.absent, colors.leave],
+                    borderWidth: 0
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Render Table
         let table = `
             <table>
                 <thead>
@@ -453,7 +589,7 @@ async function generateReport(type) {
         data.forEach(r => {
             table += `<tr>
                 <td>${r.date}</td>
-                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td><span class="badge ${r.status.toLowerCase().replace(' ', '-')}">${r.status}</span></td>
                 <td>
                     <button onclick="viewReportDetails('attendance', '${r.date}', '${r.status}')" class="btn-action btn-edit" style="margin:0; padding:4px 12px; font-size:12px; font-weight:600; border-radius:8px;">${r.count} Employees</button>
                 </td>
@@ -461,8 +597,59 @@ async function generateReport(type) {
         });
         table += `</tbody></table>`;
         container.innerHTML = table;
+
     } else if (type === "employee") {
         title.innerHTML = "👥 Active Headcount breakdown by Department";
+
+        const depts = data.map(r => r.department);
+        const headcounts = data.map(r => r.employee_count);
+
+        // Chart 1: Bar Chart of Headcount by Department
+        reportChartInstances.chart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: depts,
+                datasets: [{
+                    label: 'Active Headcount',
+                    data: headcounts,
+                    backgroundColor: [colors.blue, colors.orange, colors.pink, '#A855F7', '#EC4899', '#3B82F6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                ...chartOptions,
+                plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text }
+                    },
+                    y: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, stepSize: 1 }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Pie Chart of Headcount Distribution
+        reportChartInstances.chart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: depts,
+                datasets: [{
+                    data: headcounts,
+                    backgroundColor: [colors.blue, colors.orange, colors.pink, '#A855F7', '#EC4899', '#3B82F6'],
+                    borderWidth: 0
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Render Table
         let table = `
             <table>
                 <thead>
@@ -480,8 +667,60 @@ async function generateReport(type) {
         });
         table += `</tbody></table>`;
         container.innerHTML = table;
+
     } else if (type === "recruitment") {
         title.innerHTML = "🎯 Recruitment Funnel — Applications breakdown by Status";
+
+        const statuses = data.map(r => r.status);
+        const counts = data.map(r => r.application_count);
+
+        // Chart 1: Horizontal Bar Chart for Funnel feel
+        reportChartInstances.chart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: statuses,
+                datasets: [{
+                    label: 'Applications Count',
+                    data: counts,
+                    backgroundColor: [colors.pink, colors.orange, colors.blue, '#10B981', '#F59E0B'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                ...chartOptions,
+                indexAxis: 'y',
+                plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, stepSize: 1 }
+                    },
+                    y: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Donut Chart
+        reportChartInstances.chart2 = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: statuses,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: [colors.pink, colors.orange, colors.blue, '#10B981', '#F59E0B'],
+                    borderWidth: 0
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Render Table
         let table = `
             <table>
                 <thead>
@@ -491,7 +730,7 @@ async function generateReport(type) {
         `;
         data.forEach(r => {
             table += `<tr>
-                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td><span class="badge ${r.status.toLowerCase().replace(' ', '-')}">${r.status}</span></td>
                 <td>
                     <button onclick="viewReportDetails('recruitment', '${r.status}')" class="btn-action btn-edit" style="margin:0; padding:4px 12px; font-size:12px; font-weight:600; border-radius:8px;">${r.application_count} Applications</button>
                 </td>
@@ -948,3 +1187,22 @@ function switchContactTab(type) {
         btnElv.style.color = "#ffffff";
     }
 }
+
+// Print Media Listeners to dynamically swap Chart.js color palette styles
+window.addEventListener('beforeprint', () => {
+    if (currentActiveReportType) {
+        const card = document.getElementById("reportOutputCard");
+        if (card && card.style.display !== "none") {
+            generateReport(currentActiveReportType, true);
+        }
+    }
+});
+
+window.addEventListener('afterprint', () => {
+    if (currentActiveReportType) {
+        const card = document.getElementById("reportOutputCard");
+        if (card && card.style.display !== "none") {
+            generateReport(currentActiveReportType, false);
+        }
+    }
+});
