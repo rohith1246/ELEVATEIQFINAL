@@ -888,22 +888,109 @@ function toggleFAQ(element) {
 
 // Premium Navigation links click animation feedback & smooth scroll handler
 document.addEventListener("DOMContentLoaded", () => {
+  let tempDisableScrollSpy = false;
+  let disableTimeout;
+
+  const homeLink = document.querySelector('.nav-links a[href="index.html"]');
+  const servicesLink = document.querySelector('.nav-links a[href="#services"]');
+
+  const setActiveLink = (activeLink) => {
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.classList.remove('active');
+    });
+    if (activeLink) {
+      activeLink.classList.add('active');
+    }
+  };
+
+  // Immediate check if page loaded with #services hash to highlight it instantly without showing Home active first
+  if (window.location.hash === '#services') {
+    tempDisableScrollSpy = true;
+    if (homeLink) homeLink.classList.remove('active');
+    if (servicesLink) servicesLink.classList.add('active');
+    disableTimeout = setTimeout(() => {
+      tempDisableScrollSpy = false;
+    }, 1200);
+  }
+
   document.querySelectorAll('.nav-links a, nav .logo').forEach(link => {
     link.addEventListener('click', function(e) {
       this.classList.add('nav-clicked');
       setTimeout(() => this.classList.remove('nav-clicked'), 250);
 
-      // Smooth scroll if anchor
       const href = this.getAttribute('href');
-      if (href && href.startsWith('#')) {
+      if (!href) return;
+
+      // Helper to normalize page names
+      const normalize = (path) => {
+        if (!path) return 'index.html';
+        const filename = path.split('/').pop();
+        if (filename === '' || filename === '/') return 'index.html';
+        return filename;
+      };
+
+      const currentPage = normalize(window.location.pathname);
+      const targetPage = normalize(href.split('#')[0]);
+      const targetHash = href.includes('#') ? ('#' + href.split('#')[1]) : '';
+
+      const isCurrentPage = currentPage === targetPage;
+
+      if (isCurrentPage) {
         e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Temporarily disable Scroll Spy so it doesn't fight the instant click highlight
+        tempDisableScrollSpy = true;
+        clearTimeout(disableTimeout);
+        disableTimeout = setTimeout(() => {
+          tempDisableScrollSpy = false;
+        }, 1000);
+
+        if (targetHash) {
+          const target = document.querySelector(targetHash);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.pushState(null, null, targetHash);
+            
+            // Instantly highlight clicked link
+            setActiveLink(link);
+          }
+        } else {
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          history.pushState(null, null, window.location.pathname);
+          
+          // Instantly highlight Home link
+          setActiveLink(homeLink);
         }
       }
     });
   });
+
+  // Active viewport scroll navigation highlighting (Scroll Spy)
+  const servicesSection = document.getElementById('services');
+
+  if (servicesSection && homeLink && servicesLink) {
+    const handleScroll = () => {
+      if (tempDisableScrollSpy) return;
+
+      const scrollPos = window.scrollY || window.pageYOffset;
+      const navHeight = 90; // Height of the fixed navbar
+      const servicesTop = servicesSection.offsetTop - navHeight - 50; // Trigger slightly earlier
+
+      if (scrollPos >= servicesTop) {
+        homeLink.classList.remove('active');
+        servicesLink.classList.add('active');
+      } else {
+        servicesLink.classList.remove('active');
+        homeLink.classList.add('active');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Check initial state (e.g. if loaded with hash or already scrolled)
+    setTimeout(handleScroll, 100);
+  }
 });
 </script>
 
