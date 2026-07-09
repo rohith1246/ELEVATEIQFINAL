@@ -606,10 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <img src="images/company images/webp/20260707_120112.jpg.webp" alt="Office Life" loading="lazy" decoding="async">
         <div class="gallery-caption">Office Life</div>
       </div>
-      <div class="gallery-img-wrap" data-caption="ElevateIQ Team">
-        <img src="images/company images/webp/IMG_20260629_162519.jpg.webp" alt="ElevateIQ Team" loading="lazy" decoding="async">
-        <div class="gallery-caption">ElevateIQ Team</div>
-      </div>
+
       <div class="gallery-img-wrap" data-caption="Group Photo">
         <img src="images/company images/webp/IMG_20260629_162522.jpg.webp" alt="Group Photo" loading="lazy" decoding="async">
         <div class="gallery-caption">Group Photo</div>
@@ -639,10 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <img src="images/company images/webp/20260707_120112.jpg.webp" alt="Office Life" loading="lazy" decoding="async">
         <div class="gallery-caption">Office Life</div>
       </div>
-      <div class="gallery-img-wrap" data-caption="ElevateIQ Team">
-        <img src="images/company images/webp/IMG_20260629_162519.jpg.webp" alt="ElevateIQ Team" loading="lazy" decoding="async">
-        <div class="gallery-caption">ElevateIQ Team</div>
-      </div>
+
       <div class="gallery-img-wrap" data-caption="Group Photo">
         <img src="images/company images/webp/IMG_20260629_162522.jpg.webp" alt="Group Photo" loading="lazy" decoding="async">
         <div class="gallery-caption">Group Photo</div>
@@ -659,10 +653,12 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 
   <!-- Lightbox Overlay -->
-  <div id="galleryLightbox" onclick="closeLightbox()" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.96); backdrop-filter:blur(18px); align-items:center; justify-content:center; cursor:zoom-out; padding:20px;">
-    <button onclick="event.stopPropagation(); closeLightbox()" style="position:fixed; top:20px; right:24px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:#fff; width:46px; height:46px; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); z-index:10000; transition:background 0.25s;">✕</button>
-    <img id="lightboxImg" src="" alt="" style="max-width:90vw; max-height:85vh; border-radius:14px; box-shadow:0 50px 120px rgba(0,0,0,0.8); object-fit:contain;">
-    <div id="lightboxCaption" style="position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:rgba(6,12,32,0.75); color:#fff; padding:9px 22px; border-radius:100px; font-size:14px; font-weight:600; letter-spacing:0.4px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); white-space:nowrap;"></div>
+  <div id="galleryLightbox" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.96); backdrop-filter:blur(18px); align-items:center; justify-content:center; cursor:zoom-out; padding:20px;">
+    <button onclick="event.stopPropagation(); closeLightbox()" style="position:fixed; top:20px; right:24px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:#fff; width:46px; height:46px; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); z-index:10000; transition:background 0.25s;" onmouseenter="this.style.background='rgba(255,255,255,0.2)'" onmouseleave="this.style.background='rgba(255,255,255,0.1)'">✕</button>
+    <button id="lightboxPrev" onclick="event.stopPropagation(); navigateLightbox(-1)" style="position:fixed; left:24px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:#fff; width:52px; height:52px; border-radius:50%; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); z-index:10000; transition:all 0.25s; font-family: monospace;" onmouseenter="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-50%) scale(1.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(-50%) scale(1)'">&lt;</button>
+    <button id="lightboxNext" onclick="event.stopPropagation(); navigateLightbox(1)" style="position:fixed; right:24px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:#fff; width:52px; height:52px; border-radius:50%; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(8px); z-index:10000; transition:all 0.25s; font-family: monospace;" onmouseenter="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-50%) scale(1.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(-50%) scale(1)'">&gt;</button>
+    <img id="lightboxImg" onclick="event.stopPropagation()" src="" alt="" style="max-width:85vw; max-height:80vh; border-radius:14px; box-shadow:0 50px 120px rgba(0,0,0,0.8); object-fit:contain; transition: opacity 0.2s ease-in-out;">
+    <div id="lightboxCaption" onclick="event.stopPropagation()" style="position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:rgba(6,12,32,0.75); color:#fff; padding:9px 22px; border-radius:100px; font-size:14px; font-weight:600; letter-spacing:0.4px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); white-space:nowrap;"></div>
   </div>
 
 </section>
@@ -756,23 +752,98 @@ document.addEventListener("DOMContentLoaded", () => {
 </style>
 
 <script>
-// Lightbox handler for gallery
+// Lightbox handler for gallery with Next/Prev navigation
 (function() {
+  let galleryImages = [];
+  let currentImageIndex = -1;
+
+  const initGalleryImages = () => {
+    galleryImages = [];
+    const seenSrcs = new Set();
+    document.querySelectorAll('.gallery-img-wrap').forEach(wrap => {
+      const img = wrap.querySelector('img');
+      if (!img) return;
+      
+      const src = img.src;
+      if (seenSrcs.has(src)) return;
+      seenSrcs.add(src);
+      
+      galleryImages.push({
+        src: src,
+        alt: img.alt || '',
+        caption: wrap.dataset.caption || img.alt || ''
+      });
+    });
+  };
+
   function openLightbox(src, alt, caption) {
     const lb = document.getElementById('galleryLightbox');
     const img = document.getElementById('lightboxImg');
     const cap = document.getElementById('lightboxCaption');
+    
+    if (galleryImages.length === 0) {
+      initGalleryImages();
+    }
+    
+    currentImageIndex = galleryImages.findIndex(item => item.src === src);
+    
     img.src = src;
     img.alt = alt;
+    img.style.opacity = 1;
     cap.textContent = caption;
     lb.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
+
   window.closeLightbox = function() {
     document.getElementById('galleryLightbox').style.display = 'none';
     document.body.style.overflow = '';
   };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeLightbox(); });
+
+  window.navigateLightbox = function(direction) {
+    if (galleryImages.length === 0) return;
+    
+    currentImageIndex = (currentImageIndex + direction + galleryImages.length) % galleryImages.length;
+    const nextImgData = galleryImages[currentImageIndex];
+    
+    const img = document.getElementById('lightboxImg');
+    const cap = document.getElementById('lightboxCaption');
+    
+    // Smooth transition
+    img.style.opacity = 0;
+    setTimeout(() => {
+      img.src = nextImgData.src;
+      img.alt = nextImgData.alt;
+      cap.textContent = nextImgData.caption;
+      img.style.opacity = 1;
+    }, 150);
+  };
+
+  document.addEventListener('keydown', e => { 
+    if (e.key === 'Escape') {
+      window.closeLightbox(); 
+    } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+      const lb = document.getElementById('galleryLightbox');
+      if (lb && lb.style.display === 'flex') {
+        window.navigateLightbox(1);
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+      const lb = document.getElementById('galleryLightbox');
+      if (lb && lb.style.display === 'flex') {
+        window.navigateLightbox(-1);
+      }
+    }
+  });
+
+  // Close lightbox only when clicking outside the content (on the overlay background)
+  const lb = document.getElementById('galleryLightbox');
+  if (lb) {
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb) {
+        window.closeLightbox();
+      }
+    });
+  }
 
   // Attach after DOM ready
   const attachGallery = () => {
