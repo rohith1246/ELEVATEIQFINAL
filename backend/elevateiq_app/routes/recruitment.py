@@ -312,8 +312,10 @@ def submit_application():
     except Exception as e:
         conn.rollback()
         # Delete uploaded file to prevent orphan files if DB transaction fails
-        if os.path.exists(file_path):
-            os.remove(file_path)
+                try:
+                    os.remove(file_path)
+                except FileNotFoundError:
+                    pass  # already removed — race avoided
         logger.error(f"Recruitment API error: {e}")
         return jsonify(safe_error()), 500
     finally:

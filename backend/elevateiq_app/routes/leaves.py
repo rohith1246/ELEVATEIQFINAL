@@ -252,6 +252,10 @@ def review_leave(leave_id):
         if not leave:
             return jsonify({"error": "Leave request not found"}), 404
 
+        # Ownership check: approve/reject only allowed for admin/approver
+        if not is_approver:
+            return jsonify({"error": "Forbidden: only admins and team leaders can review leaves"}), 403
+
         if leave["status"] != "Pending":
             return jsonify({"error": "Leave request has already been processed"}), 400
 

@@ -1,6 +1,12 @@
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user") || "null");
+let _memoryToken = null;
+let _memoryUser = null;
+try {
+  _memoryToken = localStorage.getItem("token");
+  _memoryUser = JSON.parse(localStorage.getItem("user") || "null");
+} catch (e) { /* ignore */ }
+const token = _memoryToken;
+const user = _memoryUser;
 
 let csrfToken = null;
 let isRefreshing = false;
@@ -30,6 +36,7 @@ async function refreshAccessToken() {
         });
         if (res.ok) {
             const data = await res.json();
+            _memoryToken = data.token;
             localStorage.setItem("token", data.token);
             localStorage.setItem("refresh_token", data.refresh_token);
             if (data.csrf_token) csrfToken = data.csrf_token;
@@ -58,7 +65,7 @@ async function apiCall(endpoint, method = "GET", body = null) {
             method,
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
+                "Authorization": `Bearer ${_memoryToken || localStorage.getItem("token")}`
             }
         };
         if (body) options.body = JSON.stringify(body);
@@ -78,7 +85,7 @@ async function apiCall(endpoint, method = "GET", body = null) {
                 const refreshed = await refreshAccessToken();
                 isRefreshing = false;
                 if (refreshed) {
-                    options.headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
+                    options.headers["Authorization"] = `Bearer ${_memoryToken || localStorage.getItem("token")}`;
                     if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
                         options.headers["X-CSRF-Token"] = csrfToken;
                     }
