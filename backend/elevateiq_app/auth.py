@@ -5,6 +5,7 @@ from .config import Config
 from .database import get_connection
 import secrets
 import hashlib
+import hmac
 import time
 import re
 import logging
@@ -335,7 +336,7 @@ def check_password_history(user_id, password_hash):
             (user_id, PASSWORD_HISTORY_COUNT))
         for row in c.fetchall():
             h = row[0] if isinstance(row, dict) else row[0]
-            if h == password_hash:
+            if hmac.compare_digest(h, password_hash):
                 return False
         return True
     except Exception as e:

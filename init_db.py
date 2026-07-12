@@ -41,7 +41,7 @@ try:
             ("System Administrator", "admin@elevateiq.com", hashed_password, "admin")
         )
         conn.commit()
-        print(f"WARNING: Default admin credentials - Email: admin@elevateiq.com / Password: {admin_password}")
+        print("WARNING: Default admin credentials - Email: admin@elevateiq.com / Password: [REDACTED]")
         print("Set ADMIN_PASSWORD environment variable to use a custom admin password.")
         
     cursor.execute("SELECT COUNT(*) FROM courses")
@@ -85,7 +85,7 @@ try:
             (emp_user_id, "EMP002", "+91 9876543210", "Academy", "Senior Mentor")
         )
         conn.commit()
-        print(f"WARNING: Default employee credentials - Email: bathikadileep@gmail.com / Password: {emp_password}")
+        print("WARNING: Default employee credentials - Email: bathikadileep@gmail.com / Password: [REDACTED]")
     else:
         emp_user_id = employee_row[0]
 
@@ -101,7 +101,7 @@ try:
         )
         student_id = cursor.fetchone()[0]
         conn.commit()
-        print(f"WARNING: Default student credentials - Email: rohith@gmail.com / Password: {student_password}")
+        print("WARNING: Default student credentials - Email: rohith@gmail.com / Password: [REDACTED]")
     else:
         student_id = candidate_row[0]
         # Force rename to Aarav Mehta if exists to match student-dashboard greeting
