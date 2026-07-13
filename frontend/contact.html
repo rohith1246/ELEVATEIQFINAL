@@ -184,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Helper to normalize page names
       const normalize = (path) => {
         if (!path) return 'index.html';
+        if (path.includes('edutech')) return 'edutech';
         const filename = path.split('/').pop();
         if (filename === '' || filename === '/') return 'index.html';
         return filename;
