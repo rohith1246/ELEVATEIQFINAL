@@ -197,6 +197,41 @@
   }
   .btn-print.secondary:hover { background: #f8fafc; color: #0f172a; }
 
+  /* Responsive Overrides */
+  @media (max-width: 768px) {
+    body {
+      padding: 20px 10px;
+    }
+    .invoice-card {
+      padding: 24px;
+    }
+    .invoice-header {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .invoice-title {
+      text-align: left;
+    }
+    .details-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .logos-container {
+      flex-wrap: wrap;
+    }
+    .summary-table th, .summary-table td {
+      padding: 10px;
+      font-size: 13px;
+    }
+    .action-bar {
+      flex-direction: column;
+    }
+    .action-bar button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
   /* Print Media Overrides */
   @media print {
     body { background: white; padding: 0; }

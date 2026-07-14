@@ -239,6 +239,33 @@
   }
 
   footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: rgba(2, 6, 23, 0.3); }
+
+  /* ==========================================================================
+     RESPONSIVE DESIGN MEDIA QUERIES (PAYMENT)
+     ========================================================================== */
+  @media (max-width: 900px) {
+    .checkout-container {
+      grid-template-columns: 1fr;
+      margin: 20px auto;
+    }
+    nav {
+      padding: 16px 20px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .glass-card {
+      padding: 24px;
+    }
+    .field-row {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .card-graphic {
+      height: 160px;
+      padding: 16px;
+    }
+  }
 </style>
 </head>
 <body>
