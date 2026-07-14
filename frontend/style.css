@@ -242,6 +242,7 @@ nav {
   font-weight: 700;
 }
 
+.section-head h1,
 .section-head h2 {
   font-size: clamp(28px, 4vw, 44px);
   font-weight: 800;

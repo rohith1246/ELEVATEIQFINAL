@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /about.html
+Allow: /openings.html
+Allow: /contact.html
+Allow: /edutech/
+Allow: /edutech/index.html
+
+# Disallow private user workspace & transaction modules
+Disallow: /dashboard.html
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /edutech/login.html
+Disallow: /edutech/register.html
+Disallow: /edutech/dashboard.html
+Disallow: /edutech/student-dashboard.html
+Disallow: /edutech/payment.html
+Disallow: /edutech/invoice.html
+
+Sitemap: https://elevateiq.com/sitemap.xml
