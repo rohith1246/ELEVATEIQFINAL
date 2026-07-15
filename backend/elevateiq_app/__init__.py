@@ -138,7 +138,7 @@ def create_app():
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             f"img-src 'self' data:; "
             f"font-src 'self' https://fonts.gstatic.com; "
-            f"connect-src 'self'; "
+            f"connect-src 'self' https://unpkg.com; "
             f"frame-src 'self' https://www.google.com https://maps.google.com; "
             f"object-src 'none'"
         )
