@@ -1266,11 +1266,10 @@ const layouts = {
                 <th>Course</th>
                 <th>Quiz Title</th>
                 <th>Duration</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody id="adminQuizzesTableBody">
-              <tr><td colspan="4">Loading quizzes...</td></tr>
+              <tr><td colspan="3">Loading quizzes...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2651,7 +2650,7 @@ async function loadAdminQuizzes() {
       
     const list = await apiCall("/api/edutech/quizzes");
     if (!list.length) {
-      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No technical quizzes registered.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No technical quizzes registered.</td></tr>";
       return;
     }
     tbody.innerHTML = list.map(q => `
@@ -2659,13 +2658,10 @@ async function loadAdminQuizzes() {
         <td style="color:var(--secondary); font-weight:500;">${q.course_title}</td>
         <td style="font-weight:600; color:white;">${q.title}</td>
         <td>${q.duration_minutes} mins</td>
-        <td>
-          <button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openQuestionBuilderModal(${q.quiz_id}, '${q.title.replace(/'/g, "\\'")}')">+ Question</button>
-        </td>
       </tr>
     `).join("");
   } catch(err) {
-    tbody.innerHTML = "<tr><td colspan='4' style='color:#ef4444;'>Failed to load technical quizzes.</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='3' style='color:#ef4444;'>Failed to load technical quizzes.</td></tr>";
   }
 }
 
