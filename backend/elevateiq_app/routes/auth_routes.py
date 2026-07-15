@@ -133,6 +133,7 @@ def register():
 
 
 @auth_bp.route("/api/auth/verify-email", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def verify_email():
     data = request.json
     token = data.get("token") if data else None
@@ -168,6 +169,109 @@ def verify_email():
     except Exception as e:
         conn.rollback()
         logger.error(f"Email verification error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+@rate_limit(limit=5, period=60)
+def forgot_password():
+    """Generates a password reset token and sends reset email."""
+    import hashlib
+    data = request.json or {}
+    email = (data.get("email") or "").strip()
+    portal = (data.get("portal") or "elevateiq").strip().lower()
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT id, name, email FROM users WHERE email = %s LIMIT 1", (email,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"message": "If the email is registered, you will receive a reset link shortly."}), 200
+
+        reset_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+        
+        cursor.execute("""
+            INSERT INTO password_resets (user_id, token, expires_at)
+            VALUES (%s, %s, NOW() + INTERVAL '1 hour')
+        """, (user["id"], token_hash))
+        conn.commit()
+
+        from ..utils.mailer import send_password_reset_email
+        send_password_reset_email(user["name"], user["email"], reset_token, portal)
+        
+        return jsonify({"message": "If the email is registered, you will receive a reset link shortly."}), 200
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Forgot password error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+@rate_limit(limit=10, period=60)
+def reset_password():
+    """Validates the reset token and updates the user's password."""
+    import hashlib
+    data = request.json or {}
+    token = data.get("token")
+    new_password = data.get("password")
+
+    if not token or not new_password:
+        return jsonify({"error": "Token and new password are required"}), 400
+
+    is_strong, pw_msg = validate_password_strength(new_password)
+    if not is_strong:
+        return jsonify({"error": pw_msg}), 400
+
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("""
+            SELECT pr.id as reset_id, pr.user_id, u.email
+            FROM password_resets pr
+            JOIN users u ON pr.user_id = u.id
+            WHERE pr.token = %s AND pr.used = FALSE AND pr.expires_at > NOW()
+            LIMIT 1
+        """, (token_hash,))
+        reset_record = cursor.fetchone()
+        
+        if not reset_record:
+            return jsonify({"error": "Invalid or expired reset token."}), 400
+
+        user_id = reset_record["user_id"]
+        
+        try:
+            if check_password_history(conn, user_id, new_password):
+                return jsonify({"error": "Password cannot be one of your recent passwords."}), 400
+        except Exception:
+            pass
+
+        hashed_password = _bcrypt_hash(new_password.encode("utf-8")).decode("utf-8")
+        
+        cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_password, user_id))
+        cursor.execute("UPDATE password_resets SET used = TRUE WHERE id = %s", (reset_record["reset_id"],))
+        
+        try:
+            store_password_history(conn, user_id, hashed_password)
+        except Exception:
+            pass
+            
+        conn.commit()
+        return jsonify({"message": "Password reset successful. You can now log in."}), 200
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Reset password error: {e}")
         return jsonify(safe_error()), 500
     finally:
         cursor.close()

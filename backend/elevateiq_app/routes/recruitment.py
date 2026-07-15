@@ -8,8 +8,9 @@ Accepted, Rejected).
 """
 
 import os
+import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, send_from_directory, current_app
 from psycopg2.extras import RealDictCursor
 from werkzeug.utils import secure_filename
@@ -308,7 +309,57 @@ def submit_application():
             (job_id, name, email, phone, filename)
         )
         conn.commit()
-        return jsonify({"message": "Application submitted successfully."}), 201
+
+        # ── Assessment: generate token, store row, send email ─────────────
+        try:
+            assessment_token = uuid.uuid4().hex + uuid.uuid4().hex  # 64-char token
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=72)
+
+            # Auto-create user account if not exists
+            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user_row = cursor.fetchone()
+            temp_password = None
+            if not user_row:
+                import secrets
+                import string
+                from ..auth import _bcrypt_hash
+                chars = string.ascii_letters + string.digits
+                rand_part = "".join(secrets.choice(chars) for _ in range(8))
+                temp_password = f"Candidate@{rand_part}"
+                
+                hashed_pw = _bcrypt_hash(temp_password.encode("utf-8")).decode("utf-8")
+                cursor.execute("""
+                    INSERT INTO users (name, email, password, role, portal, email_verified)
+                    VALUES (%s, %s, %s, 'candidate', 'elevateiq', TRUE)
+                """, (name, email, hashed_pw))
+                conn.commit()
+
+            # Fetch the application id we just inserted
+            cursor.execute(
+                "SELECT id FROM applications WHERE job_id=%s AND email=%s ORDER BY applied_at DESC LIMIT 1",
+                (job_id, email)
+            )
+            app_row = cursor.fetchone()
+            if app_row:
+                app_id = app_row[0]
+                cursor.execute(
+                    "INSERT INTO assessments (application_id, token, expires_at) VALUES (%s, %s, %s)",
+                    (app_id, assessment_token, expires_at)
+                )
+                conn.commit()
+
+                # Fetch job title for email
+                cursor.execute("SELECT title FROM jobs WHERE id=%s", (job_id,))
+                job_row = cursor.fetchone()
+                job_title = job_row[0] if job_row else "the position"
+
+                from ..utils.mailer import send_assessment_email
+                send_assessment_email(name, email, assessment_token, job_title, password=temp_password)
+        except Exception as email_err:
+            logger.warning(f"Assessment email/account dispatch failed (non-critical): {email_err}")
+        # ────────────────────────────────────────────────────────
+
+        return jsonify({"message": "Application submitted successfully. Check your email for the assessment link."}), 201
     except Exception as e:
         conn.rollback()
         # Delete uploaded file to prevent orphan files if DB transaction fails

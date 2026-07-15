@@ -2334,7 +2334,7 @@ async function sendLmsMessage() {
   if (!text) return;
   
   const container = document.getElementById("chatMessagesList");
-  const date = new Date().toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' });
+  const date = new Date().toLocaleTimeString("en-US", { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
   
   // Append student message
   container.innerHTML += `

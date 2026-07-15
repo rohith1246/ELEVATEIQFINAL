@@ -13,6 +13,22 @@ let activeOversightConversationId = null;
 let activeOversightType = null;
 let allUsers = [];
 
+function formatToIST(dateStr) {
+    if (!dateStr) return '';
+    let cleanStr = dateStr;
+    if (typeof cleanStr === 'string' && !cleanStr.endsWith('Z') && !cleanStr.includes('+') && !cleanStr.includes('GMT')) {
+        cleanStr = cleanStr + 'Z';
+    }
+    const d = new Date(cleanStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
 let lastDMMessagesJson = "";
 let lastDMListJson = "";
 let lastGroupMessagesJson = "";
@@ -182,7 +198,7 @@ async function refreshDMThread(forceScroll = false) {
                 const isMine = m.sender_id === currentUser.id;
                 const bubbleClass = isMine ? 'outgoing' : 'incoming';
                 const senderHtml = isMine ? '' : `<div class="sender">${escapeHTML(m.sender_name)}</div>`;
-                const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                const timeStr = formatToIST(m.sent_at);
                 
                 messagesDiv.innerHTML += `
                     <div class="msg-bubble ${bubbleClass}">
@@ -215,7 +231,7 @@ async function sendChatMessage(type) {
         if (!val || !activeConversationId) return;
         
         const messagesDiv = document.getElementById("dmMessages");
-        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const timeStr = formatToIST(new Date());
         const tempId = "temp_" + Date.now();
         messagesDiv.innerHTML += `
             <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
@@ -245,7 +261,7 @@ async function sendChatMessage(type) {
         if (!val || !activeGroupConversationId) return;
         
         const messagesDiv = document.getElementById("groupMessages");
-        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const timeStr = formatToIST(new Date());
         const tempId = "temp_" + Date.now();
         messagesDiv.innerHTML += `
             <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
@@ -513,7 +529,7 @@ async function refreshGroupThread(forceScroll = false) {
             const isMine = m.sender_id === currentUser.id;
             const bubbleClass = isMine ? 'outgoing' : 'incoming';
             const senderHtml = isMine ? '' : `<div class="sender">${escapeHTML(m.sender_name)}</div>`;
-            const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            const timeStr = formatToIST(m.sent_at);
             
             messagesDiv.innerHTML += `
                 <div class="msg-bubble ${bubbleClass}">
@@ -758,7 +774,7 @@ async function refreshOversightThread() {
         messagesDiv.innerHTML = "";
         
         res.messages.forEach(m => {
-            const timeStr = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            const timeStr = formatToIST(m.sent_at);
             messagesDiv.innerHTML += `
                 <div class="msg-bubble incoming" style="align-self: flex-start; max-width: 80%;">
                     <div class="sender" style="color: var(--orange);">${escapeHTML(m.sender_name)}</div>

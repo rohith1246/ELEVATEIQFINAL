@@ -1,0 +1,384 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Assessment — ElevateIQ</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="shortcut icon" href="images/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#060d1a;--surface:#0d1f36;--glass:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.1);--blue:#3ea6ff;--green:#00e676;--orange:#ff9100;--red:#ff5252;--text:#e0e6f0;--muted:#6b7fa3}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.25;pointer-events:none;z-index:0}
+  .orb1{width:500px;height:500px;background:radial-gradient(circle,#1a4a8a,transparent);top:-100px;left:-100px}
+  .orb2{width:400px;height:400px;background:radial-gradient(circle,#0a2a5a,transparent);bottom:-100px;right:-100px}
+
+  /* ── Gate Screen ───────────────────────────────────────────── */
+  #gateScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(6,13,26,0.97);backdrop-filter:blur(10px)}
+  .gate-card{max-width:520px;width:90%;background:linear-gradient(135deg,#0d1f36,#091628);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;position:relative;z-index:1}
+  .gate-logo{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px}.gate-logo span{color:var(--blue)}
+  .gate-badge{display:inline-block;background:rgba(62,166,255,.15);border:1px solid rgba(62,166,255,.3);color:var(--blue);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:24px}
+  .gate-card h2{font-size:20px;margin-bottom:10px;color:#fff}
+  .gate-card p{color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px}
+  .rules-list{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:left;margin-bottom:24px}
+  .rules-list li{color:#9baec8;font-size:13px;padding:5px 0;display:flex;align-items:flex-start;gap:10px}
+  .rules-list li::before{content:'•';color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px}
+  .gate-warn{background:rgba(255,145,0,0.08);border:1px solid rgba(255,145,0,.3);border-radius:10px;padding:12px 16px;color:#ffb347;font-size:13px;margin-bottom:24px;text-align:left}
+  #startShareBtn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),#0066bb);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+  #startShareBtn:hover{opacity:.88}
+  #startShareBtn:disabled{opacity:.5;cursor:not-allowed}
+  #gateError{color:var(--red);font-size:13px;margin-top:12px;display:none}
+
+  /* ── Top Bar ───────────────────────────────────────────────── */
+  #topBar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(6,13,26,0.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+  .tb-logo{font-size:18px;font-weight:800;color:#fff}.tb-logo span{color:var(--blue)}
+  .tb-meta{display:flex;align-items:center;gap:16px}
+  .tb-job{font-size:13px;color:var(--muted)}
+  #timerBadge{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;font-family:monospace;color:var(--text)}
+  #timerBadge.danger{background:rgba(255,82,82,.12);border-color:rgba(255,82,82,.4);color:var(--red)}
+  .prog-bar-wrap{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+  .prog-bar{width:120px;height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:99px;transition:width .4s}
+
+  /* ── Anti-cheat warning banner ─────────────────────────────── */
+  #switchWarn{position:fixed;top:64px;left:0;right:0;z-index:49;background:rgba(255,82,82,0.12);border-bottom:1px solid rgba(255,82,82,.3);padding:8px 24px;display:none;align-items:center;gap:10px}
+  #switchWarn span{color:var(--red);font-size:13px;font-weight:600}
+
+  /* ── Main test area ────────────────────────────────────────── */
+  #testArea{max-width:760px;margin:0 auto;padding:90px 20px 60px;position:relative;z-index:1}
+  #questionCounter{font-size:13px;color:var(--muted);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+
+  .q-card{background:linear-gradient(135deg,rgba(13,31,54,0.9),rgba(9,22,40,0.9));border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;animation:fadeSlide .35s ease}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .q-num{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .q-text{font-size:16px;font-weight:500;color:#fff;line-height:1.6;margin-bottom:20px}
+  .q-diff{display:inline-block;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;margin-bottom:14px}
+  .diff-Easy{background:rgba(0,230,118,.12);color:var(--green)}
+  .diff-Medium{background:rgba(255,145,0,.12);color:var(--orange)}
+  .diff-Hard{background:rgba(255,82,82,.12);color:var(--red)}
+  .options{display:grid;gap:10px}
+  .opt-btn{display:flex;align-items:center;gap:14px;width:100%;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Inter',sans-serif}
+  .opt-btn:hover{background:rgba(62,166,255,.08);border-color:rgba(62,166,255,.35)}
+  .opt-btn.selected{background:rgba(62,166,255,.12);border-color:var(--blue);color:#fff}
+  .opt-label{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+  .opt-btn.selected .opt-label{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* ── Submit section ────────────────────────────────────────── */
+  #submitSection{background:rgba(13,31,54,0.8);border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  #submitBtn{padding:14px 40px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--green),#00a854);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+  #submitBtn:hover{opacity:.88}
+  #submitBtn:disabled{opacity:.5;cursor:not-allowed}
+  .answered-count{font-size:13px;color:var(--muted)}
+  .answered-count strong{color:#fff}
+
+  /* ── Result Screen ─────────────────────────────────────────── */
+  #resultScreen{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(6,13,26,0.97)}
+  .result-card{max-width:520px;width:90%;background:linear-gradient(135deg,#0d1f36,#091628);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;position:relative;z-index:1}
+  .result-icon{font-size:48px;margin-bottom:16px}
+  .result-card h2{font-size:24px;color:#fff;margin-bottom:8px}
+  .score-big{font-size:64px;font-weight:800;line-height:1;margin:20px 0 6px}
+  .score-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+  .result-info{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:left;margin-bottom:20px}
+  .ri-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px}
+  .ri-row:last-child{border-bottom:none}
+  .ri-label{color:var(--muted)}.ri-val{color:#fff;font-weight:600}
+  .result-msg{color:#9baec8;font-size:14px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<!-- Orbs -->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- ── GATE SCREEN ─────────────────────────────────────────── -->
+<div id="gateScreen">
+  <div class="gate-card">
+    <div class="gate-logo">Elevate<span>IQ</span></div>
+    <div class="gate-badge">Job Assessment</div>
+    <h2 id="gateTitle">Loading your assessment...</h2>
+    <p id="gateDesc">Please wait while we prepare your test.</p>
+    <ul class="rules-list" id="rulesList" style="display:none">
+      <li>This assessment has a <strong>30-minute</strong> timer — it starts when you click the button below.</li>
+      <li>Screen sharing is <strong>required</strong>. Your screen will be monitored during the test.</li>
+      <li>Switching tabs or windows is tracked. <strong>More than 3 switches</strong> will auto-submit your test.</li>
+      <li>Once submitted, you <strong>cannot retake</strong> the test.</li>
+      <li>Your results and a completion email will be sent after submission.</li>
+    </ul>
+    <div class="gate-warn" id="gateWarn" style="display:none">
+      ⚠️ <strong>Mandatory:</strong> You must share your screen to begin. Click the button, then select your screen or browser tab when prompted by your browser.
+    </div>
+    <button id="startShareBtn" style="display:none" onclick="beginAssessment()">🖥️ Share Screen & Start Test</button>
+    <div id="gateError"></div>
+  </div>
+</div>
+
+<!-- ── TAB SWITCH WARNING ──────────────────────────────────── -->
+<div id="switchWarn">
+  <span id="switchWarnText">⚠️ Tab switch detected! Remaining warnings: 3</span>
+</div>
+
+<!-- ── TOP BAR ────────────────────────────────────────────── -->
+<div id="topBar" style="display:none">
+  <div class="tb-logo">Elevate<span>IQ</span> <span style="color:var(--muted);font-size:14px;font-weight:400">/ Assessment</span></div>
+  <div class="tb-meta">
+    <div class="prog-bar-wrap">
+      <span id="qProgress">Q 0 / 0</span>
+      <div class="prog-bar"><div class="prog-bar-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+    <div id="timerBadge">30:00</div>
+  </div>
+  <div class="tb-job" id="tbJobTitle"></div>
+</div>
+
+<!-- ── MAIN TEST AREA ─────────────────────────────────────── -->
+<div id="testArea" style="display:none">
+  <div id="questionCounter">
+    <span id="answeredCount" class="answered-count">Answered: <strong>0</strong> / <strong>0</strong></span>
+  </div>
+  <div id="questionsContainer"></div>
+  <div id="submitSection">
+    <div class="answered-count">Make sure all questions are answered before submitting.</div>
+    <button id="submitBtn" onclick="confirmSubmit()">✅ Submit Assessment</button>
+  </div>
+</div>
+
+<!-- ── RESULT SCREEN ──────────────────────────────────────── -->
+<div id="resultScreen">
+  <div class="result-card">
+    <div class="result-icon" id="resultIcon">🎉</div>
+    <h2 id="resultTitle">Assessment Submitted!</h2>
+    <div class="score-big" id="resultScore" style="color:var(--green)">-</div>
+    <div class="score-sub" id="resultSub">correct answers</div>
+    <div class="result-info">
+      <div class="ri-row"><span class="ri-label">Score</span><span class="ri-val" id="riScore">-</span></div>
+      <div class="ri-row"><span class="ri-label">Questions</span><span class="ri-val" id="riTotal">-</span></div>
+      <div class="ri-row"><span class="ri-label">Status</span><span class="ri-val" id="riStatus">-</span></div>
+    </div>
+    <p class="result-msg" id="resultMsg">A confirmation email has been sent to your inbox. Our team will review your results and be in touch.</p>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────
+const token = new URLSearchParams(location.search).get('token');
+let questions = [];
+let answers = {};
+let tabSwitches = 0;
+let timerInterval = null;
+let secondsLeft = 30 * 60;
+let testStarted = false;
+let autoSubmitting = false;
+const API = '/api/assessment';
+
+// ── Helpers ──────────────────────────────────────────────────────
+function showGateError(msg) {
+  const el = document.getElementById('gateError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function updateTimer() {
+  if (secondsLeft <= 0) { clearInterval(timerInterval); autoSubmit('time_expired'); return; }
+  secondsLeft--;
+  const m = Math.floor(secondsLeft/60), s = secondsLeft % 60;
+  const badge = document.getElementById('timerBadge');
+  badge.textContent = `${pad(m)}:${pad(s)}`;
+  badge.className = secondsLeft <= 300 ? 'danger' : '';
+}
+
+function updateProgress() {
+  const answered = Object.keys(answers).length;
+  const total = questions.length;
+  document.getElementById('answeredCount').innerHTML = `Answered: <strong>${answered}</strong> / <strong>${total}</strong>`;
+  document.getElementById('qProgress').textContent = `${answered} / ${total} answered`;
+  document.getElementById('progFill').style.width = total > 0 ? `${(answered/total)*100}%` : '0%';
+}
+
+// ── Init: validate token ──────────────────────────────────────────
+async function init() {
+  if (!token) { document.getElementById('gateTitle').textContent = 'Invalid Link'; document.getElementById('gateDesc').textContent = 'No assessment token found in the URL. Please check your email for the correct link.'; return; }
+  try {
+    const res = await fetch(`${API}/take/${token}`);
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById('gateTitle').textContent = 'Cannot Start Assessment';
+      document.getElementById('gateDesc').textContent = data.error || 'Unknown error.';
+      return;
+    }
+    questions = data.questions || [];
+    document.getElementById('gateTitle').textContent = `Hi, ${data.candidate_name}!`;
+    document.getElementById('gateDesc').textContent = `You are about to begin the assessment for: ${data.job_title}`;
+    document.getElementById('tbJobTitle').textContent = data.job_title;
+    document.getElementById('rulesList').style.display = 'block';
+    document.getElementById('gateWarn').style.display = 'block';
+    document.getElementById('startShareBtn').style.display = 'block';
+  } catch(e) {
+    document.getElementById('gateTitle').textContent = 'Connection Error';
+    document.getElementById('gateDesc').textContent = 'Could not reach the server. Please check your internet and refresh.';
+  }
+}
+
+// ── Begin: Screen share + start API call ─────────────────────────
+async function beginAssessment() {
+  const btn = document.getElementById('startShareBtn');
+  btn.disabled = true; btn.textContent = 'Requesting screen share...';
+  let screenGranted = false;
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    screenGranted = true;
+    stream.getTracks().forEach(t => t.stop()); // stop immediately; just need permission
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '🖥️ Share Screen & Start Test';
+    showGateError('⚠️ Screen sharing is required to begin the assessment. Please allow screen sharing when prompted.');
+    return;
+  }
+
+  try {
+    await fetch(`${API}/start/${token}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ screen_share_granted: screenGranted })
+    });
+  } catch(e) {}
+
+  // Show test
+  document.getElementById('gateScreen').style.display = 'none';
+  document.getElementById('topBar').style.display = 'flex';
+  document.getElementById('testArea').style.display = 'block';
+  testStarted = true;
+  renderQuestions();
+  startTimer();
+  attachTabSwitchDetection();
+}
+
+// ── Render questions ──────────────────────────────────────────────
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  questions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard_${q.id}`;
+    card.innerHTML = `
+      <div class="q-num">Question ${i+1} of ${questions.length}</div>
+      <div class="q-diff diff-${q.difficulty || 'Medium'}">${q.difficulty || 'Medium'}</div>
+      <div class="q-text">${q.question_text}</div>
+      <div class="options" id="opts_${q.id}">
+        ${['A','B','C','D'].map(opt => `
+          <button class="opt-btn" id="opt_${q.id}_${opt}" onclick="selectAnswer(${q.id},'${opt}')">
+            <span class="opt-label">${opt}</span>
+            <span>${q['option_'+opt.toLowerCase()]}</span>
+          </button>
+        `).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+  updateProgress();
+}
+
+function selectAnswer(qId, opt) {
+  answers[qId] = opt;
+  ['A','B','C','D'].forEach(o => {
+    const btn = document.getElementById(`opt_${qId}_${o}`);
+    if(btn) btn.classList.toggle('selected', o === opt);
+  });
+  updateProgress();
+}
+
+// ── Timer ─────────────────────────────────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+// ── Tab switch detection ──────────────────────────────────────────
+function attachTabSwitchDetection() {
+  document.addEventListener('visibilitychange', async () => {
+    if (!testStarted || autoSubmitting) return;
+    if (document.hidden) {
+      tabSwitches++;
+      try {
+        const res = await fetch(`${API}/tab-switch/${token}`, { method:'POST' });
+        const data = await res.json();
+        const warn = document.getElementById('switchWarn');
+        const warnText = document.getElementById('switchWarnText');
+        const remaining = Math.max(0, 3 - data.tab_switches);
+        warnText.textContent = `⚠️ Tab switch detected! Warnings remaining: ${remaining}`;
+        warn.style.display = 'flex';
+        setTimeout(() => { warn.style.display = 'none'; }, 4000);
+        if (data.auto_submit) { autoSubmit('tab_limit'); }
+      } catch(e) {}
+    }
+  });
+}
+
+// ── Submit flow ───────────────────────────────────────────────────
+async function confirmSubmit() {
+  const unanswered = questions.length - Object.keys(answers).length;
+  if (unanswered > 0) {
+    if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) return;
+  }
+  await doSubmit();
+}
+
+async function autoSubmit(reason) {
+  if (autoSubmitting) return;
+  autoSubmitting = true;
+  clearInterval(timerInterval);
+  await doSubmit(reason);
+}
+
+async function doSubmit(reason) {
+  const btn = document.getElementById('submitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+  clearInterval(timerInterval);
+  try {
+    const res = await fetch(`${API}/submit/${token}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ answers })
+    });
+    const data = await res.json();
+    showResult(data, reason);
+  } catch(e) {
+    showResult({ score:0, total:questions.length, percentage:0, status:'Error' }, reason);
+  }
+}
+
+function showResult(data, reason) {
+  document.getElementById('testArea').style.display = 'none';
+  document.getElementById('topBar').style.display = 'none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display = 'flex';
+  const pct = data.percentage || 0;
+  const color = pct >= 80 ? 'var(--green)' : (pct >= 60 ? '#ffeb3b' : 'var(--red)');
+  document.getElementById('resultScore').textContent = `${pct.toFixed(0)}%`;
+  document.getElementById('resultScore').style.color = color;
+  document.getElementById('resultSub').textContent = `${data.score || 0} / ${data.total || questions.length} correct answers`;
+  document.getElementById('riScore').textContent = `${pct.toFixed(1)}%`;
+  document.getElementById('riTotal').textContent = data.total || questions.length;
+  document.getElementById('riStatus').textContent = data.status || 'Submitted';
+
+  let msg = 'A confirmation email with your score has been sent to your inbox. Our recruiter team will review your application and be in touch shortly.';
+  let icon = '🎉';
+  if (reason === 'tab_limit') {
+    msg = 'Your test was auto-submitted due to excessive tab switching and has been flagged for review. You will still receive an email confirmation.';
+    icon = '⚠️';
+    document.getElementById('resultTitle').textContent = 'Assessment Auto-Submitted';
+  } else if (reason === 'time_expired') {
+    msg = 'Time ran out and your answers have been submitted automatically. Check your email for the results.';
+    icon = '⏱️';
+    document.getElementById('resultTitle').textContent = 'Time Expired — Submitted';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

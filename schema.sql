@@ -389,3 +389,66 @@ CREATE TABLE IF NOT EXISTS tickets (
 -- Indexes for ticketing query performance
 CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
+
+-- ==================== JOB ASSESSMENT SYSTEM ====================
+
+-- 31. Assessment Questions (Per-Job question bank)
+CREATE TABLE IF NOT EXISTS assessment_questions (
+    id SERIAL PRIMARY KEY,
+    job_id INT REFERENCES jobs(id) ON DELETE CASCADE,  -- NULL = global fallback for all jobs
+    question_text TEXT NOT NULL,
+    option_a VARCHAR(500) NOT NULL,
+    option_b VARCHAR(500) NOT NULL,
+    option_c VARCHAR(500) NOT NULL,
+    option_d VARCHAR(500) NOT NULL,
+    correct_option CHAR(1) NOT NULL CHECK (correct_option IN ('A','B','C','D')),
+    difficulty VARCHAR(20) DEFAULT 'Medium' CHECK (difficulty IN ('Easy','Medium','Hard')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 32. Assessments (One per application — holds token, status, score, anti-cheat data)
+CREATE TABLE IF NOT EXISTS assessments (
+    id SERIAL PRIMARY KEY,
+    application_id INT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+    token VARCHAR(100) UNIQUE NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending' CHECK (status IN ('Pending','In Progress','Completed','Expired','Flagged')),
+    score INT,
+    total_questions INT,
+    percentage DECIMAL(5,2),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    tab_switches INT DEFAULT 0,
+    screen_share_granted BOOLEAN DEFAULT FALSE,
+    is_suspicious BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 33. Assessment Answers (Candidate's submitted answers per question)
+CREATE TABLE IF NOT EXISTS assessment_answers (
+    id SERIAL PRIMARY KEY,
+    assessment_id INT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+    question_id INT NOT NULL REFERENCES assessment_questions(id) ON DELETE CASCADE,
+    selected_option CHAR(1) CHECK (selected_option IN ('A','B','C','D')),
+    is_correct BOOLEAN
+);
+
+-- Indexes for assessment system
+CREATE INDEX IF NOT EXISTS idx_assessments_application ON assessments(application_id);
+CREATE INDEX IF NOT EXISTS idx_assessments_token ON assessments(token);
+CREATE INDEX IF NOT EXISTS idx_assessments_status ON assessments(status);
+CREATE INDEX IF NOT EXISTS idx_assessment_questions_job ON assessment_questions(job_id);
+CREATE INDEX IF NOT EXISTS idx_assessment_answers_assessment ON assessment_answers(assessment_id);
+
+-- 34. Password Resets (Forgot password token storage)
+CREATE TABLE IF NOT EXISTS password_resets (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(128) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);

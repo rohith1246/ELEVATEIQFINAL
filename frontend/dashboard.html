@@ -904,7 +904,120 @@ const layouts = {
         </div>
     `,
 
-    // === EMPLOYEE PANELS ===
+    assessments: `
+        <!-- Sub-tab bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <h2 style="font-size:18px; margin:0;">Job Assessments</h2>
+            <div style="display:flex; gap:6px; background:rgba(255,255,255,0.05); padding:4px; border-radius:10px; border:1px solid var(--glass-border); flex-wrap:wrap;">
+                <button id="aTab_all" onclick="switchAssessTab('all')" class="btn-primary" style="padding:5px 14px; font-size:12px; border-radius:7px;">All</button>
+                <button id="aTab_Pending" onclick="switchAssessTab('Pending')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">Pending</button>
+                <button id="aTab_In Progress" onclick="switchAssessTab('In Progress')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">In Progress</button>
+                <button id="aTab_Completed" onclick="switchAssessTab('Completed')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">Completed</button>
+                <button id="aTab_Flagged" onclick="switchAssessTab('Flagged')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--red, #ef4444);">&#x1F6A9; Flagged</button>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-bottom:20px; gap:14px;">
+            <div class="stat-card"><h3>Total Sent</h3><div class="val" id="astat_total">-</div></div>
+            <div class="stat-card"><h3>Pending</h3><div class="val" id="astat_pending">-</div></div>
+            <div class="stat-card"><h3>Completed</h3><div class="val" id="astat_completed">-</div></div>
+            <div class="stat-card" style="border-color:rgba(239,68,68,0.3);"><h3 style="color:#ef4444;">Flagged</h3><div class="val" id="astat_flagged" style="color:#ef4444;">-</div></div>
+        </div>
+
+        <!-- Assessments table -->
+        <div class="table-wrap" id="assessTableWrap">
+            <table>
+                <thead><tr>
+                    <th>Candidate</th><th>Email</th><th>Job</th>
+                    <th>Status</th><th>Score</th><th>Tab Switches</th>
+                    <th>Submitted At</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="assessTableBody">
+                    <tr><td colspan="8" style="text-align:center;">Loading assessments...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Question Bank section -->
+        <div style="margin-top:40px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <h2 style="font-size:18px; margin:0;">Question Bank</h2>
+                <button onclick="document.getElementById('addQModal').style.display='flex'" class="btn-primary">+ Add Question</button>
+            </div>
+            <div style="margin-bottom:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:13px; color:var(--ink-soft);">Filter by Job:</label>
+                <select id="qBankJobFilter" onchange="loadQuestionBank()" style="padding:7px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none; font-size:13px;">
+                    <option value="">All Jobs</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Job</th><th>Question</th><th>Options (A/B/C/D)</th><th>Correct</th><th>Difficulty</th><th>Actions</th>
+                    </tr></thead>
+                    <tbody id="qBankTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Loading questions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Question Modal -->
+        <div class="modal" id="addQModal" style="display:none;">
+            <div class="modal-content" style="max-width:600px;">
+                <button class="close-modal" onclick="document.getElementById('addQModal').style.display='none'">&times;</button>
+                <h2 style="margin-bottom:20px;">Add Assessment Question</h2>
+                <form id="addQForm" onsubmit="submitAddQuestion(event)">
+                    <div class="field">
+                        <label>Job (leave blank for global question)</label>
+                        <select id="aqJobId" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                            <option value="">-- Global (all jobs) --</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Question Text</label><textarea id="aqQuestion" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;" required></textarea></div>
+                    <div class="form-grid">
+                        <div class="field"><label>Option A</label><input type="text" id="aqA" required></div>
+                        <div class="field"><label>Option B</label><input type="text" id="aqB" required></div>
+                        <div class="field"><label>Option C</label><input type="text" id="aqC" required></div>
+                        <div class="field"><label>Option D</label><input type="text" id="aqD" required></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Correct Answer</label>
+                            <select id="aqCorrect" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                                <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Difficulty</label>
+                            <select id="aqDiff" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
+                                <option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="document.getElementById('addQModal').style.display='none'" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Cancel</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Question</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Answers Modal -->
+        <div class="modal" id="viewAnswersModal" style="display:none;">
+            <div class="modal-content" style="max-width:700px;">
+                <button class="close-modal" onclick="document.getElementById('viewAnswersModal').style.display='none'">&times;</button>
+                <h2 style="margin-bottom:6px;">Assessment Answer Review</h2>
+                <div id="viewAnswersMeta" style="color:var(--ink-soft); font-size:13px; margin-bottom:20px;"></div>
+                <div id="viewAnswersList" style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto;"></div>
+                <div style="margin-top:20px;">
+                    <button onclick="document.getElementById('viewAnswersModal').style.display='none'" class="btn-action btn-edit" style="width:100% !important; padding:12px !important; margin-top:0 !important;">Close</button>
+                </div>
+            </div>
+        </div>
+    `,
+
     emp_overview: `
         <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
             <div class="stat-card"><h3>Total Present Days</h3><div class="val" id="bal_present_days">-</div></div>
@@ -1420,6 +1533,7 @@ function loadPanelData(panelId) {
     else if (panelId === "groups") loadGroupsPanel();
     else if (panelId === "oversight") loadOversightPanel();
     else if (panelId === "tickets") loadTicketsPanel();
+    else if (panelId === "assessments") loadAssessmentsPanel();
 }
 
 function switchTab(panelId, element) {
@@ -1453,6 +1567,7 @@ function renderSidebar() {
             { id: "payroll", label: "Payroll Suite", icon: "wallet" },
             { id: "crm", label: "Client CRM", icon: "briefcase" },
             { id: "recruitment", label: "Recruitment Board", icon: "user-plus" },
+            { id: "assessments", label: "Assessments", icon: "clipboard-check" },
             { id: "announcements", label: "Announcements", icon: "megaphone" },
             { id: "reports", label: "Reports & Audits", icon: "file-bar-chart" },
             { id: "admin_contacts", label: "Contacts", icon: "contact" },
@@ -1693,6 +1808,214 @@ async function submitResolveTicket(e) {
         loadAdminTickets();
     } catch(err) {
         alert("Failed to resolve ticket: " + err.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ASSESSMENTS PANEL
+// ═══════════════════════════════════════════════════════════════
+
+let _allAssessments = [];
+let _currentAssessTab = 'all';
+
+async function loadAssessmentsPanel() {
+    try {
+        const data = await apiCall('/api/assessment/all');
+        _allAssessments = data;
+        // Compute stats
+        const total = data.length;
+        const pending = data.filter(a => a.status === 'Pending').length;
+        const completed = data.filter(a => a.status === 'Completed').length;
+        const flagged = data.filter(a => a.status === 'Flagged').length;
+        const s = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+        s('astat_total', total); s('astat_pending', pending);
+        s('astat_completed', completed); s('astat_flagged', flagged);
+
+        renderAssessTable(_currentAssessTab);
+        loadQuestionBank();
+        populateJobDropdowns();
+    } catch(e) {
+        const tb = document.getElementById('assessTableBody');
+        if(tb) tb.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;">Failed to load assessments: ${e.message}</td></tr>`;
+    }
+}
+
+function switchAssessTab(tab) {
+    _currentAssessTab = tab;
+    ['all','Pending','In Progress','Completed','Flagged'].forEach(t => {
+        const btn = document.getElementById(`aTab_${t}`);
+        if (!btn) return;
+        const isActive = t === tab;
+        btn.className = isActive ? 'btn-primary' : 'btn-login';
+        btn.style.background = isActive ? '' : 'transparent';
+        btn.style.border = isActive ? '' : 'none';
+        btn.style.color = isActive ? '' : (t === 'Flagged' ? '#ef4444' : 'var(--ink-soft)');
+    });
+    renderAssessTable(tab);
+}
+
+function statusBadge(status) {
+    const map = {
+        'Pending':     { bg:'rgba(255,145,0,.12)', color:'#ff9100', label:'⏳ Pending' },
+        'In Progress': { bg:'rgba(62,166,255,.12)', color:'#3ea6ff', label:'▶ In Progress' },
+        'Completed':   { bg:'rgba(0,230,118,.12)',  color:'#00e676', label:'✅ Completed' },
+        'Flagged':     { bg:'rgba(239,68,68,.12)',  color:'#ef4444', label:'🚩 Flagged' },
+        'Expired':     { bg:'rgba(255,255,255,.06)', color:'#6b7fa3', label:'⌛ Expired' },
+    };
+    const s = map[status] || { bg:'rgba(255,255,255,.05)', color:'#9baec8', label: status };
+    return `<span style="background:${s.bg};color:${s.color};padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;">${s.label}</span>`;
+}
+
+function renderAssessTable(tab) {
+    const rows = tab === 'all' ? _allAssessments : _allAssessments.filter(a => a.status === tab);
+    const tbody = document.getElementById('assessTableBody');
+    if (!tbody) return;
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">No assessments found for this filter.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = rows.map(a => {
+        const score = a.score !== null && a.score !== undefined
+            ? `${a.score}/${a.total_questions} (${parseFloat(a.percentage||0).toFixed(0)}%)`
+            : '—';
+        const submitted = a.completed_at ? new Date(a.completed_at).toLocaleString() : '—';
+        const switchColor = a.tab_switches >= 3 ? '#ef4444' : (a.tab_switches > 0 ? '#ff9100' : '#00e676');
+        return `<tr>
+            <td><strong>${a.candidate_name}</strong>${a.is_suspicious ? ' <span style="color:#ef4444;font-size:11px;">⚠️ Suspicious</span>' : ''}</td>
+            <td style="font-size:12px;">${a.email}</td>
+            <td style="font-size:12px;">${a.job_title}<br><span style="color:var(--ink-soft);font-size:11px;">${a.job_department||''}</span></td>
+            <td>${statusBadge(a.status)}</td>
+            <td style="font-weight:600;">${score}</td>
+            <td style="color:${switchColor};font-weight:600;text-align:center;">${a.tab_switches}</td>
+            <td style="font-size:12px;">${submitted}</td>
+            <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${a.status === 'Completed' || a.status === 'Flagged'
+                        ? `<button onclick="viewAssessmentAnswers(${a.id},'${a.candidate_name}')" class="btn-action btn-edit" style="font-size:11px;padding:5px 10px;margin-top:0;">👁 Answers</button>`
+                        : ''}
+                    ${a.status !== 'Completed'
+                        ? `<button onclick="resendAssessEmail(${a.id})" class="btn-action btn-approve" style="font-size:11px;padding:5px 10px;margin-top:0;">📧 Resend</button>`
+                        : ''}
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function viewAssessmentAnswers(assessmentId, candidateName) {
+    const modal = document.getElementById('viewAnswersModal');
+    const meta = document.getElementById('viewAnswersMeta');
+    const list = document.getElementById('viewAnswersList');
+    if (!modal) return;
+    meta.textContent = `Candidate: ${candidateName} | Assessment ID: #${assessmentId}`;
+    list.innerHTML = '<div style="text-align:center;color:var(--ink-soft);">Loading answers...</div>';
+    modal.style.display = 'flex';
+    try {
+        const data = await apiCall(`/api/assessment/answers/${assessmentId}`);
+        if (!data.length) { list.innerHTML = '<div style="text-align:center;color:var(--ink-soft);">No answers recorded.</div>'; return; }
+        list.innerHTML = data.map((ans, i) => {
+            const isCorrect = ans.is_correct;
+            const border = isCorrect ? 'rgba(0,230,118,.3)' : 'rgba(239,68,68,.3)';
+            const icon = isCorrect ? '✅' : '❌';
+            const opts = ['a','b','c','d'].map(o =>
+                `<div style="font-size:12px;padding:3px 0;${ans.selected_option === o.toUpperCase() ? 'color:#3ea6ff;font-weight:600;' : 'color:#6b7fa3;'}">${o.toUpperCase()}: ${ans['option_'+o]}${ans.selected_option === o.toUpperCase() ? ' ◀ Answered' : ''}${ans.correct_option === o.toUpperCase() ? ' ✓ Correct' : ''}</div>`
+            ).join('');
+            return `<div style="background:rgba(255,255,255,.02);border:1px solid ${border};border-radius:10px;padding:14px;">
+                <div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;">Q${i+1} ${icon} — <span style="color:${isCorrect?'#00e676':'#ef4444'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></div>
+                <div style="font-size:14px;color:#fff;margin-bottom:10px;">${ans.question_text}</div>
+                ${opts}
+            </div>`;
+        }).join('');
+    } catch(e) {
+        list.innerHTML = `<div style="text-align:center;color:#ef4444;">Failed to load answers: ${e.message}</div>`;
+    }
+}
+
+async function resendAssessEmail(assessmentId) {
+    try {
+        await apiCall(`/api/assessment/resend/${assessmentId}`, 'POST');
+        alert('Assessment email resent successfully!');
+    } catch(e) {
+        alert('Failed to resend email: ' + e.message);
+    }
+}
+
+async function loadQuestionBank() {
+    const jobFilter = document.getElementById('qBankJobFilter');
+    const jobId = jobFilter ? jobFilter.value : '';
+    const tbody = document.getElementById('qBankTableBody');
+    if (!tbody) return;
+    try {
+        const url = jobId ? `/api/assessment/questions?job_id=${jobId}` : '/api/assessment/questions';
+        const data = await apiCall(url);
+        if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);">No questions in bank. Click "+ Add Question" to create one.</td></tr>'; return; }
+        tbody.innerHTML = data.map(q => {
+            const diffColor = q.difficulty === 'Easy' ? '#00e676' : (q.difficulty === 'Hard' ? '#ef4444' : '#ff9100');
+            return `<tr>
+                <td style="font-size:12px;">${q.job_title || '<em style="color:var(--ink-soft);">Global</em>'}</td>
+                <td style="font-size:13px;max-width:220px;">${q.question_text}</td>
+                <td style="font-size:11px;color:var(--ink-soft);">A: ${q.option_a}<br>B: ${q.option_b}<br>C: ${q.option_c}<br>D: ${q.option_d}</td>
+                <td><span style="background:rgba(0,230,118,.12);color:#00e676;padding:3px 10px;border-radius:6px;font-weight:700;">${q.correct_option}</span></td>
+                <td><span style="color:${diffColor};font-size:12px;font-weight:600;">${q.difficulty}</span></td>
+                <td>
+                    <button onclick="deleteQuestion(${q.id})" class="btn-action btn-reject" style="font-size:11px;padding:5px 10px;margin-top:0;">🗑 Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">Failed to load: ${e.message}</td></tr>`;
+    }
+}
+
+async function populateJobDropdowns() {
+    try {
+        const jobs = await apiCall('/api/recruitment/jobs');
+        ['aqJobId','qBankJobFilter'].forEach(elId => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const current = el.value;
+            // Keep first option, re-populate rest
+            while (el.options.length > 1) el.remove(1);
+            jobs.forEach(j => {
+                const opt = document.createElement('option');
+                opt.value = j.id; opt.textContent = j.title;
+                el.appendChild(opt);
+            });
+            el.value = current;
+        });
+    } catch(e) {}
+}
+
+async function submitAddQuestion(e) {
+    e.preventDefault();
+    const payload = {
+        job_id: document.getElementById('aqJobId').value || null,
+        question_text: document.getElementById('aqQuestion').value.trim(),
+        option_a: document.getElementById('aqA').value.trim(),
+        option_b: document.getElementById('aqB').value.trim(),
+        option_c: document.getElementById('aqC').value.trim(),
+        option_d: document.getElementById('aqD').value.trim(),
+        correct_option: document.getElementById('aqCorrect').value,
+        difficulty: document.getElementById('aqDiff').value,
+    };
+    try {
+        await apiCall('/api/assessment/questions', 'POST', payload);
+        alert('Question added successfully!');
+        document.getElementById('addQModal').style.display = 'none';
+        document.getElementById('addQForm').reset();
+        loadQuestionBank();
+    } catch(e) {
+        alert('Failed to add question: ' + e.message);
+    }
+}
+
+async function deleteQuestion(qId) {
+    if (!confirm('Delete this question? This cannot be undone.')) return;
+    try {
+        await apiCall(`/api/assessment/questions/${qId}`, 'DELETE');
+        loadQuestionBank();
+    } catch(e) {
+        alert('Failed to delete question: ' + e.message);
     }
 }
 </script>

@@ -41,6 +41,15 @@ class Config:
     # Networking port the application server binds to
     PORT = int(os.getenv("PORT", 5000))
 
+    # ── Email / SMTP (Gmail App Password) ──────────────────────────────────
+    SMTP_EMAIL    = os.getenv("SMTP_EMAIL", "")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+    SMTP_HOST     = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT_NUM = int(os.getenv("SMTP_PORT", 587))
+
+    # Base URL used for building assessment deep links sent in emails
+    APP_BASE_URL  = os.getenv("APP_BASE_URL", "http://localhost:5000")
+
 
 # Safe error messages for API responses (avoids leaking internal details)
 def safe_error(message="An internal error occurred"):
