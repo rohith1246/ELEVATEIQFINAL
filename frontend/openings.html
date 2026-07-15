@@ -1,209 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Careers at ElevateIQ — Join Our Dynamic Global Team</title>
-<meta name="description" content="Explore job openings at ElevateIQ. We are hiring software engineers, customer support executives, medical coders, and operations managers. Join us and grow your career.">
-<meta name="keywords" content="ElevateIQ careers, job openings, software engineer jobs, telecalling jobs, medical coding careers, hire developers">
-<meta property="og:title" content="Careers at ElevateIQ — Join Our Dynamic Global Team">
-<meta property="og:description" content="Explore job openings at ElevateIQ. We are hiring software engineers, customer support executives, medical coders, and operations managers. Join us and grow your career.">
-<meta property="og:image" content="images/logo.png">
-<meta property="og:type" content="website">
-<meta name="theme-color" content="#06091A">
-<link rel="shortcut icon" href="images/logo.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<style>
-.job-row{
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
-  background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:16px;
-  padding:22px 26px; backdrop-filter:blur(16px);
-  transition:transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
-  margin-bottom: 14px;
-}
-.job-row:hover{ transform:translateY(-4px) translateX(2px); border-color:rgba(255,255,255,0.3); box-shadow:0 14px 34px rgba(0,0,0,0.35); }
-.job-meta span{ font-size:12px; color:var(--ink-faint); padding:4px 10px; border-radius:100px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); margin-right:8px; }
-.btn-apply{
-  padding:11px 24px; border-radius:100px; font-size:13px; font-weight:600;
-  text-decoration:none; color:#fff; background:linear-gradient(135deg, var(--pink), var(--blue));
-  transition:transform 0.25s ease, box-shadow 0.25s ease; white-space:nowrap;
-  cursor: pointer; border: none;
-}
-.btn-apply:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(124,92,255,0.4); }
-.filter-chip{
-  padding:8px 18px; border-radius:100px; font-size:13px; font-weight:500;
-  border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--ink-soft);
-  cursor:pointer; transition:all 0.3s ease;
-}
-.filter-chip:hover, .filter-chip.active{ color:var(--ink); border-color:var(--pink); background:rgba(236,47,123,0.12); }
 
-/* Modal overlay styling */
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(4, 11, 23, 0.85);
-  backdrop-filter: blur(10px);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-.modal.open {
-  display: flex;
-}
-</style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Careers at ElevateIQ — Join Our Dynamic Global Team</title>
+  <meta name="description"
+    content="Explore job openings at ElevateIQ. We are hiring software engineers, customer support executives, medical coders, and operations managers. Join us and grow your career.">
+  <meta name="keywords"
+    content="ElevateIQ careers, job openings, software engineer jobs, telecalling jobs, medical coding careers, hire developers">
+  <meta property="og:title" content="Careers at ElevateIQ — Join Our Dynamic Global Team">
+  <meta property="og:description"
+    content="Explore job openings at ElevateIQ. We are hiring software engineers, customer support executives, medical coders, and operations managers. Join us and grow your career.">
+  <meta property="og:image" content="images/logo.png">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#06091A">
+  <link rel="shortcut icon" href="images/logo.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .job-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 22px 26px;
+      backdrop-filter: blur(16px);
+      transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+      margin-bottom: 14px;
+    }
+
+    .job-row:hover {
+      transform: translateY(-4px) translateX(2px);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+    }
+
+    .job-meta span {
+      font-size: 12px;
+      color: var(--ink-faint);
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      margin-right: 8px;
+    }
+
+    .btn-apply {
+      padding: 11px 24px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      color: #fff;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      white-space: nowrap;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-apply:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(124, 92, 255, 0.4);
+    }
+
+    .filter-chip {
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .filter-chip:hover,
+    .filter-chip.active {
+      color: var(--ink);
+      border-color: var(--pink);
+      background: rgba(236, 47, 123, 0.12);
+    }
+
+    /* Modal overlay styling */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(4, 11, 23, 0.85);
+      backdrop-filter: blur(10px);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+  </style>
 </head>
+
 <body>
 
 
-<!-- ==================== BACKGROUND VISUALS ==================== -->
-<!-- Ambient Background Video -->
-<video autoplay muted loop playsinline class="video-bg">
-  <source src="logo_animated.mp4" type="video/mp4">
-</video>
+  <!-- ==================== BACKGROUND VISUALS ==================== -->
+  <!-- Ambient Background Video -->
+  <video autoplay muted loop playsinline class="video-bg">
+    <source src="logo_animated.mp4" type="video/mp4">
+  </video>
 
-<!-- Dynamic backdrop gradient orbs -->
-<div class="bg-canvas">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
-
-
-<!-- ==================== NAVIGATION BAR ==================== -->
-<nav>
-  <a href="/edutech/" class="logo">
-    <img src="images/logo.png" alt="Elevate IQ Logo">
-  </a>
-    <div class="menu-toggle" id="mobile-menu-btn" onclick="this.classList.toggle('active'); document.getElementById('navLinks').classList.toggle('active')">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-<ul id="navLinks" class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="openings.html" class="active">Careers</a></li>
-    <li><a href="index.html#services">Services</a></li>
-    <li><a href="contact.html">Contact Us</a></li>
-    <li class="mobile-auth"><a href="login.html">Login</a></li>
-    <li class="mobile-auth"><a href="register.html">Sign up</a></li>
-  </ul>
-  <div class="nav-right" id="navRight">
-    <a href="login.html" class="btn-login">Login</a>
-    <a href="register.html" class="btn-primary">Sign up</a>
-  </div>
-</nav>
-
-
-<!-- ==================== CAREERS HEADER AND FILTER CHIPS ==================== -->
-<section class="section" style="padding-top:160px;">
-  <div class="section-head">
-    <div class="label">Careers</div>
-    <h1>Build your future with ElevateIQ</h1>
-    
-  </div>
-
-  <!-- Interactive Job Search Bar -->
-  <div style="max-width: 500px; margin: 0 auto 24px; position:relative; display:flex; align-items:center;">
-    <input type="text" id="jobSearch" placeholder="Search open roles by title or keyword..." 
-           style="width:100%; padding:14px 20px 14px 44px; border-radius:100px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; outline:none; font-size:14.5px; backdrop-filter:blur(8px); transition: border-color 0.3s;"
-           oninput="handleJobSearch()"
-           onfocus="this.style.borderColor='var(--blue)'"
-           onblur="this.style.borderColor='var(--glass-border)'">
-    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="width:18px; height:18px; position:absolute; left:16px; pointer-events:none;">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-    </svg>
-  </div>
-
-  <!-- Department Selection Filter -->
-  <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
-    <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
-    <div class="filter-chip" id="chip_it" onclick="filterDepartment('IT Services')">IT Services</div>
-    <div class="filter-chip" id="chip_nonit" onclick="filterDepartment('Non-IT Services')">Non-IT Services</div>
+  <!-- Dynamic backdrop gradient orbs -->
+  <div class="bg-canvas">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
   </div>
 
 
-  <!-- ==================== DYNAMIC JOBS LISTING CONTAINER ==================== -->
-  <div id="jobsContainer" style="display:flex; flex-direction:column; gap:14px;">
-     <!-- Job openings loaded dynamically -->
-     <div style="text-align:center; color:var(--ink-soft);">Loading current openings...</div>
+  <!-- ==================== NAVIGATION BAR ==================== -->
+  <nav>
+    <a href="/edutech/" class="logo">
+      <img src="images/logo.png" alt="Elevate IQ Logo">
+    </a>
+    <div class="menu-toggle" id="mobile-menu-btn"
+      onclick="this.classList.toggle('active'); document.getElementById('navLinks').classList.toggle('active')">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <ul id="navLinks" class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="openings.html" class="active">Careers</a></li>
+      <li><a href="index.html#services">Services</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+      <li class="mobile-auth"><a href="login.html">Login</a></li>
+      <li class="mobile-auth"><a href="register.html">Sign up</a></li>
+    </ul>
+    <div class="nav-right" id="navRight">
+      <a href="login.html" class="btn-login">Login</a>
+      <a href="register.html" class="btn-primary">Sign up</a>
+    </div>
+  </nav>
+
+
+  <!-- ==================== CAREERS HEADER AND FILTER CHIPS ==================== -->
+  <section class="section" style="padding-top:160px;">
+    <div class="section-head">
+      <div class="label">Careers</div>
+      <h1>Build your future with ElevateIQ</h1>
+
+    </div>
+
+    <!-- Interactive Job Search Bar -->
+    <div style="max-width: 500px; margin: 0 auto 24px; position:relative; display:flex; align-items:center;">
+      <input type="text" id="jobSearch" placeholder="Search open roles by title or keyword..."
+        style="width:100%; padding:14px 20px 14px 44px; border-radius:100px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.02); color:#fff; outline:none; font-size:14.5px; backdrop-filter:blur(8px); transition: border-color 0.3s;"
+        oninput="handleJobSearch()" onfocus="this.style.borderColor='var(--blue)'"
+        onblur="this.style.borderColor='var(--glass-border)'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2"
+        style="width:18px; height:18px; position:absolute; left:16px; pointer-events:none;">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+    </div>
+
+    <!-- Department Selection Filter -->
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
+      <div class="filter-chip active" id="chip_all" onclick="filterDepartment('All')">All roles</div>
+      <div class="filter-chip" id="chip_it" onclick="filterDepartment('IT Services')">IT Services</div>
+      <div class="filter-chip" id="chip_nonit" onclick="filterDepartment('Non-IT Services')">Non-IT Services</div>
+    </div>
+
+
+    <!-- ==================== DYNAMIC JOBS LISTING CONTAINER ==================== -->
+    <div id="jobsContainer" style="display:flex; flex-direction:column; gap:14px;">
+      <!-- Job openings loaded dynamically -->
+      <div style="text-align:center; color:var(--ink-soft);">Loading current openings...</div>
+    </div>
+  </section>
+
+
+  <!-- ==================== RESUME APPLICATION MODAL ==================== -->
+  <div class="modal" id="applyModal">
+    <div class="auth-card" style="position:relative; max-width:480px; width:100%;">
+      <button onclick="closeApplyModal()"
+        style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--ink-faint); font-size:24px; cursor:pointer;">&times;</button>
+      <h2 style="font-size:22px; text-align:center; margin-bottom:6px;">Submit Application</h2>
+      <p id="applyJobTitle" style="text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:20px;"></p>
+
+      <form id="applyForm">
+        <input type="hidden" id="applyJobId">
+        <div class="field"><label>Full Name</label><input type="text" id="applyName" required></div>
+        <div class="field"><label>Email Address</label><input type="email" id="applyEmail" required></div>
+        <div class="field"><label>Phone Number</label><input type="tel" id="applyPhone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number" required></div>
+        <div class="field"><label>Upload Resume (PDF/DOCX/TXT)</label><input type="file" id="applyResume" required
+            style="padding:10px;"></div>
+        <button type="submit" class="btn-primary auth-submit">Submit Application</button>
+      </form>
+      <!-- Success/error status messages -->
+      <div class="msg error" id="applyErrorMsg"></div>
+      <div class="msg success" id="applySuccessMsg"></div>
+    </div>
   </div>
-</section>
 
 
-<!-- ==================== RESUME APPLICATION MODAL ==================== -->
-<div class="modal" id="applyModal">
-  <div class="auth-card" style="position:relative; max-width:480px; width:100%;">
-    <button onclick="closeApplyModal()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--ink-faint); font-size:24px; cursor:pointer;">&times;</button>
-    <h2 style="font-size:22px; text-align:center; margin-bottom:6px;">Submit Application</h2>
-    <p id="applyJobTitle" style="text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:20px;"></p>
-    
-    <form id="applyForm">
-      <input type="hidden" id="applyJobId">
-      <div class="field"><label>Full Name</label><input type="text" id="applyName" required></div>
-      <div class="field"><label>Email Address</label><input type="email" id="applyEmail" required></div>
-      <div class="field"><label>Phone Number</label><input type="text" id="applyPhone"></div>
-      <div class="field"><label>Upload Resume (PDF/DOCX/TXT)</label><input type="file" id="applyResume" required style="padding:10px;"></div>
-      <button type="submit" class="btn-primary auth-submit">Submit Application</button>
-    </form>
-    <!-- Success/error status messages -->
-    <div class="msg error" id="applyErrorMsg"></div>
-    <div class="msg success" id="applySuccessMsg"></div>
-  </div>
-</div>
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
+  </footer>
 
 
-<!-- ==================== FOOTER ==================== -->
-<footer>
-  © 2026 ElevateIQ Soft Tech Private Limited. All rights reserved.
-</footer>
+  <!-- ==================== SCRIPTS ==================== -->
+  <script>
+    // Backend API Host Location determination
+    const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
+    let allJobs = [];
 
-
-<!-- ==================== SCRIPTS ==================== -->
-<script>
-// Backend API Host Location determination
-const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
-let allJobs = [];
-
-// Session check and dynamic navbar modifications
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user") || "null");
-if (token && user) {
-  document.getElementById("navRight").innerHTML = `
+    // Session check and dynamic navbar modifications
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (token && user) {
+      document.getElementById("navRight").innerHTML = `
     <a href="dashboard.html" class="btn-login" style="margin-right:15px; font-weight:600;">Dashboard</a>
     <a href="#" onclick="logout(event)" class="btn-primary" style="padding:9px 20px;">Log out</a>
   `;
-}
-function logout(e) {
-  e.preventDefault();
-  localStorage.clear();
-  window.location.reload();
-}
+    }
+    function logout(e) {
+      e.preventDefault();
+      localStorage.clear();
+      window.location.reload();
+    }
 
-// Fetch open roles from API and refresh job layout
-async function loadJobs() {
-  try {
-    const res = await fetch(`${API_BASE}/jobs`);
-    allJobs = await res.json();
-    renderJobs(allJobs);
-  } catch (err) {
-    document.getElementById("jobsContainer").innerHTML = `<div style="text-align:center; color:#ff9999;">Could not load job postings. Make sure the server is running.</div>`;
-  }
-}
+    // Fetch open roles from API and refresh job layout
+    async function loadJobs() {
+      try {
+        const res = await fetch(`${API_BASE}/jobs`);
+        allJobs = await res.json();
+        renderJobs(allJobs);
+      } catch (err) {
+        document.getElementById("jobsContainer").innerHTML = `<div style="text-align:center; color:#ff9999;">Could not load job postings. Make sure the server is running.</div>`;
+      }
+    }
 
-// Dynamically formulate HTML rows for each job listing
-function renderJobs(list) {
-  const container = document.getElementById("jobsContainer");
-  container.innerHTML = "";
-  if (list.length === 0) {
-    container.innerHTML = `<div style="text-align:center; color:var(--ink-faint);">No open job roles at this time. Check back later!</div>`;
-    return;
-  }
+    // Dynamically formulate HTML rows for each job listing
+    function renderJobs(list) {
+      const container = document.getElementById("jobsContainer");
+      container.innerHTML = "";
+      if (list.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--ink-faint);">No open job roles at this time. Check back later!</div>`;
+        return;
+      }
 
-  list.forEach(job => {
-    container.innerHTML += `
+      list.forEach(job => {
+        container.innerHTML += `
       <div class="job-row">
         <div>
           <h3 style="font-size:16px; font-weight:600; margin-bottom:6px;">${job.title}</h3>
@@ -217,149 +273,150 @@ function renderJobs(list) {
         <button onclick="openApplyModal(${job.id}, '${job.title}')" class="btn-apply">Apply now</button>
       </div>
     `;
-  });
-}
-
-// Filter listings depending on clicked department chip category or search box inputs
-let activeDept = 'All';
-let searchQuery = '';
-
-function handleJobSearch() {
-  searchQuery = document.getElementById("jobSearch").value.trim().toLowerCase();
-  applyFilters();
-}
-
-function filterDepartment(dept) {
-  activeDept = dept;
-  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
-  
-  if (dept === 'All') {
-    document.getElementById("chip_all").classList.add("active");
-  } else if (dept === 'IT Services') {
-    document.getElementById("chip_it").classList.add("active");
-  } else if (dept === 'Non-IT Services') {
-    document.getElementById("chip_nonit").classList.add("active");
-  }
-  
-  applyFilters();
-}
-
-function applyFilters() {
-  const filtered = allJobs.filter(j => {
-    const matchesDept = activeDept === 'All' || j.department.toLowerCase().includes(activeDept.toLowerCase());
-    const titleMatch = j.title.toLowerCase().includes(searchQuery);
-    const descMatch = (j.description || "").toLowerCase().includes(searchQuery);
-    const matchesSearch = !searchQuery || titleMatch || descMatch;
-    return matchesDept && matchesSearch;
-  });
-  renderJobs(filtered);
-}
-
-// Set up apply modal fields and auto-complete candidate details if logged in
-function openApplyModal(jobId, jobTitle) {
-  document.getElementById("applyJobId").value = jobId;
-  document.getElementById("applyJobTitle").textContent = `Position: ${jobTitle}`;
-  document.getElementById("applyErrorMsg").style.display = "none";
-  document.getElementById("applySuccessMsg").style.display = "none";
-  
-  if (user) {
-    document.getElementById("applyName").value = user.name;
-    document.getElementById("applyEmail").value = user.email;
-  } else {
-    document.getElementById("applyName").value = "";
-    document.getElementById("applyEmail").value = "";
-  }
-  document.getElementById("applyPhone").value = "";
-  document.getElementById("applyResume").value = "";
-
-  document.getElementById("applyModal").classList.add("open");
-}
-
-function closeApplyModal() {
-  document.getElementById("applyModal").classList.remove("open");
-}
-
-// Handle career application form upload POST
-document.getElementById("applyForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const errorMsg = document.getElementById("applyErrorMsg");
-  const successMsg = document.getElementById("applySuccessMsg");
-  errorMsg.style.display = "none";
-  successMsg.style.display = "none";
-
-  // Formulate Multipart Form-data for binary upload transfer
-  const formData = new FormData();
-  formData.append("job_id", document.getElementById("applyJobId").value);
-  formData.append("name", document.getElementById("applyName").value);
-  formData.append("email", document.getElementById("applyEmail").value);
-  formData.append("phone", document.getElementById("applyPhone").value);
-  formData.append("resume", document.getElementById("applyResume").files[0]);
-
-  try {
-    const res = await fetch(`${API_BASE}/applications`, {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      successMsg.textContent = data.message || "Application submitted successfully!";
-      successMsg.style.display = "block";
-      setTimeout(() => { closeApplyModal(); }, 1500);
-    } else {
-      errorMsg.textContent = data.error || "Failed to submit application.";
-      errorMsg.style.display = "block";
+      });
     }
-  } catch (err) {
-    errorMsg.textContent = "Could not reach the server.";
-    errorMsg.style.display = "block";
-  }
-});
 
-// Run load on document ready
-loadJobs();
+    // Filter listings depending on clicked department chip category or search box inputs
+    let activeDept = 'All';
+    let searchQuery = '';
 
-// Premium Navigation links click animation feedback & smooth scroll handler
-document.querySelectorAll('.nav-links a, nav .logo').forEach(link => {
-  link.addEventListener('click', function(e) {
-    this.classList.add('nav-clicked');
-    setTimeout(() => this.classList.remove('nav-clicked'), 250);
+    function handleJobSearch() {
+      searchQuery = document.getElementById("jobSearch").value.trim().toLowerCase();
+      applyFilters();
+    }
 
-    const href = this.getAttribute('href');
-    if (!href) return;
+    function filterDepartment(dept) {
+      activeDept = dept;
+      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
 
-    // Helper to normalize page names
-    const normalize = (path) => {
-      if (!path) return 'index.html';
-      if (path.includes('edutech')) return 'edutech';
-      const filename = path.split('/').pop();
-      if (filename === '' || filename === '/') return 'index.html';
-      return filename;
-    };
-
-    const currentPage = normalize(window.location.pathname);
-    const targetPage = normalize(href.split('#')[0]);
-    const targetHash = href.includes('#') ? ('#' + href.split('#')[1]) : '';
-
-    const isCurrentPage = currentPage === targetPage;
-
-    if (isCurrentPage) {
-      e.preventDefault();
-      if (targetHash) {
-        const target = document.querySelector(targetHash);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          history.pushState(null, null, targetHash);
-        }
-      } else {
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        history.pushState(null, null, window.location.pathname);
+      if (dept === 'All') {
+        document.getElementById("chip_all").classList.add("active");
+      } else if (dept === 'IT Services') {
+        document.getElementById("chip_it").classList.add("active");
+      } else if (dept === 'Non-IT Services') {
+        document.getElementById("chip_nonit").classList.add("active");
       }
+
+      applyFilters();
     }
-  });
-});
-</script>
+
+    function applyFilters() {
+      const filtered = allJobs.filter(j => {
+        const matchesDept = activeDept === 'All' || j.department.toLowerCase().includes(activeDept.toLowerCase());
+        const titleMatch = j.title.toLowerCase().includes(searchQuery);
+        const descMatch = (j.description || "").toLowerCase().includes(searchQuery);
+        const matchesSearch = !searchQuery || titleMatch || descMatch;
+        return matchesDept && matchesSearch;
+      });
+      renderJobs(filtered);
+    }
+
+    // Set up apply modal fields and auto-complete candidate details if logged in
+    function openApplyModal(jobId, jobTitle) {
+      document.getElementById("applyJobId").value = jobId;
+      document.getElementById("applyJobTitle").textContent = `Position: ${jobTitle}`;
+      document.getElementById("applyErrorMsg").style.display = "none";
+      document.getElementById("applySuccessMsg").style.display = "none";
+
+      if (user) {
+        document.getElementById("applyName").value = user.name;
+        document.getElementById("applyEmail").value = user.email;
+      } else {
+        document.getElementById("applyName").value = "";
+        document.getElementById("applyEmail").value = "";
+      }
+      document.getElementById("applyPhone").value = "";
+      document.getElementById("applyResume").value = "";
+
+      document.getElementById("applyModal").classList.add("open");
+    }
+
+    function closeApplyModal() {
+      document.getElementById("applyModal").classList.remove("open");
+    }
+
+    // Handle career application form upload POST
+    document.getElementById("applyForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const errorMsg = document.getElementById("applyErrorMsg");
+      const successMsg = document.getElementById("applySuccessMsg");
+      errorMsg.style.display = "none";
+      successMsg.style.display = "none";
+
+      // Formulate Multipart Form-data for binary upload transfer
+      const formData = new FormData();
+      formData.append("job_id", document.getElementById("applyJobId").value);
+      formData.append("name", document.getElementById("applyName").value);
+      formData.append("email", document.getElementById("applyEmail").value);
+      formData.append("phone", document.getElementById("applyPhone").value);
+      formData.append("resume", document.getElementById("applyResume").files[0]);
+
+      try {
+        const res = await fetch(`${API_BASE}/applications`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          successMsg.textContent = data.message || "Application submitted successfully!";
+          successMsg.style.display = "block";
+          setTimeout(() => { closeApplyModal(); }, 1500);
+        } else {
+          errorMsg.textContent = data.error || "Failed to submit application.";
+          errorMsg.style.display = "block";
+        }
+      } catch (err) {
+        errorMsg.textContent = "Could not reach the server.";
+        errorMsg.style.display = "block";
+      }
+    });
+
+    // Run load on document ready
+    loadJobs();
+
+    // Premium Navigation links click animation feedback & smooth scroll handler
+    document.querySelectorAll('.nav-links a, nav .logo').forEach(link => {
+      link.addEventListener('click', function (e) {
+        this.classList.add('nav-clicked');
+        setTimeout(() => this.classList.remove('nav-clicked'), 250);
+
+        const href = this.getAttribute('href');
+        if (!href) return;
+
+        // Helper to normalize page names
+        const normalize = (path) => {
+          if (!path) return 'index.html';
+          if (path.includes('edutech')) return 'edutech';
+          const filename = path.split('/').pop();
+          if (filename === '' || filename === '/') return 'index.html';
+          return filename;
+        };
+
+        const currentPage = normalize(window.location.pathname);
+        const targetPage = normalize(href.split('#')[0]);
+        const targetHash = href.includes('#') ? ('#' + href.split('#')[1]) : '';
+
+        const isCurrentPage = currentPage === targetPage;
+
+        if (isCurrentPage) {
+          e.preventDefault();
+          if (targetHash) {
+            const target = document.querySelector(targetHash);
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              history.pushState(null, null, targetHash);
+            }
+          } else {
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            history.pushState(null, null, window.location.pathname);
+          }
+        }
+      });
+    });
+  </script>
 
 </body>
+
 </html>
