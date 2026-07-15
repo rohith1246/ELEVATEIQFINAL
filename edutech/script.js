@@ -223,22 +223,31 @@
     if (titleLower.includes("aws") || icon === "server") {
       return "/images/course%20images/aws.jpeg";
     }
+    if (titleLower.includes("ui") || titleLower.includes("design") || icon === "palette") {
+      return "/images/course%20images/uiux-new.jpg";
+    }
     if (titleLower.includes("app") || titleLower.includes("mobile")) {
       return "/images/course%20images/app.jpeg";
     }
     if (titleLower.includes("python")) {
-      return "/images/course%20images/python%20course.jpg";
+      return "/images/course%20images/python-new.jpg";
     }
     if (titleLower.includes("java")) {
       return "/images/course%20images/java%20couse.webp";
     }
-    if (titleLower.includes("data science") || titleLower.includes("ai") || icon === "brain" || icon === "chart") {
+    if (titleLower.includes("ai") || titleLower.includes("machine learning") || icon === "brain") {
+      return "/images/course%20images/aiml-new.jpg";
+    }
+    if (titleLower.includes("data science") || icon === "chart") {
       return "/images/course%20images/Data-science.jpg";
     }
     if (titleLower.includes("cyber") || titleLower.includes("security") || icon === "shield") {
       return "/images/course%20images/cybersecurity.jpg";
     }
-    if (titleLower.includes("full stack") || titleLower.includes("web") || titleLower.includes("devops") || titleLower.includes("cloud")) {
+    if (titleLower.includes("devops") || titleLower.includes("cloud") || icon === "cloud") {
+      return "/images/course%20images/devops-new.jpg";
+    }
+    if (titleLower.includes("full stack") || titleLower.includes("web") || icon === "code") {
       return "/images/course%20images/fullstack%20development.jpg";
     }
     
@@ -246,12 +255,12 @@
       layers: '/images/course%20images/app.jpeg',
       code:   '/images/course%20images/fullstack%20development.jpg',
       coffee: '/images/course%20images/java%20couse.webp',
-      brain:  '/images/course%20images/Data-science.jpg',
+      brain:  '/images/course%20images/aiml-new.jpg',
       chart:  '/images/course%20images/Data-science.jpg',
-      cloud:  '/images/course%20images/fullstack%20development.jpg',
+      cloud:  '/images/course%20images/devops-new.jpg',
       server: '/images/course%20images/aws.jpeg',
       shield: '/images/course%20images/cybersecurity.jpg',
-      palette:'/images/course_ui_ux.webp'
+      palette: '/images/course%20images/uiux-new.jpg'
     };
     return map[icon] || '/images/course%20images/fullstack%20development.jpg';
   }
