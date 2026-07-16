@@ -340,17 +340,6 @@
 <script>
 const API_BASE = window.location.origin;
 
-// Redirect if session token exists
-if (localStorage.getItem("edutech_token")) {
-  const params = new URLSearchParams(window.location.search);
-  const redir = params.get("redirect");
-  if (redir) {
-    window.location.href = redir;
-  } else {
-    window.location.href = "dashboard.html";
-  }
-}
-
 document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const errorMsg = document.getElementById('errorMsg');

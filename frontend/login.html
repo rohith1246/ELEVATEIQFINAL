@@ -95,11 +95,6 @@
 // Determine backend API URL depending on current context (localhost vs production origin)
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
 
-// Auto-redirect to dashboard if token session is already active
-if (localStorage.getItem("token")) {
-  window.location.href = "dashboard.html";
-}
-
 // Handle form submission and authentication integration
 document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
