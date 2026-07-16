@@ -903,6 +903,7 @@ const layouts = {
             <th id="thPricePaid">Price Paid</th>
             <th>Enrolled Date</th>
             <th>Status</th>
+            <th id="thEnrollActions">Actions</th>
           </tr>
         </thead>
         <tbody id="adminEnrollTableBody">
@@ -1912,7 +1913,7 @@ async function deleteCourse(id) {
 async function loadAdminEnrollments() {
   const tbody = document.getElementById("adminEnrollTableBody");
   const isEmployee = user && user.role === 'employee';
-  tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}">Loading student listings...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '8'}">Loading student listings...</td></tr>`;
   
   try {
     const list = await apiCall("/api/edutech/enrollments");
@@ -1921,15 +1922,17 @@ async function loadAdminEnrollments() {
     if (isEmployee) {
       document.getElementById("revenueCard").style.display = "none";
       document.getElementById("thPricePaid").style.display = "none";
+      document.getElementById("thEnrollActions").style.display = "none";
     } else {
       document.getElementById("revenueCard").style.display = "block";
       document.getElementById("thPricePaid").style.display = "table-cell";
+      document.getElementById("thEnrollActions").style.display = "table-cell";
       const revenue = list.reduce((acc, curr) => acc + (curr.price_paid || 0), 0);
       document.getElementById("statRevenue").textContent = formatRupee(revenue);
     }
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}" style="text-align:center;">No cohort student enrollments recorded.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '8'}" style="text-align:center;">No cohort student enrollments recorded.</td></tr>`;
       return;
     }
     tbody.innerHTML = list.map(e => `
@@ -1941,10 +1944,23 @@ async function loadAdminEnrollments() {
         ${isEmployee ? '' : `<td style="font-weight:600;">${formatRupee(e.price_paid)}</td>`}
         <td>${formatDate(e.enrolled_at)}</td>
         <td><span class="badge active">${e.status}</span></td>
+        ${isEmployee ? '' : `<td><button onclick="extendEnrollment(${e.id})" class="btn-primary" style="padding:4px 8px; font-size:11px; margin:0; background:var(--secondary); box-shadow:none;">Extend 15d</button></td>`}
       </tr>
     `).join("");
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '7'}" style="color:#ef4444;">Failed to load student enrollments.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${isEmployee ? '6' : '8'}" style="color:#ef4444;">Failed to load student enrollments.</td></tr>`;
+  }
+}
+
+async function extendEnrollment(id) {
+  if (confirm("Are you sure you want to extend this enrollment by 15 days?")) {
+    try {
+      const res = await apiCall(`/api/edutech/enrollments/${id}/extend`, "POST");
+      alert(res.message || "Enrollment extended successfully!");
+      loadAdminEnrollments();
+    } catch(err) {
+      alert("Failed to extend enrollment: " + err.message);
+    }
   }
 }
 

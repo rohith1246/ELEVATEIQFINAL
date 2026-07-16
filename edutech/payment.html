@@ -209,6 +209,15 @@
   .btn-pay:hover { transform: translateY(-2px); opacity: 0.95; }
   .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+  .upi-app-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+    color: var(--text); transition: all 0.2s ease;
+  }
+  .upi-app-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--secondary); }
+  .upi-app-btn.selected { background: rgba(0,150,255,0.1); border-color: var(--secondary); color: var(--secondary); }
+
   /* Success Dialog Overlay */
   .overlay {
     position: fixed;
@@ -322,54 +331,133 @@
     </div>
   </div>
 
-  <!-- Right Side: Credit Card Details Form -->
+  <!-- Right Side: UPI Payment Demo -->
   <div class="glass-card">
-    <h2><i data-lucide="lock" style="width:18px;height:18px;color:var(--secondary)"></i> Secure Payment Details</h2>
-    <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Card details (Enter any dummy numbers to test)</p>
-    
-    <div class="card-graphic">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="card-chip"></div>
-        <span style="font-size:14px; font-weight:700; color:white; letter-spacing:1px;">SECURE PAY</span>
+    <h2><i data-lucide="smartphone" style="width:18px;height:18px;color:var(--secondary)"></i> UPI Payment</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Demo mode — powered by UPI (Razorpay coming soon)</p>
+
+    <!-- UPI QR Box -->
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="display:inline-block; background:white; border-radius:16px; padding:16px; margin-bottom:14px;">
+        <!-- Placeholder QR (SVG grid pattern) -->
+        <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+          <rect width="140" height="140" fill="white"/>
+          <!-- outer finder patterns -->
+          <rect x="4" y="4" width="40" height="40" fill="#0a1628" rx="3"/>
+          <rect x="10" y="10" width="28" height="28" fill="white" rx="2"/>
+          <rect x="16" y="16" width="16" height="16" fill="#0a1628" rx="1"/>
+          <rect x="96" y="4" width="40" height="40" fill="#0a1628" rx="3"/>
+          <rect x="102" y="10" width="28" height="28" fill="white" rx="2"/>
+          <rect x="108" y="16" width="16" height="16" fill="#0a1628" rx="1"/>
+          <rect x="4" y="96" width="40" height="40" fill="#0a1628" rx="3"/>
+          <rect x="10" y="102" width="28" height="28" fill="white" rx="2"/>
+          <rect x="16" y="108" width="16" height="16" fill="#0a1628" rx="1"/>
+          <!-- data dots -->
+          <rect x="52" y="4" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="64" y="4" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="16" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="16" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="28" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="64" y="28" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="28" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="4" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="16" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="28" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="88" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="112" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="124" y="52" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="4" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="28" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="64" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="88" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="100" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="124" y="64" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="4" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="16" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="40" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="100" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="112" y="76" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="88" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="64" y="88" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="88" y="88" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="112" y="88" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="100" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="100" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="100" y="100" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="124" y="100" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="112" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="64" y="112" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="88" y="112" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="112" y="112" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="52" y="124" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="76" y="124" width="8" height="8" fill="#0a1628" rx="1"/>
+          <rect x="100" y="124" width="8" height="8" fill="#0a1628" rx="1"/>
+          <!-- UPI text label in center of QR -->
+          <rect x="56" y="56" width="28" height="28" fill="white" rx="4"/>
+          <text x="70" y="75" text-anchor="middle" font-size="10" font-weight="bold" fill="#6c0ac8" font-family="Arial">UPI</text>
+        </svg>
       </div>
-      <div class="card-number" id="previewNumber">•••• •••• •••• ••••</div>
-      <div class="card-meta">
-        <div>
-          <div style="font-size:8px; text-transform:uppercase; margin-bottom:2px;">Cardholder</div>
-          <div class="card-holder" id="previewHolder">Your Name</div>
-        </div>
-        <div>
-          <div style="font-size:8px; text-transform:uppercase; margin-bottom:2px;">Expiry</div>
-          <div style="font-weight:600; color:white;" id="previewExpiry">MM/YY</div>
-        </div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:6px;">Scan with any UPI app</div>
+      <div style="font-size:14px; font-weight:700; color:white; letter-spacing:0.5px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 16px; display:inline-block;">
+        edutech@upi <span style="color:var(--muted); font-weight:400;">(Demo)</span>
       </div>
     </div>
 
+    <!-- Divider -->
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+      <div style="flex:1; height:1px; background:var(--line);"></div>
+      <span style="color:var(--muted); font-size:12px;">OR ENTER UPI ID</span>
+      <div style="flex:1; height:1px; background:var(--line);"></div>
+    </div>
+
     <form id="paymentForm">
-      <div class="field">
-        <label>Cardholder Name</label>
-        <input type="text" id="cardName" placeholder="e.g. John Doe" required>
-      </div>
-      <div class="field">
-        <label>Card Number</label>
-        <input type="text" id="cardNumber" placeholder="16-digit card number" maxlength="19" required>
-      </div>
-      <div class="form-row">
+      <!-- New student info fields (only shown if not logged in) -->
+      <div id="newStudentFields" style="display:none;">
         <div class="field">
-          <label>Expiry Date</label>
-          <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+          <label>Student Name</label>
+          <input type="text" id="studentNameInput" placeholder="e.g. John Doe">
         </div>
         <div class="field">
-          <label>CVV / CVC</label>
-          <input type="password" id="cardCvv" placeholder="•••" maxlength="3" required>
+          <label>Student Email Address</label>
+          <input type="email" id="studentEmailInput" placeholder="e.g. john@example.com">
         </div>
       </div>
+
+      <div class="field">
+        <label>UPI ID</label>
+        <div style="display:flex; gap:10px; align-items:stretch;">
+          <input type="text" id="upiId" placeholder="yourname@upi" style="flex:1;" required>
+          <button type="button" id="verifyUpiBtn" onclick="verifyUPI()" style="background:rgba(255,255,255,0.06); border:1px solid var(--glass-border); color:var(--secondary); border-radius:10px; padding:0 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Verify</button>
+        </div>
+        <div id="upiStatus" style="margin-top:8px; font-size:12px; display:none;"></div>
+      </div>
+
+      <!-- UPI App logos -->
+      <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+        <div style="font-size:12px; color:var(--muted); width:100%; margin-bottom:4px;">Pay via:</div>
+        <button type="button" onclick="selectUPIApp('GPay')" class="upi-app-btn" id="app-gpay">
+          <span style="font-size:18px;">🇬</span> GPay
+        </button>
+        <button type="button" onclick="selectUPIApp('PhonePe')" class="upi-app-btn" id="app-phonepe">
+          <span style="font-size:18px;">📱</span> PhonePe
+        </button>
+        <button type="button" onclick="selectUPIApp('Paytm')" class="upi-app-btn" id="app-paytm">
+          <span style="font-size:18px;">💙</span> Paytm
+        </button>
+      </div>
+
       <button type="submit" class="btn-pay" id="payBtn">
         <i data-lucide="shield-check" style="width:18px;height:18px;"></i>
-        <span>Pay & Register</span>
+        <span>Pay via UPI</span>
       </button>
+      <p style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">🔒 Demo mode — no real transaction will occur</p>
     </form>
   </div>
+
 </div>
 
 <!-- Success Modal Overlay -->
@@ -378,17 +466,23 @@
     <div class="success-icon">
       <i data-lucide="check-circle" style="width:40px;height:40px;"></i>
     </div>
-    <h1 style="border:none; padding:0; margin-bottom:12px;">Payment Approved</h1>
-    <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:24px;">
-      You have successfully enrolled in <strong id="successCourseTitle" style="color:white;"></strong> (<strong id="successCourseMode" style="color:var(--primary);"></strong>). A tax invoice receipt has been compiled for your transaction.
+    <h1 style="border:none; padding:0; margin-bottom:8px;">✅ Payment Successful!</h1>
+    <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:12px;">
+      You have successfully enrolled in <strong id="successCourseTitle" style="color:white;"></strong> (<strong id="successCourseMode" style="color:var(--primary);"></strong>).
     </p>
+    <div id="credentialsNotice" style="display:none; background:rgba(255,122,0,0.08); border:1px solid rgba(255,122,0,0.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#ffd0a0; line-height:1.6;">
+      🔑 Your <strong>login credentials</strong> and <strong>invoice receipt</strong> have been sent to your email address. Please check your inbox.
+    </div>
+    <div id="invoiceNotice" style="background:rgba(0,150,255,0.08); border:1px solid rgba(0,150,255,0.2); border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:#a0cfff; line-height:1.6;">
+      📧 A premium invoice receipt has been emailed to you for this transaction.
+    </div>
     
     <div style="display:flex; flex-direction:column; gap:12px;">
       <a id="btnInvoiceLink" target="_blank" class="btn-pay" style="text-decoration:none; margin:0;">
         <i data-lucide="file-text" style="width:18px;height:18px;"></i>
         <span>View & Print Tax Invoice</span>
       </a>
-      <a href="dashboard.html" class="btn-pay" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); box-shadow:none; text-decoration:none; margin:0;">
+      <a href="student-dashboard.html" id="goToDashboardBtn" class="btn-pay" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); box-shadow:none; text-decoration:none; margin:0;">
         Go to Dashboard
       </a>
     </div>
@@ -404,8 +498,14 @@
   const token = localStorage.getItem("edutech_token");
   const user = JSON.parse(localStorage.getItem("edutech_user") || "null");
 
-  if (!token || !user) {
-    window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.href);
+  if (token && user) {
+    document.getElementById("newStudentFields").style.display = "none";
+    document.getElementById("studentNameInput").removeAttribute("required");
+    document.getElementById("studentEmailInput").removeAttribute("required");
+  } else {
+    document.getElementById("newStudentFields").style.display = "block";
+    document.getElementById("studentNameInput").setAttribute("required", "required");
+    document.getElementById("studentEmailInput").setAttribute("required", "required");
   }
 
   // Parse course ID & learning mode from query parameters
@@ -480,24 +580,31 @@
     }
   });
 
-  // Dynamic Holder Preview update
-  document.getElementById("cardName").addEventListener("input", function(e) {
-    document.getElementById("previewHolder").textContent = e.target.value || "Your Name";
-  });
-
-  // Expiry input formatter (MM/YY)
-  document.getElementById("cardExpiry").addEventListener("input", function(e) {
-    let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      e.target.value = v.substring(0, 2) + '/' + v.substring(2, 4);
-      document.getElementById("previewExpiry").textContent = e.target.value;
-    } else {
-      e.target.value = v;
-      document.getElementById("previewExpiry").textContent = v || "MM/YY";
+  // UPI verify (demo)
+  window.verifyUPI = function() {
+    const val = document.getElementById("upiId").value.trim();
+    const status = document.getElementById("upiStatus");
+    status.style.display = "block";
+    if (!val || !val.includes("@")) {
+      status.innerHTML = "❌ <span style='color:#ef4444;'>Invalid UPI ID format. Example: name@upi</span>";
+      return;
     }
-  });
+    status.innerHTML = "<span style='color:#f59e0b;'>⏳ Verifying...</span>";
+    setTimeout(() => {
+      status.innerHTML = "✅ <span style='color:#22c55e;'>UPI ID verified successfully.</span>";
+    }, 1200);
+  };
 
-  // Submit mock transaction payment
+  // Select UPI app shortcut
+  window.selectUPIApp = function(app) {
+    document.querySelectorAll(".upi-app-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("app-" + app.toLowerCase()).classList.add("selected");
+    const map = { GPay: "me@gpay", PhonePe: "me@ybl", Paytm: "me@paytm" };
+    document.getElementById("upiId").value = map[app] || "";
+    verifyUPI();
+  };
+
+  // Submit UPI payment
   document.getElementById("paymentForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     const payBtn = document.getElementById("payBtn");
@@ -505,14 +612,27 @@
     payBtn.innerHTML = '<span>Processing Securely...</span>';
 
     try {
-      // Step 1: Request enrollment registration with authentication token
+      // Step 1: Request enrollment registration
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const payload = {
+        course_id: courseId,
+        mode: selectedMode
+      };
+      if (!token) {
+        payload.student_name = document.getElementById("studentNameInput").value.trim();
+        payload.student_email = document.getElementById("studentEmailInput").value.trim();
+      }
+
       const response = await fetch(`${API_BASE}/api/edutech/enroll`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ course_id: courseId, mode: selectedMode })
+        headers: headers,
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
 
@@ -525,13 +645,27 @@
       if (document.getElementById("successCourseMode")) {
         document.getElementById("successCourseMode").textContent = selectedMode;
       }
-      document.getElementById("btnInvoiceLink").href = `invoice.html?enrollment_id=${data.enrollment_id}`;
+
+      if (!token) {
+        document.getElementById("btnInvoiceLink").style.display = "none";
+        document.getElementById("credentialsNotice").style.display = "block";
+        document.getElementById("invoiceNotice").style.display = "none";
+        document.getElementById("goToDashboardBtn").textContent = "Log In to Access Dashboard";
+        document.getElementById("goToDashboardBtn").href = "login.html";
+      } else {
+        document.getElementById("btnInvoiceLink").style.display = "flex";
+        document.getElementById("btnInvoiceLink").href = `invoice.html?enrollment_id=${data.enrollment_id}`;
+        document.getElementById("credentialsNotice").style.display = "none";
+        document.getElementById("invoiceNotice").style.display = "block";
+        document.getElementById("goToDashboardBtn").textContent = "Go to Dashboard";
+        document.getElementById("goToDashboardBtn").href = "student-dashboard.html";
+      }
+
       document.getElementById("successOverlay").classList.add("show");
     } catch(err) {
       alert(err.message || "An error occurred during payment checkout.");
       payBtn.disabled = false;
       payBtn.innerHTML = '<i data-lucide="shield-check" style="width:18px;height:18px;"></i><span>Pay & Register</span>';
-      lucide.createIcons();
     }
   });
 

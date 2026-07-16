@@ -8,8 +8,9 @@ for the Flask application (secret key, database URI, execution environment, port
 import os
 from dotenv import load_dotenv
 
-# Load key-value pairs from .env file into the shell environment variables
-load_dotenv()
+# Resolve .env path relative to project root (two levels up from this file)
+_env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+load_dotenv(dotenv_path=_env_path)
 
 class Config:
     """

@@ -8,11 +8,11 @@ and scheduling/retrieving course live classes (Zoom/Meet sessions).
 import os
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
-from ..auth import get_current_user, require_role
+from ..auth import get_current_user, require_role, _bcrypt_hash
 from ..config import safe_error
 
 logger = logging.getLogger(__name__)
@@ -67,10 +67,10 @@ def get_my_courses():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
-            SELECT c.*, e.price_paid, e.enrolled_at, e.status as enrollment_status, e.id as enrollment_id, e.mode
+            SELECT c.*, e.price_paid, e.enrolled_at, e.expires_at, e.status as enrollment_status, e.id as enrollment_id, e.mode
             FROM courses c
             JOIN course_enrollments e ON c.id = e.course_id
-            WHERE e.user_id = %s
+            WHERE e.user_id = %s AND e.expires_at >= CURRENT_TIMESTAMP
             ORDER BY e.enrolled_at DESC
         """, (user['id'],))
         courses = cursor.fetchall()
@@ -84,6 +84,8 @@ def get_my_courses():
                 course['created_at'] = course['created_at'].isoformat()
             if 'enrolled_at' in course and course['enrolled_at']:
                 course['enrolled_at'] = course['enrolled_at'].isoformat()
+            if 'expires_at' in course and course['expires_at']:
+                course['expires_at'] = course['expires_at'].isoformat()
         return jsonify(courses), 200
     except Exception as e:
         logger.error(f"EduTech API error: {e}")
@@ -93,29 +95,48 @@ def get_my_courses():
         conn.close()
 
 
+def get_course_duration_days(duration_str):
+    if not duration_str:
+        return 90
+    match = re.search(r'(\d+)', duration_str)
+    if not match:
+        return 90
+    num = int(match.group(1))
+    dur_lower = duration_str.lower()
+    if 'week' in dur_lower:
+        return num * 7
+    elif 'month' in dur_lower:
+        return num * 30
+    elif 'day' in dur_lower:
+        return num
+    return 90
+
+
 @edutech_bp.route("/api/edutech/enroll", methods=["POST"])
 def enroll_in_course():
     """
-    Enrolls the logged-in student in a specific course.
+    Enrolls a student in a specific course. Supports guest enrollment (online registration + checkout).
     """
+    import secrets
+    import string
+    from ..utils.mailer import send_enrollment_credentials_email, send_invoice_email
+
     user = get_current_user()
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    
     data = request.json or {}
     course_id = data.get("course_id")
     mode = data.get("mode", "Online").strip()
+
     if not course_id:
         return jsonify({"error": "course_id is required"}), 400
     
     if mode not in ["Online", "Offline"]:
         mode = "Online"
-        
+
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Get course price and active status
-        cursor.execute("SELECT price, is_active FROM courses WHERE id = %s", (course_id,))
+        # Get course details
+        cursor.execute("SELECT title, price, is_active, duration FROM courses WHERE id = %s", (course_id,))
         course = cursor.fetchone()
         if not course:
             return jsonify({"error": "Course not found"}), 404
@@ -123,20 +144,123 @@ def enroll_in_course():
             return jsonify({"error": "This course is currently not active"}), 400
         
         price = float(course['price'])
+        course_title = course.get('title') or "Course"
+        course_duration = course.get('duration') or "90 days"
         
+        generated_password = None
+        new_user_created = False
+        user_id = None
+        student_name = None
+        student_email = None
+
+        if user:
+            user_id = user['id']
+            student_name = user.get('name') or user.get('email', 'Student')
+            student_email = user.get('email')
+        else:
+            # Guest checkout - create new user
+            student_name = data.get("student_name", "").strip()
+            student_email = data.get("student_email", "").strip()
+            
+            if not student_name or not student_email:
+                return jsonify({"error": "student_name and student_email are required for guest checkout"}), 400
+
+            # Check if user already exists
+            cursor.execute("SELECT id FROM users WHERE email = %s", (student_email,))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                return jsonify({"error": "An account with this email address already exists. Please log in first."}), 400
+
+            # Generate password
+            alphabet = string.ascii_letters + string.digits
+            generated_password = ''.join(secrets.choice(alphabet) for _ in range(10))
+            hashed_password = _bcrypt_hash(generated_password.encode("utf-8")).decode("utf-8")
+
+            # Create user
+            cursor.execute(
+                "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, 'candidate', 'edutech') RETURNING id",
+                (student_name, student_email, hashed_password)
+            )
+            user_id = cursor.fetchone()['id']
+            new_user_created = True
+
         # Check if already enrolled
-        cursor.execute("SELECT id FROM course_enrollments WHERE user_id = %s AND course_id = %s", (user['id'], course_id))
+        cursor.execute("SELECT id FROM course_enrollments WHERE user_id = %s AND course_id = %s", (user_id, course_id))
         if cursor.fetchone():
             return jsonify({"error": "Already enrolled in this course"}), 400
-        
+
+        # Calculate expires_at
+        enrolled_at = datetime.now()
+        duration_days = get_course_duration_days(course_duration)
+        expires_at = enrolled_at + timedelta(days=duration_days)
+
         # Insert enrollment
         cursor.execute("""
-            INSERT INTO course_enrollments (user_id, course_id, price_paid, mode)
-            VALUES (%s, %s, %s, %s) RETURNING id
-        """, (user['id'], course_id, price, mode))
-        enrollment_id = cursor.fetchone()[0]
+            INSERT INTO course_enrollments (user_id, course_id, price_paid, mode, expires_at)
+            VALUES (%s, %s, %s, %s, %s) RETURNING id
+        """, (user_id, course_id, price, mode, expires_at))
+        enrollment_row = cursor.fetchone()
+        enrollment_id = enrollment_row['id'] if isinstance(enrollment_row, dict) else enrollment_row[0]
         conn.commit()
+
+        # Send credentials email if new guest user was created
+        if new_user_created:
+            try:
+                send_enrollment_credentials_email(student_name, student_email, generated_password, course_title)
+            except Exception as mail_err:
+                logger.error(f"Failed to send credentials email: {mail_err}")
+
+        # Send invoice email to ALL users after successful payment
+        if student_email:
+            try:
+                send_invoice_email(student_name, student_email, course_title, price, enrollment_id, mode, enrolled_at, expires_at)
+            except Exception as mail_err:
+                logger.error(f"Failed to send invoice email: {mail_err}")
+
         return jsonify({"message": "Enrolled successfully", "price_paid": price, "enrollment_id": enrollment_id}), 201
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"EduTech API error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@edutech_bp.route("/api/edutech/enrollments/<int:enrollment_id>/extend", methods=["POST"])
+@require_role(["admin"])
+def extend_enrollment(enrollment_id):
+    """
+    Extends the expiration date of a course enrollment by 15 days.
+    """
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT id, expires_at, extended_days FROM course_enrollments WHERE id = %s", (enrollment_id,))
+        enroll = cursor.fetchone()
+        if not enroll:
+            return jsonify({"error": "Enrollment not found"}), 404
+        
+        # Calculate new expires_at
+        current_expires = enroll['expires_at']
+        if not current_expires:
+            current_expires = datetime.now()
+            
+        new_expires = current_expires + timedelta(days=15)
+        new_extended_days = (enroll['extended_days'] or 0) + 15
+        
+        cursor.execute("""
+            UPDATE course_enrollments
+            SET expires_at = %s, extended_days = %s
+            WHERE id = %s
+        """, (new_expires, new_extended_days, enrollment_id))
+        
+        conn.commit()
+        return jsonify({
+            "message": "Enrollment extended by 15 days successfully.",
+            "expires_at": new_expires.isoformat(),
+            "extended_days": new_extended_days
+        }), 200
     except Exception as e:
         conn.rollback()
         logger.error(f"EduTech API error: {e}")

@@ -1017,12 +1017,7 @@
   window.proceedToEnroll = function() {
     if (!currentlySelectedCourseId) return;
     const selectedMode = document.querySelector('input[name="enrollMode"]:checked').value;
-    
-    if (localStorage.getItem("edutech_token")) {
-      window.location.href = `payment.html?course_id=${currentlySelectedCourseId}&mode=${selectedMode}`;
-    } else {
-      window.location.href = `login.html?redirect=payment.html?course_id=${currentlySelectedCourseId}%26mode=${selectedMode}`;
-    }
+    window.location.href = `payment.html?course_id=${currentlySelectedCourseId}&mode=${selectedMode}`;
   };
 
   window.openModal = function(id) {
