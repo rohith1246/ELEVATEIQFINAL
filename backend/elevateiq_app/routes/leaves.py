@@ -167,7 +167,7 @@ def apply_leave():
             """
             SELECT COUNT(*) FROM leaves 
             WHERE employee_id = %s 
-              AND status NOT IN ('Rejected', 'Team Lead Rejected', 'HR Rejected')
+              AND status NOT IN ('Rejected', 'TL Rejected', 'HR Rejected')
               AND start_date >= %s AND start_date < %s
             """,
             (user["emp_db_id"], start_of_month, end_of_month)
@@ -179,7 +179,7 @@ def apply_leave():
         cursor.execute(
             """
             INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason, status) 
-            VALUES (%s, %s, %s, %s, %s, 'Pending Team Lead Approval')
+            VALUES (%s, %s, %s, %s, %s, 'Pending TL Approval')
             """,
             (user["emp_db_id"], leave_type, start_date, end_date, reason)
         )
@@ -255,19 +255,19 @@ def review_leave(leave_id):
 
         current_status = leave["status"]
         if current_status == "Pending":
-            current_status = "Pending Team Lead Approval"
+            current_status = "Pending TL Approval"
 
         is_tl = "team leader" in designation
         is_hr_or_admin = "hr" in designation or "human resource" in designation or user["role"] == "admin"
 
-        if current_status == "Pending Team Lead Approval":
+        if current_status == "Pending TL Approval":
             if not is_tl and not is_hr_or_admin:  # Fallback: let HR/Admin approve if no TL is available
                 return jsonify({"error": "Forbidden: Only a Team Leader can review this request at this stage."}), 403
             
             if action == "Approved":
                 new_status = "Pending HR Approval"
             else:
-                new_status = "Team Lead Rejected"
+                new_status = "TL Rejected"
 
             cursor.execute("UPDATE leaves SET status = %s WHERE id = %s", (new_status, leave_id))
             conn.commit()

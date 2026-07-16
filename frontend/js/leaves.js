@@ -337,11 +337,13 @@ function getStatusBadgeHtml(status) {
     let style = "";
     if (status === "Approved") {
         style = "background:rgba(34,197,94,0.12); color:#22c55e; border:1px solid rgba(34,197,94,0.3);";
-    } else if (status === "Team Lead Rejected") {
+    } else if (status === "TL Rejected") {
         style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
+        text = "TL Rejected";
     } else if (status === "HR Rejected") {
         style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
-    } else if (status === "Pending Team Lead Approval" || status === "Pending") {
+        text = "HR Rejected";
+    } else if (status === "Pending TL Approval" || status === "Pending") {
         style = "background:rgba(255,145,0,0.12); color:#ff9100; border:1px solid rgba(255,145,0,0.3);";
         text = "Pending TL Approval";
     } else if (status === "Pending HR Approval") {
@@ -372,9 +374,9 @@ async function loadAdminLeaves() {
         const end = new Date(l.end_date).toLocaleDateString();
         
         let actionBtn = "";
-        const status = l.status === "Pending" ? "Pending Team Lead Approval" : l.status;
+        const status = l.status === "Pending" ? "Pending TL Approval" : l.status;
 
-        if (status === "Pending Team Lead Approval") {
+        if (status === "Pending TL Approval") {
             if (isTL) {
                 actionBtn = `
                     <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="margin-right:4px;">Approve</button>
