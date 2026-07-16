@@ -25,12 +25,16 @@ edutech_bp = Blueprint("edutech", __name__)
 @edutech_bp.route("/api/edutech/courses", methods=["GET"])
 def get_courses():
     """
-    Returns a list of all active course offerings.
+    Returns a list of all active course offerings (or all for admin/employees).
     """
+    user = get_current_user()
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cursor.execute("SELECT * FROM courses WHERE is_active = TRUE ORDER BY title ASC")
+        if user and user.get("role") in ["admin", "employee"]:
+            cursor.execute("SELECT * FROM courses ORDER BY title ASC")
+        else:
+            cursor.execute("SELECT * FROM courses WHERE is_active = TRUE ORDER BY title ASC")
         courses = cursor.fetchall()
         for course in courses:
             course['price'] = float(course['price']) if course['price'] is not None else 0.0

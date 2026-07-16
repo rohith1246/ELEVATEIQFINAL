@@ -2844,7 +2844,7 @@ async function loadAdminTickets() {
   
   try {
     const filterVal = document.getElementById("ticketStatusFilter").value;
-    const list = await apiCall("/api/tickets?scope=all");
+    const list = await apiCall("/api/tickets?scope=all&portal=edutech");
     
     const filtered = filterVal ? list.filter(t => t.status === filterVal) : list;
     

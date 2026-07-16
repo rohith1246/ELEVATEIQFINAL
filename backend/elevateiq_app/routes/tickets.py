@@ -73,16 +73,31 @@ def get_tickets():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         if scope == "all" and user["role"] == "admin":
-            cursor.execute(
-                """
-                SELECT t.*, u.name as user_name, u.email as user_email, u.role as user_role, u.portal as user_portal,
-                       r.name as resolved_by_name
-                FROM tickets t
-                JOIN users u ON t.user_id = u.id
-                LEFT JOIN users r ON t.resolved_by = r.id
-                ORDER BY t.created_at DESC
-                """
-            )
+            portal = request.args.get("portal")
+            if portal:
+                cursor.execute(
+                    """
+                    SELECT t.*, u.name as user_name, u.email as user_email, u.role as user_role, u.portal as user_portal,
+                           r.name as resolved_by_name
+                    FROM tickets t
+                    JOIN users u ON t.user_id = u.id
+                    LEFT JOIN users r ON t.resolved_by = r.id
+                    WHERE u.portal = %s
+                    ORDER BY t.created_at DESC
+                    """,
+                    (portal,)
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT t.*, u.name as user_name, u.email as user_email, u.role as user_role, u.portal as user_portal,
+                           r.name as resolved_by_name
+                    FROM tickets t
+                    JOIN users u ON t.user_id = u.id
+                    LEFT JOIN users r ON t.resolved_by = r.id
+                    ORDER BY t.created_at DESC
+                    """
+                )
         else:
             cursor.execute(
                 """
