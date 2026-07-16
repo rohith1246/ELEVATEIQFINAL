@@ -1010,7 +1010,7 @@ def get_dashboard_stats():
                 SELECT 
                     (SELECT COUNT(*) FROM employees WHERE status = 'Active') AS active_employees,
                     (SELECT COUNT(*) FROM attendance WHERE date = %s AND status IN ('Present', 'Half Day')) AS present_today,
-                    (SELECT COUNT(*) FROM leaves WHERE status = 'Pending') AS pending_leaves,
+                    (SELECT COUNT(*) FROM leaves WHERE status LIKE 'Pending%%') AS pending_leaves,
                     (SELECT COUNT(*) FROM jobs WHERE status = 'Open') AS active_jobs,
                     (SELECT COUNT(*) FROM applications) AS total_applications
                 """,
@@ -1036,7 +1036,7 @@ def get_dashboard_stats():
                 SELECT 
                     (SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Present') AS p_count,
                     (SELECT COUNT(*) FROM attendance WHERE employee_id = %s AND status = 'Half Day') AS h_count,
-                    (SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status = 'Pending') AS pending_leaves,
+                    (SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status LIKE 'Pending%%') AS pending_leaves,
                     (SELECT COALESCE(SUM(end_date - start_date + 1), 0) FROM leaves WHERE employee_id = %s AND status = 'Approved') AS total_leaves
                 """,
                 (user["emp_db_id"], user["emp_db_id"], user["emp_db_id"], user["emp_db_id"])

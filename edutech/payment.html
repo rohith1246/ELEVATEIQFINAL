@@ -560,25 +560,8 @@
     }
   }
 
-  // Format Card Number input with spaces
-  document.getElementById("cardNumber").addEventListener("input", function(e) {
-    let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    let matches = v.match(/\d{4,16}/g);
-    let match = matches && matches[0] || '';
-    let parts = [];
 
-    for (let i=0, len=match.length; i<len; i+=4) {
-      parts.push(match.substring(i, i+4));
-    }
 
-    if (parts.length > 0) {
-      e.target.value = parts.join(' ');
-      document.getElementById("previewNumber").textContent = parts.join(' ');
-    } else {
-      e.target.value = v;
-      document.getElementById("previewNumber").textContent = v || "•••• •••• •••• ••••";
-    }
-  });
 
   // UPI verify (demo)
   window.verifyUPI = function() {

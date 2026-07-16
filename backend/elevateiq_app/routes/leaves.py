@@ -133,8 +133,8 @@ def apply_leave():
     if not leave_type or not start_date_str or not end_date_str:
         return jsonify({"error": "Required fields are missing"}), 400
 
-    if leave_type != "Leave":
-        return jsonify({"error": "Invalid leave type. Only 'Leave' is allowed."}), 400
+    if leave_type not in ["Casual", "Sick", "Earned", "Emergency"]:
+        return jsonify({"error": "Invalid leave type. Must be Casual, Sick, Earned, or Emergency."}), 400
 
     # Parse date strings to Python date objects
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -167,7 +167,7 @@ def apply_leave():
             """
             SELECT COUNT(*) FROM leaves 
             WHERE employee_id = %s 
-              AND status != 'Rejected'
+              AND status NOT IN ('Rejected', 'Team Lead Rejected', 'HR Rejected')
               AND start_date >= %s AND start_date < %s
             """,
             (user["emp_db_id"], start_of_month, end_of_month)
@@ -179,7 +179,7 @@ def apply_leave():
         cursor.execute(
             """
             INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason, status) 
-            VALUES (%s, %s, %s, %s, %s, 'Pending')
+            VALUES (%s, %s, %s, %s, %s, 'Pending Team Lead Approval')
             """,
             (user["emp_db_id"], leave_type, start_date, end_date, reason)
         )
@@ -225,6 +225,7 @@ def review_leave(leave_id):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         is_approver = False
+        designation = ""
         if user["role"] == "admin":
             is_approver = True
         else:
@@ -252,54 +253,77 @@ def review_leave(leave_id):
         if not leave:
             return jsonify({"error": "Leave request not found"}), 404
 
-        # Ownership check: approve/reject only allowed for admin/approver
-        if not is_approver:
-            return jsonify({"error": "Forbidden: only admins and team leaders can review leaves"}), 403
+        current_status = leave["status"]
+        if current_status == "Pending":
+            current_status = "Pending Team Lead Approval"
 
-        if leave["status"] != "Pending":
-            return jsonify({"error": "Leave request has already been processed"}), 400
+        is_tl = "team leader" in designation
+        is_hr_or_admin = "hr" in designation or "human resource" in designation or user["role"] == "admin"
 
-        emp_id = leave["employee_id"]
-        leave_days = (leave["end_date"] - leave["start_date"]).days + 1
-        leave_type = leave["leave_type"]
+        if current_status == "Pending Team Lead Approval":
+            if not is_tl and not is_hr_or_admin:  # Fallback: let HR/Admin approve if no TL is available
+                return jsonify({"error": "Forbidden: Only a Team Leader can review this request at this stage."}), 403
+            
+            if action == "Approved":
+                new_status = "Pending HR Approval"
+            else:
+                new_status = "Team Lead Rejected"
 
-        if action == "Approved":
-            if leave_type != "Leave":
+            cursor.execute("UPDATE leaves SET status = %s WHERE id = %s", (new_status, leave_id))
+            conn.commit()
+            return jsonify({"message": f"Leave request status updated to '{new_status}'"}), 200
+
+        elif current_status == "Pending HR Approval":
+            if not is_hr_or_admin:
+                return jsonify({"error": "Forbidden: Only HR or Admin can review this request at this stage."}), 403
+
+            if action == "Approved":
+                new_status = "Approved"
+                
+                emp_id = leave["employee_id"]
+                leave_days = (leave["end_date"] - leave["start_date"]).days + 1
+                leave_type = leave["leave_type"]
+
+                # Deduct balance (if type is in allowed leave columns)
                 balance_col = f"{leave_type.lower()}_leave"
-                if balance_col not in ALLOWED_LEAVE_COLUMNS:
-                    return jsonify({"error": "Invalid leave type"}), 400
-                cursor.execute(
-                    "SELECT {} FROM employees WHERE id = %s".format(balance_col), (emp_id,)
-                )
-                emp_row = cursor.fetchone()
-                if not emp_row:
-                    return jsonify({"error": "Employee record not found."}), 404
-                balance = emp_row[balance_col]
+                if balance_col in ALLOWED_LEAVE_COLUMNS:
+                    cursor.execute(
+                        "SELECT {} FROM employees WHERE id = %s".format(balance_col), (emp_id,)
+                    )
+                    emp_row = cursor.fetchone()
+                    if not emp_row:
+                        return jsonify({"error": "Employee record not found."}), 404
+                    balance = emp_row[balance_col]
 
-                if balance < leave_days:
-                    return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400
+                    if balance < leave_days:
+                        return jsonify({"error": "Employee does not have enough leave balance to approve."}), 400
 
-                cursor.execute(
-                    "UPDATE employees SET {} = {} - %s WHERE id = %s".format(balance_col, balance_col),
-                    (leave_days, emp_id)
-                )
+                    cursor.execute(
+                        "UPDATE employees SET {} = {} - %s WHERE id = %s".format(balance_col, balance_col),
+                        (leave_days, emp_id)
+                    )
 
-            # Insert attendance records marked as 'Leave' for the duration
-            curr = leave["start_date"]
-            while curr <= leave["end_date"]:
-                cursor.execute(
-                    """
-                    INSERT INTO attendance (employee_id, date, status, check_in, check_out, working_hours) 
-                    VALUES (%s, %s, 'Leave', '09:00:00', '17:00:00', 8.0)
-                    ON CONFLICT (employee_id, date) DO UPDATE SET status = 'Leave'
-                    """,
-                    (emp_id, curr)
-                )
-                curr = datetime.fromordinal(curr.toordinal() + 1).date()
+                # Insert attendance records marked as 'Leave' for the duration
+                curr = leave["start_date"]
+                while curr <= leave["end_date"]:
+                    cursor.execute(
+                        """
+                        INSERT INTO attendance (employee_id, date, status, check_in, check_out, working_hours) 
+                        VALUES (%s, %s, 'Leave', '09:00:00', '17:00:00', 8.0)
+                        ON CONFLICT (employee_id, date) DO UPDATE SET status = 'Leave'
+                        """,
+                        (emp_id, curr)
+                    )
+                    curr = datetime.fromordinal(curr.toordinal() + 1).date()
+            else:
+                new_status = "HR Rejected"
 
-        cursor.execute("UPDATE leaves SET status = %s WHERE id = %s", (action, leave_id))
-        conn.commit()
-        return jsonify({"message": f"Leave request status updated to '{action}'"}), 200
+            cursor.execute("UPDATE leaves SET status = %s WHERE id = %s", (new_status, leave_id))
+            conn.commit()
+            return jsonify({"message": f"Leave request status updated to '{new_status}'"}), 200
+
+        else:
+            return jsonify({"error": "Leave request has already been processed"}), 400
     except Exception as e:
         conn.rollback()
         logger.error(f"Leaves API error: {e}")

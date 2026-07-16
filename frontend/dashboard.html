@@ -1070,11 +1070,14 @@ const layouts = {
         <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:22px;">
             <div class="glass-card">
                 <h2 style="font-size:18px; margin-bottom:15px;">Apply for Leave</h2>
-                <form id="applyLeaveForm">
+                <form id="applyLeaveForm" onsubmit="submitLeaveForm(event)">
                     <div class="field">
                         <label>Leave Type</label>
                         <select id="leaveType" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;" required>
-                            <option value="Leave">Leave</option>
+                            <option value="Casual">Casual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Earned">Earned Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
                         </select>
                     </div>
                     <div class="field"><label>Start Date</label><input type="date" id="leaveStart" required></div>

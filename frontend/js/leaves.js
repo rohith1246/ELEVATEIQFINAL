@@ -329,22 +329,69 @@ async function loadAdminAttendance() {
  * 
  * @async
  */
+function getStatusBadgeHtml(status) {
+    let cls = "pending";
+    let text = status;
+    
+    // Inline style/colors to look gorgeous
+    let style = "";
+    if (status === "Approved") {
+        style = "background:rgba(34,197,94,0.12); color:#22c55e; border:1px solid rgba(34,197,94,0.3);";
+    } else if (status === "Team Lead Rejected") {
+        style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
+    } else if (status === "HR Rejected") {
+        style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
+    } else if (status === "Pending Team Lead Approval" || status === "Pending") {
+        style = "background:rgba(255,145,0,0.12); color:#ff9100; border:1px solid rgba(255,145,0,0.3);";
+        text = "Pending TL Approval";
+    } else if (status === "Pending HR Approval") {
+        style = "background:rgba(0,176,255,0.12); color:#00b0ff; border:1px solid rgba(0,176,255,0.3);";
+        text = "Pending HR Approval";
+    }
+    
+    return `<span class="badge" style="padding:4px 10px; border-radius:8px; font-weight:600; font-size:12px; display:inline-block; text-transform:none; ${style}">${text}</span>`;
+}
+
+/**
+ * Loads admin leaves requests history.
+ * 
+ * @async
+ */
 async function loadAdminLeaves() {
     const leaves = await apiCall("/leaves?scope=all");
     const tbody = document.getElementById("leavesTableBody");
     tbody.innerHTML = "";
     if (leaves.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No leave applications found.</td></tr>`;
+    
+    const isTL = currentUser.is_team_leader || currentUser.role === 'admin';
+    const isHR = currentUser.is_hr || currentUser.role === 'admin';
+
     leaves.forEach(l => {
         const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
         const start = new Date(l.start_date).toLocaleDateString();
         const end = new Date(l.end_date).toLocaleDateString();
         
         let actionBtn = "";
-        if (l.status === "Pending") {
-            actionBtn = `
-                <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve">Approve</button>
-                <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
-            `;
+        const status = l.status === "Pending" ? "Pending Team Lead Approval" : l.status;
+
+        if (status === "Pending Team Lead Approval") {
+            if (isTL) {
+                actionBtn = `
+                    <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="margin-right:4px;">Approve</button>
+                    <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                `;
+            } else {
+                actionBtn = `<span style="font-size:12px; color:#ff9100; font-weight:600;">Awaiting TL</span>`;
+            }
+        } else if (status === "Pending HR Approval") {
+            if (isHR) {
+                actionBtn = `
+                    <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="margin-right:4px;">Approve</button>
+                    <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                `;
+            } else {
+                actionBtn = `<span style="font-size:12px; color:#00b0ff; font-weight:600;">Awaiting HR</span>`;
+            }
         } else {
             actionBtn = `<span style="font-size:12px; color:var(--ink-faint);">Processed</span>`;
         }
@@ -359,7 +406,7 @@ async function loadAdminLeaves() {
                     <div style="font-size:11px; color:var(--ink-faint);">${start} to ${end}</div>
                 </td>
                 <td style="max-width:180px; word-break:break-all;">${l.reason || '-'}</td>
-                <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+                <td>${getStatusBadgeHtml(l.status)}</td>
                 <td>${actionBtn}</td>
             </tr>
         `;
@@ -957,30 +1004,32 @@ async function loadEmpLeaves() {
                     <div style="font-size:11px; color:var(--ink-faint);">${new Date(l.start_date).toLocaleDateString()} to ${new Date(l.end_date).toLocaleDateString()}</div>
                 </td>
                 <td>${l.reason || '-'}</td>
-                <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
+                <td>${getStatusBadgeHtml(l.status)}</td>
             </tr>
         `;
     });
 }
 
-// Apply for leave form submission handler
-const applyLeaveForm = document.getElementById("applyLeaveForm");
-if (applyLeaveForm) {
-    applyLeaveForm.addEventListener("submit", async function(e) {
-        e.preventDefault();
-        const payload = {
-            leave_type: document.getElementById("leaveType").value,
-            start_date: document.getElementById("leaveStart").value,
-            end_date: document.getElementById("leaveEnd").value,
-            reason: document.getElementById("leaveReason").value
-        };
+// Global submit handler for leave application
+window.submitLeaveForm = async function(e) {
+    if (e) e.preventDefault();
+    const payload = {
+        leave_type: document.getElementById("leaveType").value,
+        start_date: document.getElementById("leaveStart").value,
+        end_date: document.getElementById("leaveEnd").value,
+        reason: document.getElementById("leaveReason").value
+    };
+    try {
         await apiCall("/leaves", "POST", payload);
         alert("Leave application submitted successfully for review!");
-        this.reset();
+        const form = document.getElementById("applyLeaveForm");
+        if (form) form.reset();
         loadEmpLeaves();
         loadEmpOverview(); // refresh leave balances
-    });
-}
+    } catch (err) {
+        alert("Failed to submit leave request: " + err.message);
+    }
+};
 
 /**
  * Loads notice board logs on employee notice board panels.
