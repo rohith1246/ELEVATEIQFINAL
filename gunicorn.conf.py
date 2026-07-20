@@ -25,6 +25,9 @@ keepalive = 5
 preload_app = True
 
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+
 def _neon_keepalive_loop():
     """
     Sends a lightweight SELECT 1 ping to Neon PostgreSQL every 45 seconds
