@@ -429,17 +429,26 @@ def check_in():
     current_time = ist_now.strftime("%H:%M:%S")
     
     try:
+        emp_db_id = user.get("emp_db_id")
+        if not emp_db_id:
+            cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
+            emp_row = cursor.fetchone()
+            emp_db_id = emp_row[0] if emp_row else None
+            
+        if not emp_db_id:
+            return jsonify({"error": "Employee profile record not found"}), 404
+
         # Enforce unique check-ins per day per employee
         cursor.execute(
             "SELECT id FROM attendance WHERE employee_id = %s AND date = %s",
-            (user["emp_db_id"], today_date)
+            (emp_db_id, today_date)
         )
         if cursor.fetchone():
             return jsonify({"error": "Already checked in today"}), 400
 
         cursor.execute(
             "INSERT INTO attendance (employee_id, date, check_in, status) VALUES (%s, %s, %s, 'Present')",
-            (user["emp_db_id"], today_date, current_time)
+            (emp_db_id, today_date, current_time)
         )
         conn.commit()
         return jsonify({"message": f"Checked in successfully at {current_time}"}), 201
@@ -482,9 +491,18 @@ def check_out():
     current_time = ist_now.time()
 
     try:
+        emp_db_id = user.get("emp_db_id")
+        if not emp_db_id:
+            cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
+            emp_row = cursor.fetchone()
+            emp_db_id = emp_row["id"] if emp_row else None
+            
+        if not emp_db_id:
+            return jsonify({"error": "Employee profile record not found"}), 404
+
         cursor.execute(
             "SELECT * FROM attendance WHERE employee_id = %s AND date = %s",
-            (user["emp_db_id"], today_date)
+            (emp_db_id, today_date)
         )
         record = cursor.fetchone()
         if not record:
