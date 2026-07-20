@@ -284,6 +284,8 @@ def reset_password():
 @auth_bp.route("/login", methods=["POST"])
 @rate_limit(limit=10, period=60)
 def login():
+    import time
+    t0 = time.time()
     data = request.json
     login_id = data.get("email")
     password = data.get("password")
@@ -292,6 +294,7 @@ def login():
         return jsonify({"error": "Email/Employee ID/Client ID and password are required"}), 400
 
     conn = get_connection()
+    t_conn = time.time()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute(
@@ -308,20 +311,27 @@ def login():
             (login_id, login_id, login_id)
         )
         user_record = cursor.fetchone()
+        t_user = time.time()
 
         if not user_record:
+            print(f"[LOGIN_TIMING] INVALID_USER | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, TOTAL={time.time()-t0:.3f}s", flush=True)
             return jsonify({"error": "Invalid email or password"}), 401
 
         user_id = user_record["id"]
 
         locked, locked_until = is_account_locked_conn(conn, user_id)
+        t_lock = time.time()
+
         if locked:
             remaining = int((locked_until - datetime.now()).total_seconds()) if locked_until else BRUTE_FORCE_WINDOW_MINUTES * 60
             return jsonify({
                 "error": f"Account locked due to too many failed login attempts. Try again in {max(60, remaining)} seconds."
             }), 429
 
-        if _bcrypt_check(password.encode("utf-8"), user_record["password"].encode("utf-8")):
+        is_valid = _bcrypt_check(password.encode("utf-8"), user_record["password"].encode("utf-8"))
+        t_bcrypt = time.time()
+
+        if is_valid:
             requested_portal = data.get("portal", "elevateiq")
             user_portal = user_record.get("portal") or "elevateiq"
             
@@ -353,6 +363,9 @@ def login():
                 conn.rollback()
                 logger.error(f"Session setup error: {ex}")
 
+            t_commit = time.time()
+            print(f"[LOGIN_TIMING] SUCCESS | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, lock_check={t_lock-t_user:.3f}s, bcrypt={t_bcrypt-t_lock:.3f}s, session_commit={t_commit-t_bcrypt:.3f}s, TOTAL={t_commit-t0:.3f}s", flush=True)
+
             response = jsonify({
                 "message": "Login successful",
                 "token": token,
@@ -376,6 +389,8 @@ def login():
         else:
             ip = request.headers.get("X-Forwarded-For", request.remote_addr) or "unknown"
             record_failed_attempt_conn(conn, user_id, ip)
+            t_fail = time.time()
+            print(f"[LOGIN_TIMING] BAD_PASSWORD | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, lock_check={t_lock-t_user:.3f}s, bcrypt={t_bcrypt-t_lock:.3f}s, fail_record={t_fail-t_bcrypt:.3f}s, TOTAL={t_fail-t0:.3f}s", flush=True)
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e:
         conn.rollback()
