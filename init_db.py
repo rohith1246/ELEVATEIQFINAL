@@ -97,38 +97,6 @@ try:
     cursor.execute("DELETE FROM users WHERE email = 'bathikadileep@gmail.com'")
     conn.commit()
 
-    student_password = os.getenv("STUDENT_PASSWORD", generate_strong_password())
-    cursor.execute("SELECT id FROM users WHERE email = 'rohith@gmail.com'")
-    candidate_row = cursor.fetchone()
-    if not candidate_row:
-        print("Seeding default candidate/student user (Aarav Mehta)...")
-        hashed_password = bcrypt.hashpw(student_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        cursor.execute(
-            "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            ("Aarav Mehta", "rohith@gmail.com", hashed_password, "candidate", "edutech")
-        )
-        student_id = cursor.fetchone()[0]
-        conn.commit()
-        print("WARNING: Default student credentials - Email: rohith@gmail.com / Password: [REDACTED]")
-    else:
-        student_id = candidate_row[0]
-        # Force rename to Aarav Mehta if exists to match student-dashboard greeting
-        cursor.execute("UPDATE users SET name = 'Aarav Mehta' WHERE id = %s", (student_id,))
-        conn.commit()
-
-    # Seed placement track for student
-    cursor.execute("SELECT id FROM placement_tracks WHERE user_id = %s", (student_id,))
-    if not cursor.fetchone():
-        print("Seeding placement track...")
-        cursor.execute(
-            """
-            INSERT INTO placement_tracks (user_id, current_stage, next_steps, resume_approved, mock_interview_score, recruiter_feedback)
-            VALUES (%s, 'Mock Interview Prep', 'Attend final round mock interview prep with Dileep Bathika on Wednesday', TRUE, 85, 'Solid coding foundation; work on system design presentation.')
-            """,
-            (student_id,)
-        )
-        conn.commit()
-
     # Get course IDs
     cursor.execute("SELECT id, title FROM courses")
     courses_map = {row[1]: row[0] for row in cursor.fetchall()}
