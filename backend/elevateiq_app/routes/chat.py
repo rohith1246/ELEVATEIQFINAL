@@ -67,6 +67,8 @@ def chat_stream():
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
     if not token:
+        token = request.args.get("token")
+    if not token:
         token = request.cookies.get("token")
     if not token:
         return "Unauthorized", 401
