@@ -7,6 +7,7 @@ dead-socket hang issues caused by client-side pool stale connections.
 """
 
 import os
+import uuid
 import psycopg2
 import psycopg2.extras
 from psycopg2.extras import RealDictCursor
