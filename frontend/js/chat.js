@@ -21,12 +21,19 @@ function formatToIST(dateStr) {
     }
     const d = new Date(cleanStr);
     if (isNaN(d.getTime())) return '';
-    return d.toLocaleTimeString('en-US', {
+    const datePart = d.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+    const timePart = d.toLocaleTimeString('en-US', {
         timeZone: 'Asia/Kolkata',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
     });
+    return `${datePart}, ${timePart}`;
 }
 
 let lastDMMessagesJson = "";
