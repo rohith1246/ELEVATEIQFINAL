@@ -67,28 +67,28 @@ function startPayrollTickers(summary, ledger) {
     const secsInMonth = daysInMonth * 24 * 3600;
     
     payrollTickerInterval = setInterval(() => {
+        if (!totalAccruedElem || !document.body.contains(totalAccruedElem)) {
+            clearInterval(payrollTickerInterval);
+            payrollTickerInterval = null;
+            return;
+        }
         const deltaSeconds = (Date.now() - startTime) / 1000;
         const totalElapsed = elapsedSeconds + deltaSeconds;
         
-        // Cap elapsed at seconds in month if month is past
         const cappedElapsed = Math.min(totalElapsed, secsInMonth);
         
-        // Update main accrued spend ticker
         const accruedTotal = cappedElapsed * burnRate;
-        if (totalAccruedElem) {
-            totalAccruedElem.innerHTML = `<span class="ticker-prefix">$</span>${accruedTotal.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`;
-        }
+        totalAccruedElem.innerHTML = `<span class="ticker-prefix">$</span>${accruedTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         
-        // Update individual employee row tickers
         ledger.forEach(emp => {
             const empTicker = document.getElementById(`emp_ticker_${emp.employee_db_id}`);
             if (empTicker) {
                 const empRate = emp.base_salary / secsInMonth;
                 const empAccrued = cappedElapsed * empRate;
-                empTicker.textContent = formatCurrency(empAccrued, 4);
+                empTicker.textContent = formatCurrency(empAccrued, 2);
             }
         });
-    }, 100);
+    }, 1000);
 }
 
 /**

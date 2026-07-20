@@ -114,7 +114,7 @@
     }
     resize();
     window.addEventListener("resize", resize);
-    const COUNT = Math.min(70, Math.floor((canvas.offsetWidth*canvas.offsetHeight)/16000));
+    const COUNT = Math.min(25, Math.floor((canvas.offsetWidth*canvas.offsetHeight)/25000));
     const colors = ["37,99,235","124,58,237","6,182,212"];
     for(let i=0;i<COUNT;i++){
       particles.push({
@@ -128,6 +128,7 @@
 
     /** Animation tick generator loop */
     function tick(){
+      if (!document.body.contains(canvas)) return;
       ctx.clearRect(0,0,w,h);
       particles.forEach((p,i)=>{
         p.x+=p.vx; p.y+=p.vy;
@@ -140,8 +141,8 @@
         for(let j=i+1;j<particles.length;j++){
           const q = particles[j];
           const dx=p.x-q.x, dy=p.y-q.y, dist=Math.sqrt(dx*dx+dy*dy);
-          if(dist < 130*devicePixelRatio){
-            ctx.strokeStyle = `rgba(${p.c},${0.12*(1-dist/(130*devicePixelRatio))})`;
+          if(dist < 100*devicePixelRatio){
+            ctx.strokeStyle = `rgba(${p.c},${0.12*(1-dist/(100*devicePixelRatio))})`;
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
           }
