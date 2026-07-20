@@ -28,23 +28,25 @@
     
     const bar = document.getElementById("preload-bar");
     const pre = document.getElementById("preloader");
-    if (bar) bar.style.transition = "width .6s ease";
+    if (bar) bar.style.transition = "width .2s ease";
     requestAnimationFrame(() => { if (bar) bar.style.width = "100%"; });
     
     setTimeout(() => {
       if (pre){
-        pre.style.transition = "opacity .5s ease, visibility .5s";
+        pre.style.transition = "opacity .25s ease, visibility .25s";
         pre.style.opacity = "0";
-        setTimeout(() => pre.remove(), 550);
+        setTimeout(() => pre.remove(), 250);
       }
       document.body.classList.add("loaded");
       playEntranceAnimations();
-    }, 650);
+    }, 150);
   }
 
-  window.addEventListener("load", () => {
-    setTimeout(hidePreloader, 100);
-  });
+  if (document.readyState === "interactive" || document.readyState === "complete") {
+    hidePreloader();
+  } else {
+    document.addEventListener("DOMContentLoaded", hidePreloader);
+  }
 
   /* ============================================================
      2. LENIS SMOOTH SCROLL INTEGRATION
