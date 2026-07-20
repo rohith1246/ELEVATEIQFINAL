@@ -11,7 +11,7 @@ import secrets
 import string
 import logging
 import bcrypt
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from flask import Blueprint, request, jsonify, redirect, send_from_directory
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
@@ -39,6 +39,8 @@ from ..config import Config, safe_error
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint("auth", __name__)
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # Absolute paths for serving EduTech portal static content
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -1002,7 +1004,7 @@ def get_dashboard_stats():
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    today_date = date.today()
+    today_date = datetime.now(IST).date()
     try:
         if user["role"] == "admin":
             cursor.execute(

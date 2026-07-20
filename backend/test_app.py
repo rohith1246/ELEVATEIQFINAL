@@ -186,7 +186,7 @@ class ElevateIQTestCase(unittest.TestCase):
         ]
         
         response = self.client.post('/leaves', json={
-            'leave_type': 'Leave',
+            'leave_type': 'Casual',
             'start_date': '2026-07-10',
             'end_date': '2026-07-10',
             'reason': 'Vacation'

@@ -39,7 +39,8 @@ def get_courses():
         for course in courses:
             course['price'] = float(course['price']) if course['price'] is not None else 0.0
             if course.get('old_price') is not None:
-                course['old_price'] = float(course['old_price'])
+                old_p = float(course['old_price'])
+                course['old_price'] = old_p if old_p > course['price'] else None
             course['rating'] = float(course['rating']) if course['rating'] is not None else 5.0
             if 'created_at' in course and course['created_at']:
                 course['created_at'] = course['created_at'].isoformat()
@@ -77,7 +78,8 @@ def get_my_courses():
         for course in courses:
             course['price'] = float(course['price']) if course['price'] is not None else 0.0
             if course.get('old_price') is not None:
-                course['old_price'] = float(course['old_price'])
+                old_p = float(course['old_price'])
+                course['old_price'] = old_p if old_p > course['price'] else None
             course['price_paid'] = float(course['price_paid']) if course['price_paid'] is not None else 0.0
             course['rating'] = float(course['rating']) if course['rating'] is not None else 5.0
             if 'created_at' in course and course['created_at']:
@@ -323,6 +325,8 @@ def create_course():
     
     if not title or not level or not duration or price is None:
         return jsonify({"error": "Title, level, duration, and price are required"}), 400
+    if old_price is not None and float(old_price) <= float(price):
+        return jsonify({"error": "Previous course price (old_price) must be greater than the present course price"}), 400
     
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -368,6 +372,8 @@ def update_course(course_id):
     
     if not title or not level or not duration or price is None:
         return jsonify({"error": "Title, level, duration, and price are required"}), 400
+    if old_price is not None and float(old_price) <= float(price):
+        return jsonify({"error": "Previous course price (old_price) must be greater than the present course price"}), 400
     
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)

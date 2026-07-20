@@ -69,6 +69,9 @@ try:
         conn.commit()
         print(f"Seeded {len(default_courses)} default courses.")
 
+    cursor.execute("UPDATE courses SET old_price = NULL WHERE old_price IS NOT NULL AND old_price <= price")
+    conn.commit()
+
     emp_password = os.getenv("EMP_PASSWORD", generate_strong_password())
     cursor.execute("SELECT id FROM users WHERE email = 'bathikadileep@gmail.com'")
     employee_row = cursor.fetchone()

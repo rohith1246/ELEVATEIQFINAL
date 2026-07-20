@@ -285,9 +285,9 @@
     const revealClass = isInitial ? "reveal" : "";
     const revealStyle = isInitial ? "" : 'style="opacity:1; transform:none;"';
 
-    grid.innerHTML = list.map(c => {
-      const priceVal = c.price;
-      const oldPriceVal = c.oldPrice || c.old_price;
+    grid.innerHTML = list.map(c => {      const priceVal = Number(c.price || 0);
+      const rawOldPrice = c.oldPrice || c.old_price;
+      const oldPriceVal = (rawOldPrice && Number(rawOldPrice) > priceVal) ? Number(rawOldPrice) : null;
       return `
       <div class="glass-card course-card alive-card ${revealClass}" ${revealStyle}>
         <div class="course-thumb" style="overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative;">
@@ -304,7 +304,7 @@
           <div style="margin: 10px 0 16px 0; display: flex; align-items: baseline; gap: 8px;">
             <span style="font-size: 18px; font-weight: 700; color: white;">${money(priceVal)}</span>
             ${oldPriceVal ? `<span style="font-size: 13px; text-decoration: line-through; color: var(--muted);">${money(oldPriceVal)}</span>` : ''}
-          </div>
+          </div>`v>
           <div class="course-foot">
             <button class="btn btn-primary btn-sm magnetic enroll-btn" data-id="${c.id}">Enroll</button>
           </div>
