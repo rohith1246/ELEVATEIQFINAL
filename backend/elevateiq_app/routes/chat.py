@@ -878,3 +878,44 @@ def chat_group_add_member(conv_id):
         cursor.close()
         conn.close()
 
+
+@chat_bp.route("/chat/conversations/<int:conv_id>", methods=["DELETE"])
+def delete_conversation(conv_id):
+    """
+    Deletes a conversation (DM or Group) and all associated messages/members.
+    Restricted to Admins, Team Leaders, or the creator of the group.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT id, type, created_by FROM conversations WHERE id = %s", (conv_id,))
+        conv = cursor.fetchone()
+        if not conv:
+            return jsonify({"error": "Conversation not found"}), 404
+            
+        is_admin = user.get("role") == "admin"
+        is_creator = conv.get("created_by") == user.get("id")
+        is_tl = check_is_team_leader(user, cursor)
+        
+        if not (is_admin or is_creator or is_tl):
+            return jsonify({"error": "Only Admins, Team Leaders, or group creators can delete conversations."}), 403
+            
+        cursor.execute("DELETE FROM messages WHERE conversation_id = %s", (conv_id,))
+        cursor.execute("DELETE FROM conversation_members WHERE conversation_id = %s", (conv_id,))
+        cursor.execute("DELETE FROM conversations WHERE id = %s", (conv_id,))
+        conn.commit()
+        
+        return jsonify({"message": "Conversation deleted successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Delete conversation error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+

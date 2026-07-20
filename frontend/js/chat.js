@@ -517,13 +517,20 @@ async function refreshGroupThread(forceScroll = false) {
 
         // Update Title & Simulated Online count representation
         const membersCount = res.members ? res.members.length : 0;
-        const onlineCount = Math.max(1, Math.ceil(membersCount * 0.45));
-        const groupTitleElem = document.getElementById("groupActiveTitle");
-        
+        const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || res.conversation.created_by === currentUser.id;
+        const deleteBtnHtml = isCanDelete ? `
+            <button type="button" onclick="deleteCurrentGroup(${activeGroupConversationId})" class="btn-action btn-reject" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Delete Group">
+                🗑️ Delete Group
+            </button>
+        ` : '';
+
         groupTitleElem.innerHTML = `
-            <div class="title-area">
-                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${res.conversation.group_name || 'Group Chat'}</h3>
-                <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+            <div class="title-area" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${escapeHTML(res.conversation.group_name || 'Group Chat')}</h3>
+                    <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+                </div>
+                ${deleteBtnHtml}
             </div>
         `;
         
@@ -810,6 +817,24 @@ async function refreshOversightThread() {
         }
     } catch(e) {
         console.error(e);
+    }
+}
+
+async function deleteCurrentGroup(convId) {
+    if (!convId) return;
+    if (!confirm("Are you sure you want to delete this group chat? All messages and members will be removed.")) return;
+    
+    try {
+        await apiCall(`/chat/conversations/${convId}`, "DELETE");
+        activeGroupConversationId = null;
+        lastGroupMessagesJson = "";
+        const activeGroupHeader = document.getElementById("groupActiveTitle");
+        if (activeGroupHeader) activeGroupHeader.innerHTML = "<h3 style='margin:0; font-size:16px; color:var(--ink-soft);'>Select a group to start chatting</h3>";
+        const groupMsgs = document.getElementById("groupMessages");
+        if (groupMsgs) groupMsgs.innerHTML = "";
+        await refreshGroupList();
+    } catch (err) {
+        alert(err.message || "Failed to delete group.");
     }
 }
 
