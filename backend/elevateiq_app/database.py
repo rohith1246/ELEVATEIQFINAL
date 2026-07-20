@@ -1,21 +1,23 @@
 """
-Database Connectivity and Pool Management Module.
+Database Connectivity Module.
 
-This module initializes and manages a thread-safe PostgreSQL connection pool using 
-psycopg2's `ThreadedConnectionPool`. It ensures connection safety across concurrent execution 
-threads and gevent greenlets by tracking checkouts with unique UUID-based keys. It also 
-provides self-healing checkouts by verifying connection health with a lightweight query 
-('SELECT 1') before handing them off to callers.
+Uses direct psycopg2 connections (no client-side pool) since Neon PostgreSQL
+provides PgBouncer connection pooling on the server side. This eliminates all
+dead-socket hang issues caused by client-side pool stale connections.
 """
 
 import os
-import uuid
-from psycopg2.pool import ThreadedConnectionPool
+import psycopg2
+import psycopg2.extras
 from psycopg2.extras import RealDictCursor
 from .config import Config
 
+# Keep ThreadedConnectionPool import for PooledConnection compatibility
+from psycopg2.pool import ThreadedConnectionPool
+
 # Global database connection pool instance
 db_pool = None
+
 
 def init_db(app=None):
     """
@@ -229,28 +231,17 @@ class PooledConnection:
             self._conn = None
             self._pool = None
 
-import threading
-
-def _check_conn_alive(conn, result):
-    """Runs SELECT 1 in a thread; sets result[0]=True if alive, False if dead."""
-    try:
-        c = conn.cursor()
-        c.execute("SELECT 1")
-        c.fetchone()
-        c.close()
-        result[0] = True
-    except Exception:
-        result[0] = False
+_last_checked_ts = {}
 
 def get_connection():
     """
     Checks out a database connection from the global pool.
 
-    Uses a 3-second threading timeout watchdog to detect dead/hung connections
-    (Neon serverless cold sockets) instead of waiting 15-20 seconds for OS TCP timeout.
+    Generates a unique UUID key for tracking checkouts, validates connection health,
+    and returns a PooledConnection wrapper safe for thread/greenlet usage.
 
     Returns:
-        PooledConnection: A wrapped connection safe for thread/greenlet usage.
+        PooledConnection: A wrapped connection.
     """
     global db_pool
     if db_pool is None:
@@ -271,23 +262,23 @@ def get_connection():
                 continue
 
             now = time.time()
-            last_check = getattr(conn, "_last_checked_ts", 0)
-            if now - last_check > 10:
-                # Use a 3s thread timeout watchdog to detect dead cloud sockets instantly
-                result = [None]
-                t = threading.Thread(target=_check_conn_alive, args=(conn, result), daemon=True)
-                t.start()
-                t.join(timeout=3.0)  # Wait max 3 seconds
+            conn_id = id(conn)
+            last_check = _last_checked_ts.get(conn_id, 0)
 
-                if result[0] is not True:
-                    # Connection is dead or timed out — discard it
+            if now - last_check > 15:
+                try:
+                    c = conn.cursor()
+                    c.execute("SELECT 1")
+                    c.fetchone()
+                    c.close()
+                    _last_checked_ts[conn_id] = now
+                except Exception:
+                    _last_checked_ts.pop(conn_id, None)
                     try:
                         db_pool.putconn(conn, key=key, close=True)
                     except Exception:
                         pass
                     continue
-
-                conn._last_checked_ts = now
 
             if conn.info.transaction_status != 0:
                 conn.rollback()
@@ -299,7 +290,7 @@ def get_connection():
                 continue
             raise e
 
-    # Fallback: one final direct checkout
+    # Fallback checkout
     key = str(uuid.uuid4())
     conn = db_pool.getconn(key=key)
     return PooledConnection(db_pool, conn, key)
