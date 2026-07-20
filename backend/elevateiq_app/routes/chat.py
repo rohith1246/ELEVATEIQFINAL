@@ -132,8 +132,8 @@ def chat_user_details():
             if res:
                 designation = ((res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")).lower()
 
-        is_tl = user.get("role") in ["admin", "team_leader"] or "team leader" in designation
-        can_approve = user.get("role") == "admin" or "team leader" in designation or "hr" in designation or "human resource" in designation
+        is_tl = user.get("role") in ["admin", "team_leader"] or "team leader" in designation or "team lead" in designation
+        can_approve = user.get("role") == "admin" or "team leader" in designation or "team lead" in designation or "hr" in designation or "human resource" in designation
         is_hr = user.get("role") == "admin" or "hr" in designation or "human resource" in designation
 
         return jsonify({

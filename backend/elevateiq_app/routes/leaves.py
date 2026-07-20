@@ -7,7 +7,7 @@ classifying presence status as Present, Half Day, or Absent).
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
@@ -17,6 +17,8 @@ from ..config import safe_error
 logger = logging.getLogger(__name__)
 
 ALLOWED_LEAVE_COLUMNS = {"casual_leave", "sick_leave", "earned_leave", "emergency_leave"}
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 leaves_bp = Blueprint("leaves", __name__)
 
@@ -57,7 +59,7 @@ def get_leaves():
             if res:
                 designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
                 designation = designation.lower()
-                if "team leader" in designation or "hr" in designation or "human resource" in designation:
+                if "team leader" in designation or "team lead" in designation or "hr" in designation or "human resource" in designation:
                     is_approver = True
 
         # Grant full company-wide view only to admins and authorised approvers
@@ -235,7 +237,7 @@ def review_leave(leave_id):
             if res:
                 designation = (res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")
                 designation = designation.lower()
-                if "team leader" in designation or "hr" in designation or "human resource" in designation:
+                if "team leader" in designation or "team lead" in designation or "hr" in designation or "human resource" in designation:
                     is_approver = True
 
         if not is_approver:
@@ -257,7 +259,7 @@ def review_leave(leave_id):
         if current_status == "Pending":
             current_status = "Pending TL Approval"
 
-        is_tl = "team leader" in designation
+        is_tl = "team leader" in designation or "team lead" in designation
         is_hr_or_admin = "hr" in designation or "human resource" in designation or user["role"] == "admin"
 
         if current_status == "Pending TL Approval":
@@ -422,8 +424,9 @@ def check_in():
 
     conn = get_connection()
     cursor = conn.cursor()
-    today_date = date.today()
-    current_time = datetime.now().time().strftime("%H:%M:%S")
+    ist_now = datetime.now(IST)
+    today_date = ist_now.date()
+    current_time = ist_now.strftime("%H:%M:%S")
     
     try:
         # Enforce unique check-ins per day per employee
@@ -473,9 +476,10 @@ def check_out():
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    today_date = date.today()
-    current_time_str = datetime.now().time().strftime("%H:%M:%S")
-    current_time = datetime.now().time()
+    ist_now = datetime.now(IST)
+    today_date = ist_now.date()
+    current_time_str = ist_now.strftime("%H:%M:%S")
+    current_time = ist_now.time()
 
     try:
         cursor.execute(

@@ -302,7 +302,7 @@
 
     function applyFilters() {
       const filtered = allJobs.filter(j => {
-        const matchesDept = activeDept === 'All' || j.department.toLowerCase().includes(activeDept.toLowerCase());
+        const matchesDept = activeDept === 'All' || j.department.toLowerCase() === activeDept.toLowerCase();
         const titleMatch = j.title.toLowerCase().includes(searchQuery);
         const descMatch = (j.description || "").toLowerCase().includes(searchQuery);
         const matchesSearch = !searchQuery || titleMatch || descMatch;

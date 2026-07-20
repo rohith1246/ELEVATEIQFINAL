@@ -838,7 +838,7 @@ def check_is_team_leader(user, cursor):
             d = res.get("designation") or ""
         elif isinstance(res, (tuple, list)):
             d = res[0] or ""
-        if "team leader" in d.lower():
+        if "team leader" in d.lower() or "team lead" in d.lower():
             return True
     return False
 
@@ -859,7 +859,7 @@ def check_is_crm_manager(user, cursor):
         elif isinstance(res, (tuple, list)):
             d = res[0] or ""
         d = d.lower()
-        if "team leader" in d or "hr" in d or "human resource" in d:
+        if "team leader" in d or "team lead" in d or "hr" in d or "human resource" in d:
             return True
     return False
 
