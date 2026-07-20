@@ -43,6 +43,20 @@ auth_bp = Blueprint("auth", __name__)
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
+_api_cache = {}
+
+def get_cached_response(key, ttl_seconds=5):
+    import time
+    if key in _api_cache:
+        data, timestamp = _api_cache[key]
+        if time.time() - timestamp < ttl_seconds:
+            return data
+    return None
+
+def set_cached_response(key, data):
+    import time
+    _api_cache[key] = (data, time.time())
+
 # Absolute paths for serving EduTech portal static content
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 EDUTECH_DIR = os.path.join(BASE_DIR, "edutech")
@@ -951,6 +965,13 @@ def get_announcements():
             - 200: List of announcement items.
             - 500: SQL query issues.
     """
+@auth_bp.route("/announcements", methods=["GET"])
+def get_announcements():
+    cache_key = "announcements"
+    cached = get_cached_response(cache_key, ttl_seconds=5)
+    if cached:
+        return jsonify(cached), 200
+
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -959,6 +980,7 @@ def get_announcements():
         for a in announcements:
             if a.get("created_at"):
                 a["created_at"] = a["created_at"].isoformat()
+        set_cached_response(cache_key, announcements)
         return jsonify(announcements), 200
     except Exception as e:
         logger.error(f"API error: {e}")
