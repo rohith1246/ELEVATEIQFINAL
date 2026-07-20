@@ -90,18 +90,23 @@ async function loadDesignations(selectedVal = null) {
 function toggleDesgInput(mode, showInput) {
     const selectArea = document.getElementById(`${mode}DesgSelectArea`);
     const inputArea = document.getElementById(`${mode}DesgInputArea`);
+    const selectElem = document.getElementById(`${mode}Desg`);
     const customInput = document.getElementById(`${mode}DesgCustom`);
     
     if (showInput) {
         if (selectArea) selectArea.style.display = "none";
         if (inputArea) inputArea.style.display = "flex";
+        if (selectElem) selectElem.required = false;
         if (customInput) {
+            customInput.required = true;
             customInput.value = "";
             customInput.focus();
         }
     } else {
         if (selectArea) selectArea.style.display = "flex";
         if (inputArea) inputArea.style.display = "none";
+        if (selectElem) selectElem.required = true;
+        if (customInput) customInput.required = false;
     }
 }
 
