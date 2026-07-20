@@ -72,25 +72,9 @@ try:
     cursor.execute("UPDATE courses SET old_price = NULL WHERE old_price IS NOT NULL AND old_price <= price")
     conn.commit()
 
-    emp_password = os.getenv("EMP_PASSWORD", generate_strong_password())
-    cursor.execute("SELECT id FROM users WHERE email = 'bathikadileep@gmail.com'")
-    employee_row = cursor.fetchone()
-    if not employee_row:
-        print("Seeding default employee user...")
-        hashed_password = bcrypt.hashpw(emp_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        cursor.execute(
-            "INSERT INTO users (name, email, password, role, portal) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            ("Dileep Bathika", "bathikadileep@gmail.com", hashed_password, "employee", "edutech")
-        )
-        emp_user_id = cursor.fetchone()[0]
-        cursor.execute(
-            "INSERT INTO employees (user_id, employee_id, phone_number, department, designation, date_of_joining) VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)",
-            (emp_user_id, "EMP002", "+91 9876543210", "Academy", "Senior Mentor")
-        )
-        conn.commit()
-        print("WARNING: Default employee credentials - Email: bathikadileep@gmail.com / Password: [REDACTED]")
-    else:
-        emp_user_id = employee_row[0]
+    # Remove dummy seeded employee if present
+    cursor.execute("DELETE FROM users WHERE email = 'bathikadileep@gmail.com'")
+    conn.commit()
 
     student_password = os.getenv("STUDENT_PASSWORD", generate_strong_password())
     cursor.execute("SELECT id FROM users WHERE email = 'rohith@gmail.com'")
