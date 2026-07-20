@@ -82,6 +82,11 @@ def ensure_all_auth_tables():
                 role VARCHAR(50) NOT NULL,
                 permission VARCHAR(100) NOT NULL,
                 PRIMARY KEY (role, permission))""")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_csrf_tokens_user_id ON csrf_tokens(user_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_user_id ON login_attempts(user_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_account_lockouts_user_id ON account_lockouts(user_id)")
             conn.commit()
             _tables_checked.update(['csrf_tokens', 'login_attempts', 'account_lockouts',
                                      'password_history', 'token_blacklist',

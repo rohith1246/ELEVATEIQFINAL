@@ -84,7 +84,16 @@ try:
         conn.commit()
         print(f"Seeded {len(default_desgs)} default company designations.")
 
-    # Remove dummy seeded employee if present
+    # Ensure high-performance indexes exist on authentication & session tables
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_csrf_tokens_user_id ON csrf_tokens(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_user_id ON login_attempts(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_account_lockouts_user_id ON account_lockouts(user_id)")
+    
+    # Prune old stale login attempts and CSRF tokens to keep tables tiny and fast
+    cursor.execute("DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL '1 day'")
+    cursor.execute("DELETE FROM csrf_tokens WHERE created_at < NOW() - INTERVAL '7 days'")
     cursor.execute("DELETE FROM users WHERE email = 'bathikadileep@gmail.com'")
     conn.commit()
 
