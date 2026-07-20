@@ -229,50 +229,41 @@ class PooledConnection:
             self._conn = None
             self._pool = None
 
-import select
+import threading
 
-def is_socket_alive(conn):
-    """
-    Performs an instant 0.1ms non-blocking check on the connection socket.
-    If the remote server (Neon) closed the connection, select returns readable (EOF/RST).
-    """
-    if not conn or conn.closed != 0:
-        return False
+def _check_conn_alive(conn, result):
+    """Runs SELECT 1 in a thread; sets result[0]=True if alive, False if dead."""
     try:
-        r, _, _ = select.select([conn.fileno()], [], [], 0)
-        if r:
-            return False
-        return True
+        c = conn.cursor()
+        c.execute("SELECT 1")
+        c.fetchone()
+        c.close()
+        result[0] = True
     except Exception:
-        return False
+        result[0] = False
 
 def get_connection():
     """
     Checks out a database connection from the global pool.
 
-    Generates a unique UUID key for tracking the checkout, handles self-healing by 
-    validating the connection with 'SELECT 1', and discards/recreates connections that 
-    have dropped due to socket timeout or backend closure.
+    Uses a 3-second threading timeout watchdog to detect dead/hung connections
+    (Neon serverless cold sockets) instead of waiting 15-20 seconds for OS TCP timeout.
 
     Returns:
         PooledConnection: A wrapped connection safe for thread/greenlet usage.
-
-    Raises:
-        Exception: If no healthy connections can be retrieved after max retries.
     """
     global db_pool
     if db_pool is None:
         init_db()
-        
-    retries = 5
+
     import time
+    retries = 5
     for attempt in range(retries):
         key = str(uuid.uuid4())
         try:
             conn = db_pool.getconn(key=key)
-            
-            # Instant 0.1ms socket health check — discards dead sockets immediately without waiting 20s
-            if not is_socket_alive(conn):
+
+            if conn.closed != 0:
                 try:
                     db_pool.putconn(conn, key=key, close=True)
                 except Exception:
@@ -282,30 +273,33 @@ def get_connection():
             now = time.time()
             last_check = getattr(conn, "_last_checked_ts", 0)
             if now - last_check > 10:
-                try:
-                    c = conn.cursor()
-                    c.execute("SELECT 1")
-                    c.fetchone()
-                    c.close()
-                    conn._last_checked_ts = now
-                except Exception:
+                # Use a 3s thread timeout watchdog to detect dead cloud sockets instantly
+                result = [None]
+                t = threading.Thread(target=_check_conn_alive, args=(conn, result), daemon=True)
+                t.start()
+                t.join(timeout=3.0)  # Wait max 3 seconds
+
+                if result[0] is not True:
+                    # Connection is dead or timed out — discard it
                     try:
                         db_pool.putconn(conn, key=key, close=True)
                     except Exception:
                         pass
                     continue
 
-            # Reset connection state if it was left in an error/aborted transaction
-            if conn.info.transaction_status != 0:  # 0 = IDLE
+                conn._last_checked_ts = now
+
+            if conn.info.transaction_status != 0:
                 conn.rollback()
             return PooledConnection(db_pool, conn, key)
+
         except Exception as e:
             if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
                 time.sleep(0.02 * (attempt + 1))
                 continue
             raise e
-                
-    # Fallback: If all retries failed, attempt one final checkout
+
+    # Fallback: one final direct checkout
     key = str(uuid.uuid4())
     conn = db_pool.getconn(key=key)
     return PooledConnection(db_pool, conn, key)
