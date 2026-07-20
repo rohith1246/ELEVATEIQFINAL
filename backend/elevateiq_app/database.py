@@ -39,8 +39,15 @@ def init_db(app=None):
             raise ValueError("CRITICAL: DATABASE_URL environment variable is missing or empty. Please check your config.")
         
         try:
-            # Initialize thread-safe connection pool with minimum 5 and maximum 120 connections
-            db_pool = ThreadedConnectionPool(5, 120, dsn=dsn)
+            # Initialize thread-safe connection pool with TCP keepalives to prevent Neon serverless socket stalls
+            pool_kwargs = {
+                'connect_timeout': 5,
+                'keepalives': 1,
+                'keepalives_idle': 5,
+                'keepalives_interval': 2,
+                'keepalives_count': 3
+            }
+            db_pool = ThreadedConnectionPool(5, 120, dsn=dsn, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -250,7 +257,7 @@ def get_connection():
             if conn.closed == 0:
                 now = time.time()
                 last_check = getattr(conn, "_last_checked_ts", 0)
-                if now - last_check > 30:
+                if now - last_check > 5:
                     try:
                         c = conn.cursor()
                         c.execute("SELECT 1")
@@ -258,7 +265,6 @@ def get_connection():
                         c.close()
                         conn._last_checked_ts = now
                     except Exception:
-                        # Connection is dead; discard and put it back to close it
                         try:
                             db_pool.putconn(conn, key=key, close=True)
                         except Exception:
