@@ -1262,7 +1262,7 @@ def serve_edutech(path="index.html"):
 @require_role(["admin", "employee"])
 def get_designations():
     """
-    Lists designations registered in the designations lookup table.
+    Lists designations registered in the designations lookup table and existing employee profiles.
 
     Returns:
         tuple: (JSON response, HTTP status code)
@@ -1274,6 +1274,19 @@ def get_designations():
     try:
         cursor.execute("SELECT id, name FROM designations ORDER BY name ASC")
         rows = cursor.fetchall()
+        
+        # Merge distinct designations from existing employees table so no existing designations are lost
+        cursor.execute("SELECT DISTINCT designation AS name FROM employees WHERE designation IS NOT NULL AND designation != ''")
+        emp_desgs = cursor.fetchall()
+        
+        existing_names = {r["name"].strip() for r in rows if r.get("name")}
+        for ed in emp_desgs:
+            dname = ed["name"].strip() if ed.get("name") else ""
+            if dname and dname not in existing_names:
+                existing_names.add(dname)
+                rows.append({"id": len(rows) + 1, "name": dname})
+                
+        rows.sort(key=lambda x: x["name"].lower())
         return jsonify(rows), 200
     except Exception as e:
         logger.error(f"API error: {e}")

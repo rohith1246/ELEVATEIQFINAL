@@ -69,8 +69,20 @@ try:
         conn.commit()
         print(f"Seeded {len(default_courses)} default courses.")
 
-    cursor.execute("UPDATE courses SET old_price = NULL WHERE old_price IS NOT NULL AND old_price <= price")
-    conn.commit()
+    # Seed default company designations if table is empty
+    cursor.execute("SELECT COUNT(*) FROM designations")
+    if cursor.fetchone()[0] == 0:
+        default_desgs = [
+            'Software Engineer', 'Senior Software Engineer', 'Team Lead', 
+            'Engineering Manager', 'Product Manager', 'UI/UX Designer', 
+            'DevOps Engineer', 'QA Engineer', 'HR Specialist', 'HR Manager', 
+            'Accountant', 'Business Analyst', 'Data Scientist', 'Senior Mentor', 
+            'Customer Support Executive'
+        ]
+        for desg in default_desgs:
+            cursor.execute("INSERT INTO designations (name) VALUES (%s) ON CONFLICT DO NOTHING", (desg,))
+        conn.commit()
+        print(f"Seeded {len(default_desgs)} default company designations.")
 
     # Remove dummy seeded employee if present
     cursor.execute("DELETE FROM users WHERE email = 'bathikadileep@gmail.com'")

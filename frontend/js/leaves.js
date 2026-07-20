@@ -219,21 +219,25 @@ const addEmployeeForm = document.getElementById("addEmployeeForm");
 if (addEmployeeForm) {
     addEmployeeForm.addEventListener("submit", async function(e) {
         e.preventDefault();
-        const payload = {
-            employee_id: document.getElementById("addEmpId").value,
-            name: document.getElementById("addName").value,
-            email: document.getElementById("addEmail").value,
-            password: document.getElementById("addPassword").value,
-            phone_number: document.getElementById("addPhone").value,
-            department: document.getElementById("addDept").value,
-            designation: document.getElementById("addDesg").value,
-            date_of_joining: document.getElementById("addJoinDate").value
-        };
-        await apiCall("/employees", "POST", payload);
-        alert("Employee profile created successfully!");
-        closeModal("addEmployeeModal");
-        this.reset();
-        loadAdminEmployees();
+        try {
+            const payload = {
+                employee_id: document.getElementById("addEmpId").value,
+                name: document.getElementById("addName").value,
+                email: document.getElementById("addEmail").value,
+                password: document.getElementById("addPassword").value,
+                phone_number: document.getElementById("addPhone").value,
+                department: document.getElementById("addDept").value,
+                designation: document.getElementById("addDesg").value,
+                date_of_joining: document.getElementById("addJoinDate").value
+            };
+            const res = await apiCall("/employees", "POST", payload);
+            alert((res && res.message) ? res.message : "Employee profile created successfully!");
+            closeModal("addEmployeeModal");
+            this.reset();
+            loadAdminEmployees();
+        } catch(err) {
+            alert(err.message || "Failed to create employee.");
+        }
     });
 }
 
@@ -260,19 +264,23 @@ const editEmployeeForm = document.getElementById("editEmployeeForm");
 if (editEmployeeForm) {
     editEmployeeForm.addEventListener("submit", async function(e) {
         e.preventDefault();
-        const empId = document.getElementById("editEmpId").value;
-        const payload = {
-            name: document.getElementById("editName").value,
-            email: document.getElementById("editEmail").value,
-            phone_number: document.getElementById("editPhone").value,
-            department: document.getElementById("editDept").value,
-            designation: document.getElementById("editDesg").value,
-            status: document.getElementById("editStatus").value
-        };
-        await apiCall(`/employees/${empId}`, "PUT", payload);
-        alert("Employee record updated successfully!");
-        closeModal("editEmployeeModal");
-        loadAdminEmployees();
+        try {
+            const empId = document.getElementById("editEmpId").value;
+            const payload = {
+                name: document.getElementById("editName").value,
+                email: document.getElementById("editEmail").value,
+                phone_number: document.getElementById("editPhone").value,
+                department: document.getElementById("editDept").value,
+                designation: document.getElementById("editDesg").value,
+                status: document.getElementById("editStatus").value
+            };
+            const res = await apiCall(`/employees/${empId}`, "PUT", payload);
+            alert((res && res.message) ? res.message : "Employee record updated successfully!");
+            closeModal("editEmployeeModal");
+            loadAdminEmployees();
+        } catch(err) {
+            alert(err.message || "Failed to update employee.");
+        }
     });
 }
 

@@ -2211,9 +2211,9 @@ async function submitEmployee(e) {
       const res = await apiCall("/employees", "POST", payload);
       alert(res.message || "Employee registered successfully!");
     }
-    closeModal("employeeModal");
-    loadAdminEmployees();
-  } catch(e) {}
+  } catch(err) {
+    alert(err.message || "Failed to save employee.");
+  }
 }
 
 
