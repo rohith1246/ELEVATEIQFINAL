@@ -8,6 +8,7 @@ designations lookup/creation, and serving the EduTech static portal.
 
 import os
 import secrets
+import hashlib
 import string
 import logging
 import bcrypt
@@ -321,7 +322,6 @@ def login():
             }), 429
 
         if _bcrypt_check(password.encode("utf-8"), user_record["password"].encode("utf-8")):
-            reset_login_attempts_conn(conn, user_id)
             requested_portal = data.get("portal", "elevateiq")
             user_portal = user_record.get("portal") or "elevateiq"
             
@@ -338,8 +338,21 @@ def login():
                 "client_db_id": user_record.get("client_db_id"),
             }
             token = serializer.dumps(payload)
-            refresh_token = issue_refresh_token_conn(conn, user_id)
-            csrf_token = get_csrf_token_conn(conn, user_id)
+            refresh_token = secrets.token_urlsafe(64)
+            refresh_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+            csrf_token = secrets.token_hex(32)
+
+            # Single batched transaction for session initialization
+            try:
+                cursor.execute("DELETE FROM login_attempts WHERE user_id = %s", (user_id,))
+                cursor.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = %s AND revoked = FALSE", (user_id,))
+                cursor.execute("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (%s, %s, NOW() + INTERVAL '7 days')", (user_id, refresh_hash))
+                cursor.execute("INSERT INTO csrf_tokens (user_id, token) VALUES (%s, %s)", (user_id, csrf_token))
+                conn.commit()
+            except Exception as ex:
+                conn.rollback()
+                logger.error(f"Session setup error: {ex}")
+
             response = jsonify({
                 "message": "Login successful",
                 "token": token,
@@ -359,7 +372,6 @@ def login():
                 samesite="Strict", path="/api/auth/refresh",
                 max_age=REFRESH_TOKEN_MAX_AGE
             )
-            seed_default_permissions_conn(conn)
             return response, 200
         else:
             ip = request.headers.get("X-Forwarded-For", request.remote_addr) or "unknown"

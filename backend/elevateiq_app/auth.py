@@ -17,20 +17,10 @@ _tables_checked = {'csrf_tokens', 'login_attempts', 'account_lockouts', 'passwor
 _permissions_seeded = False
 
 def _bcrypt_check(password_bytes, hashed_bytes):
-    """Run bcrypt.checkpw in a way that doesn't block the gevent event loop."""
-    try:
-        from gevent import get_hub
-        return get_hub().threadpool.apply(bcrypt.checkpw, (password_bytes, hashed_bytes))
-    except (ImportError, Exception):
-        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 def _bcrypt_hash(password_bytes):
-    """Run bcrypt.hashpw in a way that doesn't block the gevent event loop."""
-    try:
-        from gevent import get_hub
-        return get_hub().threadpool.apply(bcrypt.hashpw, (password_bytes, bcrypt.gensalt(rounds=10)))
-    except (ImportError, Exception):
-        return bcrypt.hashpw(password_bytes, bcrypt.gensalt(rounds=10))
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt(rounds=10))
 
 import bcrypt
 
