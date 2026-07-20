@@ -131,7 +131,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       localStorage.setItem("user", JSON.stringify(data.user));
       if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
       if (data.csrf_token) localStorage.setItem("csrf_token", data.csrf_token);
-      setTimeout(() => { window.location.href = 'dashboard.html'; }, 150);
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 50);
     } else {
       errorMsg.textContent = data.error || 'Invalid email or password.';
       errorMsg.style.display = 'block';

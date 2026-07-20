@@ -380,7 +380,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         } else {
           window.location.href = 'dashboard.html';
         }
-      }, 1000);
+      }, 100);
     } else {
       errorMsg.textContent = data.error || 'Invalid credentials.';
       errorMsg.style.display = 'block';

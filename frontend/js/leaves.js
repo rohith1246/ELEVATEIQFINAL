@@ -14,7 +14,10 @@
  * @async
  */
 async function loadAdminOverview() {
-    const stats = await apiCall("/dashboard/stats");
+    const [stats, notices] = await Promise.all([
+        apiCall("/dashboard/stats"),
+        apiCall("/announcements")
+    ]);
     document.getElementById("stat_total_emp").textContent = stats.active_employees;
     document.getElementById("stat_present").textContent = stats.present_today;
     document.getElementById("stat_absent").textContent = stats.absent_today;
@@ -24,7 +27,6 @@ async function loadAdminOverview() {
 
     const noticeList = document.getElementById("adminNoticeList");
     noticeList.innerHTML = "";
-    const notices = await apiCall("/announcements");
     if (notices.length === 0) noticeList.innerHTML = `<div style="color:var(--ink-faint); font-size:13px;">No announcements published.</div>`;
     notices.slice(0, 3).forEach(n => {
         noticeList.innerHTML += `
