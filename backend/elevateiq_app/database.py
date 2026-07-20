@@ -47,7 +47,7 @@ def init_db(app=None):
                 'keepalives_interval': 2,
                 'keepalives_count': 3
             }
-            db_pool = ThreadedConnectionPool(5, 120, dsn=dsn, **pool_kwargs)
+            db_pool = ThreadedConnectionPool(2, 120, dsn=dsn, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -229,6 +229,23 @@ class PooledConnection:
             self._conn = None
             self._pool = None
 
+import select
+
+def is_socket_alive(conn):
+    """
+    Performs an instant 0.1ms non-blocking check on the connection socket.
+    If the remote server (Neon) closed the connection, select returns readable (EOF/RST).
+    """
+    if not conn or conn.closed != 0:
+        return False
+    try:
+        r, _, _ = select.select([conn.fileno()], [], [], 0)
+        if r:
+            return False
+        return True
+    except Exception:
+        return False
+
 def get_connection():
     """
     Checks out a database connection from the global pool.
@@ -250,40 +267,41 @@ def get_connection():
     retries = 5
     import time
     for attempt in range(retries):
-        # Generate a unique key for tracking checkout and returning to the pool
         key = str(uuid.uuid4())
         try:
             conn = db_pool.getconn(key=key)
-            if conn.closed == 0:
-                now = time.time()
-                last_check = getattr(conn, "_last_checked_ts", 0)
-                if now - last_check > 5:
-                    try:
-                        c = conn.cursor()
-                        c.execute("SELECT 1")
-                        c.fetchone()
-                        c.close()
-                        conn._last_checked_ts = now
-                    except Exception:
-                        try:
-                            db_pool.putconn(conn, key=key, close=True)
-                        except Exception:
-                            pass
-                        continue
-
-                # Reset connection state if it was left in an error/aborted transaction
-                if conn.info.transaction_status != 0:  # 0 = IDLE
-                    conn.rollback()
-                return PooledConnection(db_pool, conn, key)
-            else:
+            
+            # Instant 0.1ms socket health check — discards dead sockets immediately without waiting 20s
+            if not is_socket_alive(conn):
                 try:
                     db_pool.putconn(conn, key=key, close=True)
                 except Exception:
                     pass
+                continue
+
+            now = time.time()
+            last_check = getattr(conn, "_last_checked_ts", 0)
+            if now - last_check > 10:
+                try:
+                    c = conn.cursor()
+                    c.execute("SELECT 1")
+                    c.fetchone()
+                    c.close()
+                    conn._last_checked_ts = now
+                except Exception:
+                    try:
+                        db_pool.putconn(conn, key=key, close=True)
+                    except Exception:
+                        pass
+                    continue
+
+            # Reset connection state if it was left in an error/aborted transaction
+            if conn.info.transaction_status != 0:  # 0 = IDLE
+                conn.rollback()
+            return PooledConnection(db_pool, conn, key)
         except Exception as e:
-            # Catch pool exhaustion or dead socket errors, back off, and retry
             if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
-                time.sleep(0.05 * (attempt + 1))
+                time.sleep(0.02 * (attempt + 1))
                 continue
             raise e
                 
