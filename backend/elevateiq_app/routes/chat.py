@@ -174,15 +174,27 @@ def chat_list_users():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Select active employees/admins to prevent displaying guest candidates in corporate chat
+        # Touch last_seen timestamp
+        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (user["id"],))
+        conn.commit()
+
+        # Select active employees/admins with real-time online status
         if user.get("role") == "client":
             cursor.execute(
-                "SELECT id, name, email, role FROM users WHERE role = 'admin' AND id != %s ORDER BY name ASC",
+                """
+                SELECT id, name, email, role,
+                       (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '5 minutes') as is_online 
+                FROM users WHERE role = 'admin' AND id != %s ORDER BY name ASC
+                """,
                 (user["id"],)
             )
         else:
             cursor.execute(
-                "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin', 'team_leader') AND id != %s ORDER BY name ASC",
+                """
+                SELECT id, name, email, role,
+                       (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '5 minutes') as is_online 
+                FROM users WHERE role IN ('employee', 'admin', 'team_leader') AND id != %s ORDER BY name ASC
+                """,
                 (user["id"],)
             )
         users = cursor.fetchall()
@@ -514,7 +526,8 @@ def chat_get_messages(conv_id):
         if conv["type"] == "group":
             cursor.execute(
                 """
-                SELECT u.id, u.name, u.email, u.role, e.designation
+                SELECT u.id, u.name, u.email, u.role, e.designation,
+                       (u.last_seen IS NOT NULL AND u.last_seen > NOW() - INTERVAL '5 minutes') as is_online
                 FROM conversation_members cm
                 JOIN users u ON cm.user_id = u.id
                 LEFT JOIN employees e ON u.id = e.user_id
@@ -529,7 +542,8 @@ def chat_get_messages(conv_id):
             if not members_list:
                 cursor.execute(
                     """
-                    SELECT u.id, u.name, u.email, u.role, e.designation
+                    SELECT u.id, u.name, u.email, u.role, e.designation,
+                           (u.last_seen IS NOT NULL AND u.last_seen > NOW() - INTERVAL '5 minutes') as is_online
                     FROM users u
                     LEFT JOIN employees e ON u.id = e.user_id
                     WHERE u.role IN ('employee', 'admin', 'team_leader')

@@ -354,16 +354,20 @@ function renderDMUsersList(list) {
     }
     list.forEach(u => {
         const initials = u.name ? u.name.charAt(0).toUpperCase() : "?";
+        const isOnline = u.is_online === true || u.is_online === 'true' || u.is_online === 1;
+        const statusDot = isOnline 
+            ? '<span style="width:7px; height:7px; border-radius:50%; background:#00e676; display:inline-block; margin-left:6px;" title="Online"></span>' 
+            : '<span style="width:7px; height:7px; border-radius:50%; background:#707a8a; display:inline-block; margin-left:6px;" title="Offline"></span>';
         container.innerHTML += `
             <div class="user-row">
                 <div style="display:flex; align-items:center; min-width: 0;">
                     <div class="user-avatar">${initials}</div>
                     <div style="min-width: 0; text-align: left;">
-                        <div class="user-name" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${u.name}</div>
-                        <div class="user-email" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${u.email}</div>
+                        <div class="user-name" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; display:flex; align-items:center;">${escapeHTML(u.name)} ${statusDot}</div>
+                        <div class="user-email" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHTML(u.email)}</div>
                     </div>
                 </div>
-                <button onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" class="btn-chat-action">Chat</button>
+                <button onclick="startDMWithUser(${u.id}, '${escapeHTML(u.name.replace(/'/g, "\\'"))}')" class="btn-chat-action">Chat</button>
             </div>
         `;
     });
@@ -571,10 +575,15 @@ async function refreshGroupThread(forceScroll = false) {
             } else {
                 membersToRender.forEach(m => {
                     const roleBadge = (m.role === 'admin' || m.role === 'team_leader') ? `<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">${m.role.toUpperCase()}</span>` : '';
+                    const isOnline = m.is_online === true || m.is_online === 'true' || m.is_online === 1;
+                    const statusDot = isOnline 
+                        ? '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#00e676; display:inline-block; margin-right:4px;"></span> Online' 
+                        : '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#707a8a; display:inline-block; margin-right:4px;"></span> Offline';
+
                     membersList.innerHTML += `
                         <div class="member-card">
                             <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
-                            <div class="status"><span style="width:6px; height:6px; border-radius:50%; background:#00e676; display:inline-block;"></span> Online</div>
+                            <div class="status" style="font-size:11px; display:flex; align-items:center; color:${isOnline ? '#00e676' : 'var(--ink-soft)'};">${statusDot}</div>
                         </div>
                     `;
                 });
