@@ -831,7 +831,34 @@
   /* ============================================================
      15. INITIALIZATION CONTROLLER
      ============================================================ */
+  function updateDynamicNav() {
+    const navBtn = document.getElementById("navLoginLink");
+    if (!navBtn) return;
+    
+    const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        navBtn.textContent = "Dashboard";
+        if (user.role === "candidate" || user.portal === "edutech") {
+          navBtn.href = "student-dashboard.html";
+        } else {
+          navBtn.href = "../dashboard.html";
+        }
+      } catch (e) {
+        navBtn.textContent = "Login";
+        navBtn.href = "login.html";
+      }
+    } else {
+      navBtn.textContent = "Login";
+      navBtn.href = "login.html";
+    }
+  }
+
   async function initPortal() {
+    try { updateDynamicNav(); } catch(e) {}
     try {
       const yrEl = document.getElementById("year");
       if (yrEl) yrEl.textContent = new Date().getFullYear();
