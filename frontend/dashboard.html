@@ -34,8 +34,28 @@
   <a href="/edutech/" class="logo">
     <img src="images/logo.png" alt="Elevate IQ Logo">
   </a>
-  <div class="nav-right">
-    <span id="userGreeting" style="font-size:14px; color:var(--ink-soft); margin-right:15px;"></span>
+  <div class="nav-right" style="position:relative; display:flex; align-items:center; gap:14px;">
+    <span id="userGreeting" style="font-size:14px; color:var(--ink-soft); margin-right:4px;"></span>
+
+    <!-- Real-time Notification Bell & Dropdown -->
+    <div style="position:relative;" id="navNotificationWrapper">
+        <button type="button" onclick="toggleNotificationsMenu(event)" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; position:relative; transition:all 0.2s ease;" title="Notifications">
+            🔔
+            <span id="navNotificationBadge" style="display:none; position:absolute; top:-4px; right:-4px; background:var(--orange); color:#fff; font-size:10px; font-weight:800; border-radius:10px; padding:2px 6px; min-width:18px; text-align:center; box-shadow:0 0 10px rgba(255, 122, 0, 0.8);">0</span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div id="notificationDropdown" style="display:none; position:absolute; right:0; top:48px; width:340px; background:#0c1222; border:1px solid var(--glass-border); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.6); z-index:99999; padding:16px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--glass-border);">
+                <span style="font-size:14px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">🔔 Notifications</span>
+                <button onclick="markAllNotificationsRead()" style="background:none; border:none; color:var(--orange); font-size:11px; font-weight:600; cursor:pointer;">Mark all read</button>
+            </div>
+            <div id="notificationItemsList" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                <!-- Dynamic notifications -->
+            </div>
+        </div>
+    </div>
+
     <button onclick="logout()" class="btn-ghost" style="padding: 8px 20px; font-size:13px;">Log out</button>
   </div>
 </nav>
@@ -1517,6 +1537,7 @@ Object.keys(layouts).forEach(panelId => {
 <script src="js/recruitment.js"></script>
 <script src="js/leaves.js?v=1.0.1"></script>
 <script src="js/payroll.js"></script>
+<script src="js/notifications.js"></script>
 
 
 <!-- ==================== CORE DASHBOARD LOGIC ==================== -->
