@@ -379,8 +379,8 @@ def login():
                 conn.rollback()
                 logger.error(f"Session setup error: {ex}")
 
-            t_commit = time.time()
-            print(f"[LOGIN_TIMING] SUCCESS | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, lock_check={t_lock-t_user:.3f}s, bcrypt={t_bcrypt-t_lock:.3f}s, session_commit={t_commit-t_bcrypt:.3f}s, TOTAL={t_commit-t0:.3f}s", flush=True)
+            t_done = time.time()
+            logger.info(f"Login success for user #{user_id} in {t_done-t0:.3f}s")
 
             response = jsonify({
                 "message": "Login successful",
@@ -405,8 +405,6 @@ def login():
         else:
             ip = request.headers.get("X-Forwarded-For", request.remote_addr) or "unknown"
             record_failed_attempt_conn(conn, user_id, ip)
-            t_fail = time.time()
-            print(f"[LOGIN_TIMING] BAD_PASSWORD | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, lock_check={t_lock-t_user:.3f}s, bcrypt={t_bcrypt-t_lock:.3f}s, fail_record={t_fail-t_bcrypt:.3f}s, TOTAL={t_fail-t0:.3f}s", flush=True)
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e:
         conn.rollback()
