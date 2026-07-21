@@ -520,6 +520,19 @@ def chat_get_messages(conv_id):
             )
             members_list = cursor.fetchall()
             
+            # Fallback to all active system users if group members list is unpopulated
+            if not members_list:
+                cursor.execute(
+                    """
+                    SELECT u.id, u.name, u.email, u.role, e.designation
+                    FROM users u
+                    LEFT JOIN employees e ON u.id = e.user_id
+                    WHERE u.role IN ('employee', 'admin', 'team_leader')
+                    ORDER BY u.name ASC
+                    """
+                )
+                members_list = cursor.fetchall()
+            
         return jsonify({
             "conversation": {
                 "id": conv_id,

@@ -563,16 +563,23 @@ async function refreshGroupThread(forceScroll = false) {
         }
         
         const membersList = document.getElementById("groupMembersList");
-        membersList.innerHTML = "";
-        res.members.forEach(m => {
-            const roleBadge = m.role === 'admin' ? '<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">ADMIN</span>' : '';
-            membersList.innerHTML += `
-                <div class="member-card">
-                    <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
-                    <div class="status"><span style="width:6px; height:6px; border-radius:50%; background:#00e676; display:inline-block;"></span> Online</div>
-                </div>
-            `;
-        });
+        if (membersList) {
+            membersList.innerHTML = "";
+            const membersToRender = (res.members && res.members.length > 0) ? res.members : (allUsers || []);
+            if (membersToRender.length === 0) {
+                membersList.innerHTML = `<div style="padding:12px; color:var(--ink-soft); font-size:12px; text-align:center;">No members listed.</div>`;
+            } else {
+                membersToRender.forEach(m => {
+                    const roleBadge = (m.role === 'admin' || m.role === 'team_leader') ? `<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">${m.role.toUpperCase()}</span>` : '';
+                    membersList.innerHTML += `
+                        <div class="member-card">
+                            <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
+                            <div class="status"><span style="width:6px; height:6px; border-radius:50%; background:#00e676; display:inline-block;"></span> Online</div>
+                        </div>
+                    `;
+                });
+            }
+        }
     } catch(e) {
         console.error(e);
     }
