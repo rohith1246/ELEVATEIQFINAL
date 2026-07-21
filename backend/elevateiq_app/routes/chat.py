@@ -588,10 +588,24 @@ def chat_send_message(conv_id):
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Verify room membership
+        cursor.execute("SELECT type FROM conversations WHERE id = %s", (conv_id,))
+        conv = cursor.fetchone()
+        if not conv:
+            return jsonify({"error": "Conversation not found"}), 404
+
+        # Verify room membership (Admins and Team Leaders auto-enroll in groups)
         cursor.execute("SELECT id FROM conversation_members WHERE conversation_id = %s AND user_id = %s", (conv_id, user["id"]))
-        if not cursor.fetchone():
-            return jsonify({"error": "You are not a member of this conversation"}), 403
+        is_member = cursor.fetchone() is not None
+        
+        is_tl = check_is_team_leader(user, cursor)
+        is_admin = user.get("role") == "admin"
+        
+        if not is_member:
+            if conv["type"] == "group" and (is_admin or is_tl):
+                cursor.execute("INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (conv_id, user["id"]))
+                conn.commit()
+            else:
+                return jsonify({"error": "You are not a member of this conversation"}), 403
             
         if user.get("role") == "client":
             cursor.execute("SELECT type FROM conversations WHERE id = %s", (conv_id,))
