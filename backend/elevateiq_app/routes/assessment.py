@@ -263,7 +263,9 @@ def submit_assessment(token):
 def get_all_assessments():
     """Admin: list all assessments with candidate and job info."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -302,7 +304,9 @@ def get_all_assessments():
 def get_assessment_answers(assessment_id):
     """Admin: get detailed Q&A breakdown for a specific assessment."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -330,7 +334,9 @@ def get_assessment_answers(assessment_id):
 def resend_assessment_email(assessment_id):
     """Admin: resend assessment invitation email."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -365,7 +371,9 @@ def resend_assessment_email(assessment_id):
 def get_questions():
     """Admin: list questions, optionally filtered by job_id."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -402,7 +410,9 @@ def get_questions():
 def create_question():
     """Admin: create a new assessment question."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -442,7 +452,9 @@ def create_question():
 def update_question(q_id):
     """Admin: update an existing assessment question."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -474,7 +486,9 @@ def update_question(q_id):
 def delete_question(q_id):
     """Admin: delete an assessment question."""
     user = get_current_user()
-    if not user or user.get("role") != "admin":
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if user.get("role") != "admin":
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()

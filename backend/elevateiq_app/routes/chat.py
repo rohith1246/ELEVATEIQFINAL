@@ -313,6 +313,7 @@ def chat_create_conversation():
 
 
 @chat_bp.route("/chat/conversations", methods=["GET"])
+@chat_bp.route("/chat/groups", methods=["GET"])
 def chat_list_conversations():
     """
     Lists all active conversation channels the current user is a member of.
