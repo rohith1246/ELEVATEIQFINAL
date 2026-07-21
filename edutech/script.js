@@ -832,25 +832,23 @@
      15. INITIALIZATION CONTROLLER
      ============================================================ */
   async function initPortal() {
-    document.getElementById("year").textContent = new Date().getFullYear();
-    
-    // 3s fallback safety timeout to prevent getting stuck
-    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
-    const coursesPromise = setupCourses();
-    
-    // Race database courses fetch against the 3s timeout
-    await Promise.race([coursesPromise, timeoutPromise]);
-    
-    // Remove preloader
-    hidePreloader();
-    
-    renderTeam();
-    renderFAQ();
-    setupTestimonials();
-    setupForm();
-    setupAI();
-    setupRoadmap();
-    setupReveal();
+    try {
+      const yrEl = document.getElementById("year");
+      if (yrEl) yrEl.textContent = new Date().getFullYear();
+    } catch(e) {}
+
+    try {
+      await Promise.race([setupCourses(), new Promise(resolve => setTimeout(resolve, 1500))]);
+    } catch(e) {}
+
+    try { hidePreloader(); } catch(e) {}
+    try { renderTeam(); } catch(e) {}
+    try { renderFAQ(); } catch(e) {}
+    try { setupTestimonials(); } catch(e) {}
+    try { setupForm(); } catch(e) {}
+    try { setupAI(); } catch(e) {}
+    try { setupRoadmap(); } catch(e) {}
+    try { setupReveal(); } catch(e) {}
   }
   initPortal();
 
