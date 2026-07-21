@@ -345,25 +345,24 @@ async function loadAdminAttendance() {
  * @async
  */
 function getStatusBadgeHtml(status) {
-    let cls = "pending";
-    let text = status;
+    let text = status || "Pending";
+    let style = "background:rgba(255,145,0,0.12); color:#ff9100; border:1px solid rgba(255,145,0,0.3);";
     
-    // Inline style/colors to look gorgeous
-    let style = "";
-    if (status === "Approved") {
+    const sLower = text.toLowerCase();
+    if (sLower.includes("approved")) {
         style = "background:rgba(34,197,94,0.12); color:#22c55e; border:1px solid rgba(34,197,94,0.3);";
-    } else if (status === "TL Rejected") {
+        if (sLower === "approved") text = "Approved by Admin";
+    } else if (sLower.includes("rejected")) {
         style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
-        text = "TL Rejected";
-    } else if (status === "HR Rejected") {
-        style = "background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);";
-        text = "HR Rejected";
-    } else if (status === "Pending TL Approval" || status === "Pending") {
-        style = "background:rgba(255,145,0,0.12); color:#ff9100; border:1px solid rgba(255,145,0,0.3);";
-        text = "Pending TL Approval";
-    } else if (status === "Pending HR Approval") {
+    } else if (sLower.includes("withdrawn")) {
+        style = "background:rgba(112,122,138,0.12); color:#707a8a; border:1px solid rgba(112,122,138,0.3);";
+        text = "Withdrawn";
+    } else if (sLower.includes("pending hr")) {
         style = "background:rgba(0,176,255,0.12); color:#00b0ff; border:1px solid rgba(0,176,255,0.3);";
         text = "Pending HR Approval";
+    } else if (sLower.includes("pending tl") || sLower === "pending") {
+        style = "background:rgba(255,145,0,0.12); color:#ff9100; border:1px solid rgba(255,145,0,0.3);";
+        text = "Pending TL Approval";
     }
     
     return `<span class="badge" style="padding:4px 10px; border-radius:8px; font-weight:600; font-size:12px; display:inline-block; text-transform:none; ${style}">${text}</span>`;
@@ -376,35 +375,50 @@ function getStatusBadgeHtml(status) {
  */
 async function loadAdminLeaves() {
     const leaves = await apiCall("/leaves?scope=all");
-    const tbody = document.getElementById("leavesTableBody");
+    const tbody = document.getElementById("adminLeavesTableBody");
+    if (!tbody) return;
     tbody.innerHTML = "";
-    if (leaves.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No leave applications found.</td></tr>`;
+    if (leaves.length === 0) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:15px; color:var(--ink-faint);">No leave requests found.</td></tr>`;
     
-    const isTL = currentUser.is_team_leader || currentUser.role === 'admin';
-    const isHR = currentUser.is_hr || currentUser.role === 'admin';
+    const isTl = currentUser.designation && (currentUser.designation.toLowerCase().includes("team leader") || currentUser.designation.toLowerCase().includes("team lead"));
+    const isHrOrAdmin = currentUser.role === 'admin' || (currentUser.designation && (currentUser.designation.toLowerCase().includes("hr") || currentUser.designation.toLowerCase().includes("human resource")));
 
     leaves.forEach(l => {
-        const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
         const start = new Date(l.start_date).toLocaleDateString();
         const end = new Date(l.end_date).toLocaleDateString();
-        
-        let actionBtn = "";
-        const status = l.status === "Pending" ? "Pending TL Approval" : l.status;
+        const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
 
-        if (status === "Pending TL Approval") {
-            if (isTL) {
+        let actionBtn = "";
+        const isPending = l.status.toLowerCase().includes("pending");
+
+        if (isPending) {
+            if (currentUser.role === 'admin') {
                 actionBtn = `
-                    <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="margin-right:4px;">Approve</button>
-                    <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>
+                        <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject" style="padding:4px 8px; font-size:11px; margin:0;">Reject</button>
+                    </div>
                 `;
-            } else {
-                actionBtn = `<span style="font-size:12px; color:#ff9100; font-weight:600;">Awaiting TL</span>`;
-            }
-        } else if (status === "Pending HR Approval") {
-            if (isHR) {
+            } else if (l.status === "Pending TL Approval" && (isTl || isHrOrAdmin)) {
                 actionBtn = `
-                    <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="margin-right:4px;">Approve</button>
-                    <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject">Reject</button>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>
+                        <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject" style="padding:4px 8px; font-size:11px; margin:0;">Reject</button>
+                    </div>
+                `;
+            } else if (l.status === "Pending HR Approval" && isHrOrAdmin) {
+                actionBtn = `
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>
+                        <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject" style="padding:4px 8px; font-size:11px; margin:0;">Reject</button>
+                    </div>
+                `;
+            } else if (l.status === "Pending TL Approval" && isHrOrAdmin) {
+                actionBtn = `
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>
+                        <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject" style="padding:4px 8px; font-size:11px; margin:0;">Reject</button>
+                    </div>
                 `;
             } else {
                 actionBtn = `<span style="font-size:12px; color:#00b0ff; font-weight:600;">Awaiting HR</span>`;
@@ -414,7 +428,7 @@ async function loadAdminLeaves() {
         }
 
         tbody.innerHTML += `
-            <tr>
+            <tr id="leave_row_${l.id}">
                 <td>${l.employee_id}</td>
                 <td>${l.name}</td>
                 <td>${l.leave_type}</td>
@@ -423,24 +437,50 @@ async function loadAdminLeaves() {
                     <div style="font-size:11px; color:var(--ink-faint);">${start} to ${end}</div>
                 </td>
                 <td style="max-width:180px; word-break:break-all;">${l.reason || '-'}</td>
-                <td>${getStatusBadgeHtml(l.status)}</td>
-                <td>${actionBtn}</td>
+                <td class="leave-status-cell">${getStatusBadgeHtml(l.status)}</td>
+                <td class="leave-actions-cell">${actionBtn}</td>
             </tr>
         `;
     });
 }
 
 /**
- * Dispatches leave application review decision POST updates.
+ * Dispatches leave application review decision POST updates without reloading the page.
  * 
  * @async
  * @param {number} id - Target leave ID.
  * @param {string} action - Action status decision ('Approved' or 'Rejected').
  */
 async function reviewLeave(id, action) {
-    await apiCall(`/leaves/${id}`, "PUT", { status: action });
-    alert(`Leave request ${action.toLowerCase()} successfully.`);
-    loadAdminLeaves();
+    try {
+        const res = await apiCall(`/leaves/${id}`, "PUT", { status: action });
+        const newStatus = res.new_status || (action === "Approved" ? "Approved by Admin" : "Rejected by Admin");
+        
+        // Instant Real-time UI Update without reloading!
+        const row = document.getElementById(`leave_row_${id}`);
+        if (row) {
+            const statusCell = row.querySelector(".leave-status-cell");
+            const actionCell = row.querySelector(".leave-actions-cell");
+            if (statusCell) statusCell.innerHTML = getStatusBadgeHtml(newStatus);
+            if (actionCell) actionCell.innerHTML = `<span style="font-size:12px; color:var(--ink-faint);">Processed</span>`;
+        }
+
+        // Push real-time notification toast
+        if (typeof addNotification === 'function') {
+            addNotification({
+                icon: action === 'Approved' ? '✅' : '❌',
+                title: 'Leave Decision Updated',
+                message: `Leave request #${id} marked as ${newStatus}`,
+                category: 'leave',
+                targetView: 'leaves'
+            });
+        }
+
+        // Refresh stats quietly in background
+        if (typeof loadAdminOverview === 'function') loadAdminOverview();
+    } catch(err) {
+        alert("Failed to review leave: " + err.message);
+    }
 }
 
 
