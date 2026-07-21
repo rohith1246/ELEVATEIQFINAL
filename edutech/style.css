@@ -757,7 +757,7 @@ footer{ position:relative; padding-top:120px; border-top:1px solid var(--line); 
 /* ============================================================
    22. GSAP REVEAL ANIMATIONS UTILITY
    ============================================================ */
-.reveal{ opacity:0; transform:translateY(36px); }
+.reveal{ opacity:1 !important; transform:none !important; }
 
 
 /* ============================================================
