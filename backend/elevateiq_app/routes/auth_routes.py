@@ -965,8 +965,6 @@ def get_announcements():
             - 200: List of announcement items.
             - 500: SQL query issues.
     """
-@auth_bp.route("/announcements", methods=["GET"])
-def get_announcements():
     cache_key = "announcements"
     cached = get_cached_response(cache_key, ttl_seconds=5)
     if cached:
