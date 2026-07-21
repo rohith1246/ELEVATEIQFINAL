@@ -645,53 +645,99 @@ async function submitCreateGroup(e) {
  * Shows list of users eligible to join a specific group chat.
  * 
  * @async
- * @param {number} groupId - Target group channel ID.
+ * @param {number} groupId - Target group channel ID
  */
+let currentAddGroupUsers = [];
+let currentAddGroupId = null;
+
 async function openAddMemberModal(groupId) {
+    currentAddGroupId = groupId;
     openModal("addGroupMemberModal");
     const container = document.getElementById("addGroupMembersList");
-    container.innerHTML = `<div style="text-align:center; color:var(--ink-soft);">Loading...</div>`;
+    const searchInput = document.getElementById("addMemberSearchInput");
+    if (searchInput) searchInput.value = "";
+    
+    container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); padding:20px; font-size:13px;"><span class="spinner"></span> Loading employees...</div>`;
     
     try {
         const users = await apiCall("/chat/users");
         const res = await apiCall(`/chat/conversations/${groupId}/messages`);
-        const memberIds = res.members.map(m => m.id);
+        const memberIds = (res.members || []).map(m => m.id);
         
-        const eligibleUsers = users.filter(u => !memberIds.includes(u.id));
-        container.innerHTML = "";
-        
-        if (eligibleUsers.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:15px;">All employees are members of this group.</div>`;
-            return;
-        }
-        
-        eligibleUsers.forEach(u => {
-            container.innerHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:8px 12px; border-radius:10px;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px; color:#fff;">${u.name}</div>
-                        <div style="font-size:10px; color:var(--ink-soft);">${u.email}</div>
-                    </div>
-                    <button onclick="addGroupMember(${groupId}, ${u.id})" class="btn-primary" style="padding:6px 12px; font-size:11px;">Add</button>
-                </div>
-            `;
-        });
-    } catch(e) {}
+        currentAddGroupUsers = users.filter(u => !memberIds.includes(u.id));
+        renderAddGroupMembersList(currentAddGroupUsers);
+    } catch(e) {
+        container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:15px;">Failed to load employee list.</div>`;
+    }
 }
 
-/**
- * Dispatches group member insertion POST request.
- * 
- * @async
- * @param {number} groupId - Target group.
- * @param {number} userId - Target employee.
- */
-async function addGroupMember(groupId, userId) {
+function filterAddGroupMembers() {
+    const q = (document.getElementById("addMemberSearchInput")?.value || "").toLowerCase().trim();
+    if (!q) {
+        renderAddGroupMembersList(currentAddGroupUsers);
+        return;
+    }
+    const filtered = currentAddGroupUsers.filter(u => 
+        (u.name && u.name.toLowerCase().includes(q)) || 
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.designation && u.designation.toLowerCase().includes(q))
+    );
+    renderAddGroupMembersList(filtered);
+}
+
+function renderAddGroupMembersList(list) {
+    const container = document.getElementById("addGroupMembersList");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    if (list.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:20px; background:rgba(255,255,255,0.01); border-radius:12px; border:1px dashed var(--glass-border);">All employees are already members of this group.</div>`;
+        return;
+    }
+    
+    list.forEach(u => {
+        const initials = u.name.split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase();
+        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="background:rgba(255, 122, 0, 0.15); border:1px solid rgba(255, 122, 0, 0.3); color:var(--orange); font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">${u.role.toUpperCase()}</span>` : '';
+
+        container.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:10px 14px; border-radius:14px; transition:all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, var(--blue), var(--orange)); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                        ${initials}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:13.5px; color:#fff; display:flex; align-items:center;">${escapeHTML(u.name)} ${roleLabel}</div>
+                        <div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${escapeHTML(u.email)}</div>
+                    </div>
+                </div>
+                <button onclick="addGroupMember(${currentAddGroupId}, ${u.id}, this)" class="btn-primary" style="padding:6px 14px; font-size:11.5px; border-radius:8px; display:inline-flex; align-items:center; gap:4px; font-weight:600; cursor:pointer;">
+                    + Add
+                </button>
+            </div>
+        `;
+    });
+}
+
+async function addGroupMember(groupId, userId, btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `✓ Added`;
+        btn.style.background = `rgba(0, 230, 118, 0.2)`;
+        btn.style.color = `#00e676`;
+        btn.style.borderColor = `#00e676`;
+    }
     try {
         await apiCall(`/chat/groups/${groupId}/members`, "POST", { user_id: userId });
-        closeModal("addGroupMemberModal");
-        await refreshGroupThread(true);
-    } catch(e) {}
+        setTimeout(async () => {
+            closeModal("addGroupMemberModal");
+            await refreshGroupThread(true);
+        }, 400);
+    } catch(e) {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `+ Add`;
+        }
+    }
 }
 
 /**
