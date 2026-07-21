@@ -517,22 +517,26 @@ async function refreshGroupThread(forceScroll = false) {
 
         // Update Title & Simulated Online count representation
         const membersCount = res.members ? res.members.length : 0;
-        const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || res.conversation.created_by === currentUser.id;
+        const onlineCount = membersCount;
+        const groupTitleElem = document.getElementById("groupActiveTitle") || document.getElementById("groupTitleHeader");
+        const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || (res.conversation && res.conversation.created_by === currentUser.id);
         const deleteBtnHtml = isCanDelete ? `
             <button type="button" onclick="deleteCurrentGroup(${activeGroupConversationId})" class="btn-action btn-reject" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Delete Group">
                 🗑️ Delete Group
             </button>
         ` : '';
 
-        groupTitleElem.innerHTML = `
-            <div class="title-area" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                <div>
-                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${escapeHTML(res.conversation.group_name || 'Group Chat')}</h3>
-                    <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+        if (groupTitleElem) {
+            groupTitleElem.innerHTML = `
+                <div class="title-area" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${escapeHTML((res.conversation && res.conversation.group_name) || 'Group Chat')}</h3>
+                        <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+                    </div>
+                    ${deleteBtnHtml}
                 </div>
-                ${deleteBtnHtml}
-            </div>
-        `;
+            `;
+        }
         
         const messagesDiv = document.getElementById("groupMessages");
         const isAtBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 40;

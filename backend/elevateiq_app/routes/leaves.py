@@ -419,7 +419,7 @@ def check_in():
             - 500: Database insertion exceptions.
     """
     user = get_current_user()
-    if not user or user["role"] != "employee":
+    if not user or user.get("role") not in ["employee", "admin", "team_leader"]:
         return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
 
     conn = get_connection()
@@ -433,7 +433,15 @@ def check_in():
         if not emp_db_id:
             cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
             emp_row = cursor.fetchone()
-            emp_db_id = emp_row[0] if emp_row else None
+            if emp_row:
+                emp_db_id = emp_row[0]
+            else:
+                cursor.execute(
+                    "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
+                    (user["id"], f"EMP_{user['id']}")
+                )
+                emp_db_id = cursor.fetchone()[0]
+                conn.commit()
             
         if not emp_db_id:
             return jsonify({"error": "Employee profile record not found"}), 404
@@ -480,7 +488,7 @@ def check_out():
             - 500: Database update exceptions.
     """
     user = get_current_user()
-    if not user or user["role"] != "employee":
+    if not user or user.get("role") not in ["employee", "admin", "team_leader"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -495,7 +503,15 @@ def check_out():
         if not emp_db_id:
             cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
             emp_row = cursor.fetchone()
-            emp_db_id = emp_row["id"] if emp_row else None
+            if emp_row:
+                emp_db_id = emp_row["id"]
+            else:
+                cursor.execute(
+                    "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
+                    (user["id"], f"EMP_{user['id']}")
+                )
+                emp_db_id = cursor.fetchone()["id"]
+                conn.commit()
             
         if not emp_db_id:
             return jsonify({"error": "Employee profile record not found"}), 404
