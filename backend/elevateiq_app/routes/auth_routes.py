@@ -315,7 +315,8 @@ def login():
             """
             SELECT u.*, 
                    e.id as emp_db_id, e.employee_id,
-                   c.id as client_db_id, c.client_id, c.company_name
+                   c.id as client_db_id, c.client_id, c.company_name,
+                   (SELECT locked_until FROM account_lockouts WHERE user_id = u.id AND locked_until > NOW() LIMIT 1) as locked_until
             FROM users u
             LEFT JOIN employees e ON u.id = e.user_id
             LEFT JOIN clients c ON u.id = c.user_id
@@ -325,25 +326,20 @@ def login():
             (login_id, login_id, login_id)
         )
         user_record = cursor.fetchone()
-        t_user = time.time()
 
         if not user_record:
-            print(f"[LOGIN_TIMING] INVALID_USER | get_conn={t_conn-t0:.3f}s, query_user={t_user-t_conn:.3f}s, TOTAL={time.time()-t0:.3f}s", flush=True)
             return jsonify({"error": "Invalid email or password"}), 401
 
         user_id = user_record["id"]
 
-        locked, locked_until = is_account_locked_conn(conn, user_id)
-        t_lock = time.time()
-
-        if locked:
+        if user_record.get("locked_until"):
+            locked_until = user_record["locked_until"]
             remaining = int((locked_until - datetime.now()).total_seconds()) if locked_until else BRUTE_FORCE_WINDOW_MINUTES * 60
             return jsonify({
                 "error": f"Account locked due to too many failed login attempts. Try again in {max(60, remaining)} seconds."
             }), 429
 
         is_valid = _bcrypt_check(password.encode("utf-8"), user_record["password"].encode("utf-8"))
-        t_bcrypt = time.time()
 
         if is_valid:
             requested_portal = data.get("portal", "elevateiq")
@@ -366,12 +362,18 @@ def login():
             refresh_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
             csrf_token = secrets.token_hex(32)
 
-            # Single batched transaction for session initialization
+            # Single batched transaction for session initialization & presence touch
             try:
-                cursor.execute("DELETE FROM login_attempts WHERE user_id = %s", (user_id,))
-                cursor.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = %s AND revoked = FALSE", (user_id,))
-                cursor.execute("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (%s, %s, NOW() + INTERVAL '7 days')", (user_id, refresh_hash))
-                cursor.execute("INSERT INTO csrf_tokens (user_id, token) VALUES (%s, %s)", (user_id, csrf_token))
+                cursor.execute(
+                    """
+                    DELETE FROM login_attempts WHERE user_id = %s;
+                    UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = %s AND revoked = FALSE;
+                    INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (%s, %s, NOW() + INTERVAL '7 days');
+                    INSERT INTO csrf_tokens (user_id, token) VALUES (%s, %s);
+                    UPDATE users SET last_seen = NOW() WHERE id = %s;
+                    """,
+                    (user_id, user_id, user_id, refresh_hash, user_id, csrf_token, user_id)
+                )
                 conn.commit()
             except Exception as ex:
                 conn.rollback()
