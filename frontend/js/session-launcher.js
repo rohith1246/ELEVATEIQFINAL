@@ -75,8 +75,9 @@
 
       // Force all EduTech portal links to open in a brand new browser tab
       if (lowerHref.includes('edutech')) {
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(link.href, '_blank', 'noopener,noreferrer');
         return;
       }
 
