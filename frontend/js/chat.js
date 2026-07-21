@@ -519,9 +519,9 @@ async function refreshGroupThread(forceScroll = false) {
         }
         lastGroupMessagesJson = cacheKey;
 
-        // Update Title & Simulated Online count representation
-        const membersCount = res.members ? res.members.length : 0;
-        const onlineCount = membersCount;
+        const membersToRender = (res.members && res.members.length > 0) ? res.members : (allUsers || []);
+        const membersCount = membersToRender.length;
+        const onlineCount = membersToRender.filter(m => m.is_online === true || m.is_online === 'true' || m.is_online === 1).length;
         const groupTitleElem = document.getElementById("groupActiveTitle") || document.getElementById("groupTitleHeader");
         const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || (res.conversation && res.conversation.created_by === currentUser.id);
         const deleteBtnHtml = isCanDelete ? `
