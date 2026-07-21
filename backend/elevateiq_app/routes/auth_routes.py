@@ -1235,7 +1235,7 @@ def get_report_details(report_type):
                 return jsonify({"error": "Parameter 'department' is required"}), 400
             cursor.execute(
                 """
-                SELECT e.employee_id, u.name, e.designation, e.phone_number, e.status
+                SELECT e.employee_id, u.name, e.designation, COALESCE(e.phone_number, e.phone, '-') as phone_number, e.status
                 FROM employees e
                 JOIN users u ON e.user_id = u.id
                 WHERE e.department = %s AND e.status = 'Active'

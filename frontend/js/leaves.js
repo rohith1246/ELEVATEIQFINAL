@@ -866,7 +866,7 @@ async function viewReportDetails(type, param1, param2) {
                         <td>${row.employee_id || "-"}</td>
                         <td><strong>${row.name || "-"}</strong></td>
                         <td>${row.designation || "-"}</td>
-                        <td>${row.phone_number || "-"}</td>
+                        <td>${row.phone_number || row.phone || "-"}</td>
                         <td><span class="badge ${row.status.toLowerCase()}">${row.status}</span></td>
                     `;
                 } else if (type === "recruitment") {
