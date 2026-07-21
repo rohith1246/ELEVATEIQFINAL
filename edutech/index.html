@@ -791,5 +791,21 @@
 <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="data.js"></script>
 <script src="script.js"></script>
+<script>
+  (function() {
+    function dismissPreloader() {
+      var p = document.getElementById("preloader");
+      if (p) {
+        p.style.transition = "opacity 0.25s ease, visibility 0.25s";
+        p.style.opacity = "0";
+        setTimeout(function() { if (p) p.remove(); }, 250);
+      }
+    }
+    setTimeout(dismissPreloader, 800);
+    window.addEventListener("DOMContentLoaded", function() { setTimeout(dismissPreloader, 300); });
+    document.addEventListener("click", dismissPreloader, { once: true });
+    document.addEventListener("touchstart", dismissPreloader, { once: true });
+  })();
+</script>
 </body>
 </html>
