@@ -157,18 +157,14 @@
      6. HERO ANIMATION TIMELINES (GSAP)
      ============================================================ */
   function playEntranceAnimations(){
-    if (hasGSAP){
-      gsap.to(".hero-line span", { yPercent:0, y:0, duration:1, ease:"power4.out", stagger:0.12, delay:0.15 });
-      gsap.to(".hero-badge", { opacity:1, y:0, duration:0.8, delay:0.05 });
-      gsap.to(".hero-ctas .btn", { opacity:1, y:0, duration:0.8, stagger:0.1, delay:0.6 });
-      gsap.to(".hero-stats", { opacity:1, y:0, duration:0.8, delay:0.85 });
-    } else {
-      document.querySelectorAll(".hero-line span").forEach(el => el.style.transform = "none");
-      document.querySelectorAll(".hero-badge, .hero-ctas .btn, .hero-stats").forEach(el => {
-        el.style.opacity = "1";
-        el.style.transform = "none";
-      });
-    }
+    document.querySelectorAll(".hero-line span").forEach(el => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+    document.querySelectorAll(".hero-badge, .hero-ctas .btn, .hero-stats").forEach(el => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
   }
   if (hasGSAP){
     document.querySelectorAll("[data-float]").forEach((el,i)=>{

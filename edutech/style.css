@@ -358,8 +358,8 @@ input,textarea,select{font-family:inherit;}
   line-height:1.02;
   margin-bottom:24px;
 }
-.hero-line{ display:block; overflow:hidden; }
-.hero-line span{ display:inline-block; }
+.hero-line{ display:block; overflow:visible !important; }
+.hero-line span{ display:inline-block; opacity:1 !important; transform:none !important; }
 
 #hero .sub{
   font-size:clamp(16px,2vw,19px); color:var(--muted); max-width:600px; margin:0 auto 40px;
