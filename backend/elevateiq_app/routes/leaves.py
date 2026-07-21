@@ -196,6 +196,52 @@ def apply_leave():
         conn.close()
 
 
+@leaves_bp.route("/leaves/<int:leave_id>", methods=["DELETE"])
+def revert_leave(leave_id):
+    """
+    Reverts / withdraws an employee's leave request.
+    Allows employees to cancel pending or approved leave requests.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("SELECT * FROM leaves WHERE id = %s", (leave_id,))
+        leave = cursor.fetchone()
+        if not leave:
+            return jsonify({"error": "Leave request not found"}), 404
+
+        # Security check: Ensure leave request belongs to the logged-in employee or user is admin
+        if user["role"] != "admin" and leave["employee_id"] != user.get("emp_db_id"):
+            return jsonify({"error": "Forbidden - You can only revert your own leave applications."}), 403
+
+        # Update leave status to Withdrawn
+        cursor.execute("UPDATE leaves SET status = 'Withdrawn' WHERE id = %s", (leave_id,))
+        
+        # Clean up any attendance records created for this leave if approved previously
+        cursor.execute(
+            """
+            DELETE FROM attendance 
+            WHERE employee_id = %s 
+              AND date >= %s AND date <= %s 
+              AND status = 'Leave'
+            """,
+            (leave["employee_id"], leave["start_date"], leave["end_date"])
+        )
+        conn.commit()
+        return jsonify({"message": "Leave application reverted successfully."}), 200
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Revert leave error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @leaves_bp.route("/leaves/<int:leave_id>", methods=["PUT"])
 def review_leave(leave_id):
     """

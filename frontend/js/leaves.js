@@ -1010,22 +1010,40 @@ async function loadEmpLeaves() {
     const records = await apiCall("/leaves");
     const tbody = document.getElementById("empLeavesTableBody");
     tbody.innerHTML = "";
-    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No leave applications submitted.</td></tr>`;
+    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:15px;">No leave applications submitted.</td></tr>`;
     records.forEach(l => {
         const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+        const isRevertible = !l.status.toLowerCase().includes("rejected") && !l.status.toLowerCase().includes("withdrawn");
+        const revertBtn = isRevertible 
+            ? `<button onclick="revertLeave(${l.id})" class="btn-action btn-reject" style="padding:4px 10px; font-size:11.5px; height:auto; border-radius:6px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Revert / Withdraw Leave Request">↩️ Revert</button>` 
+            : '<span style="color:var(--ink-faint); font-size:11px;">-</span>';
+
         tbody.innerHTML += `
             <tr>
-                <td>${l.leave_type}</td>
+                <td>${escapeHTML(l.leave_type)}</td>
                 <td>
-                    <div style="font-weight:500;">${leaveDays} Days</div>
+                    <div style="font-weight:500;">${leaveDays} Day${leaveDays > 1 ? 's' : ''}</div>
                     <div style="font-size:11px; color:var(--ink-faint);">${new Date(l.start_date).toLocaleDateString()} to ${new Date(l.end_date).toLocaleDateString()}</div>
                 </td>
-                <td>${l.reason || '-'}</td>
+                <td>${escapeHTML(l.reason || '-')}</td>
                 <td>${getStatusBadgeHtml(l.status)}</td>
+                <td>${revertBtn}</td>
             </tr>
         `;
     });
 }
+
+window.revertLeave = async function(leaveId) {
+    if (!confirm("Are you sure you want to revert/withdraw this leave application?")) return;
+    try {
+        await apiCall(`/leaves/${leaveId}`, "DELETE");
+        alert("Leave application reverted successfully.");
+        loadEmpLeaves();
+        if (typeof loadEmpOverview === 'function') loadEmpOverview();
+    } catch(err) {
+        alert("Failed to revert leave application: " + err.message);
+    }
+};
 
 // Global submit handler for leave application
 window.submitLeaveForm = async function(e) {
