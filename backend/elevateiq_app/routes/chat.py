@@ -182,7 +182,7 @@ def chat_list_users():
             )
         else:
             cursor.execute(
-                "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin') AND id != %s ORDER BY name ASC",
+                "SELECT id, name, email, role FROM users WHERE role IN ('employee', 'admin', 'team_leader') AND id != %s ORDER BY name ASC",
                 (user["id"],)
             )
         users = cursor.fetchall()
@@ -405,7 +405,8 @@ def chat_list_conversations():
             )
         conversations = cursor.fetchall()
         
-        # Append DM counterparty user info
+        valid_conversations = []
+        # Append DM counterparty user info (filter out DMs with deleted users)
         for c in conversations:
             if c["type"] == "dm":
                 cursor.execute(
@@ -420,11 +421,15 @@ def chat_list_conversations():
                 other = cursor.fetchone()
                 if other:
                     c["dm_user"] = other
+                    valid_conversations.append(c)
+            else:
+                valid_conversations.append(c)
+
             if c["last_message_time"]:
                 c["last_message_time"] = c["last_message_time"].isoformat()
             c["created_at"] = c["created_at"].isoformat()
             
-        return jsonify(conversations), 200
+        return jsonify(valid_conversations), 200
     except Exception as e:
         logger.error(f"Chat API error: {e}")
         return jsonify(safe_error()), 500
