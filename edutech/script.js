@@ -303,7 +303,7 @@
           <div style="margin: 10px 0 16px 0; display: flex; align-items: baseline; gap: 8px;">
             <span style="font-size: 18px; font-weight: 700; color: white;">${money(priceVal)}</span>
             ${oldPriceVal ? `<span style="font-size: 13px; text-decoration: line-through; color: var(--muted);">${money(oldPriceVal)}</span>` : ''}
-          </div>`v>
+          </div>
           <div class="course-foot">
             <button class="btn btn-primary btn-sm magnetic enroll-btn" data-id="${c.id}">Enroll</button>
           </div>
