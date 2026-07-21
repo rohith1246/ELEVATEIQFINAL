@@ -69,15 +69,23 @@
       if (!link) return;
 
       const href = link.getAttribute('href');
-      
+      if (!href) return;
+
+      const lowerHref = href.toLowerCase();
+
+      // Force all EduTech portal links to open in a brand new browser tab
+      if (lowerHref.includes('edutech')) {
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+        return;
+      }
+
       // Do not intercept if:
-      // - No href exists
       // - It is an internal section link (starts with #)
       // - It is a javascript action, tel link, or mailto link
       // - It opens in a new tab (_blank)
       // - It has custom click handlers like logout
-      if (!href || 
-          href.startsWith('#') || 
+      if (href.startsWith('#') || 
           href.startsWith('javascript:') || 
           href.startsWith('tel:') || 
           href.startsWith('mailto:') || 
