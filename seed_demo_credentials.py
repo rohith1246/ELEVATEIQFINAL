@@ -99,7 +99,7 @@ def seed_demo_accounts():
                 c.execute("SELECT id FROM clients WHERE user_id = %s", (user_id,))
                 if not c.fetchone():
                     c.execute(
-                        "INSERT INTO clients (user_id, client_id, company_name, industry) VALUES (%s, %s, %s, 'Technology')",
+                        "INSERT INTO clients (user_id, client_id, company_name) VALUES (%s, %s, %s)",
                         (user_id, clt_id, comp_name)
                     )
 
