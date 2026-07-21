@@ -13,6 +13,13 @@ let activeOversightConversationId = null;
 let activeOversightType = null;
 let allUsers = [];
 
+// Periodic presence heartbeat ping (updates last_seen every 20 seconds)
+setInterval(() => {
+    if (currentUser) {
+        apiCall('/chat/heartbeat', 'POST').catch(() => {});
+    }
+}, 20000);
+
 function formatToIST(dateStr) {
     if (!dateStr) return '';
     let cleanStr = dateStr;

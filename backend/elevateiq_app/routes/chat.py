@@ -156,16 +156,29 @@ def chat_user_details():
         conn.close()
 
 
+@chat_bp.route("/chat/heartbeat", methods=["POST"])
+def chat_heartbeat():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (user["id"],))
+        conn.commit()
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @chat_bp.route("/chat/users", methods=["GET"])
 def chat_list_users():
     """
     Lists all system users eligible for chat (Employees and Admins), excluding self.
-
-    Returns:
-        tuple: (JSON response, HTTP status code)
-            - 200: Array of user profiles.
-            - 401: Unauthorized.
-            - 500: SQL query issues.
     """
     user = get_current_user()
     if not user:
@@ -178,12 +191,12 @@ def chat_list_users():
         cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (user["id"],))
         conn.commit()
 
-        # Select active employees/admins with real-time online status
+        # Select active employees/admins with real-time online status (timezone safe)
         if user.get("role") == "client":
             cursor.execute(
                 """
                 SELECT id, name, email, role,
-                       (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '5 minutes') as is_online 
+                       (last_seen IS NOT NULL AND ABS(EXTRACT(EPOCH FROM (NOW() - last_seen))) < 300) as is_online 
                 FROM users WHERE role = 'admin' AND id != %s ORDER BY name ASC
                 """,
                 (user["id"],)
@@ -192,7 +205,7 @@ def chat_list_users():
             cursor.execute(
                 """
                 SELECT id, name, email, role,
-                       (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '5 minutes') as is_online 
+                       (last_seen IS NOT NULL AND ABS(EXTRACT(EPOCH FROM (NOW() - last_seen))) < 300) as is_online 
                 FROM users WHERE role IN ('employee', 'admin', 'team_leader') AND id != %s ORDER BY name ASC
                 """,
                 (user["id"],)
@@ -527,7 +540,7 @@ def chat_get_messages(conv_id):
             cursor.execute(
                 """
                 SELECT u.id, u.name, u.email, u.role, e.designation,
-                       (u.last_seen IS NOT NULL AND u.last_seen > NOW() - INTERVAL '5 minutes') as is_online
+                       (u.last_seen IS NOT NULL AND ABS(EXTRACT(EPOCH FROM (NOW() - u.last_seen))) < 300) as is_online
                 FROM conversation_members cm
                 JOIN users u ON cm.user_id = u.id
                 LEFT JOIN employees e ON u.id = e.user_id
@@ -543,7 +556,7 @@ def chat_get_messages(conv_id):
                 cursor.execute(
                     """
                     SELECT u.id, u.name, u.email, u.role, e.designation,
-                           (u.last_seen IS NOT NULL AND u.last_seen > NOW() - INTERVAL '5 minutes') as is_online
+                           (u.last_seen IS NOT NULL AND ABS(EXTRACT(EPOCH FROM (NOW() - u.last_seen))) < 300) as is_online
                     FROM users u
                     LEFT JOIN employees e ON u.id = e.user_id
                     WHERE u.role IN ('employee', 'admin', 'team_leader')
