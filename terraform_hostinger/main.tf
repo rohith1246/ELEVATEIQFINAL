@@ -41,7 +41,7 @@ resource "null_resource" "hostinger_vps_deploy" {
 
       "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
       "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
-      "rm -rf /tmp/assessments_tmp && GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /tmp/assessments_tmp && cp -rf /tmp/assessments_tmp/assessments/* /var/www/assessments/ && rm -rf /tmp/assessments_tmp",
+      "rm -rf /tmp/assessments_tmp && GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /tmp/assessments_tmp && (if [ -d '/tmp/assessments_tmp/assessments' ]; then cp -rf /tmp/assessments_tmp/assessments/* /var/www/assessments/; else cp -rf /tmp/assessments_tmp/* /var/www/assessments/; fi) && rm -rf /tmp/assessments_tmp",
 
       "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
