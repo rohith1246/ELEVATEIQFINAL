@@ -36,16 +36,15 @@ resource "null_resource" "hostinger_vps_deploy" {
       "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx",
 
       "echo '=== [2/8] Setting Up Project Work Directories ==='",
-      "sudo mkdir -p /var/www/elevateiq /var/www/assessments",
+      "sudo mkdir -p /var/www/elevateiq /var/www/assessments /var/www/assessments/instance",
       "sudo chown -R $USER:$USER /var/www/elevateiq /var/www/assessments",
 
       "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
       "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
-      "rm -rf /tmp/assessments_tmp && GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /tmp/assessments_tmp && (if [ -d '/tmp/assessments_tmp/assessments' ]; then cp -rf /tmp/assessments_tmp/assessments/* /var/www/assessments/; else cp -rf /tmp/assessments_tmp/* /var/www/assessments/; fi) && rm -rf /tmp/assessments_tmp",
+      "if [ ! -d '/var/www/assessments/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /var/www/assessments; else cd /var/www/assessments && git pull origin main; fi",
 
       "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
-      "sudo mkdir -p /var/www/assessments/instance && sudo chown -R $USER:$USER /var/www/assessments",
       "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip gunicorn gevent greenlet && /var/www/assessments/venv/bin/pip install -r requirements.txt",
       "sudo cp /var/www/elevateiq/.env /var/www/assessments/.env || true",
       "cd /var/www/assessments && FLASK_APP=\"app:create_app()\" /var/www/assessments/venv/bin/flask init-db || true",
