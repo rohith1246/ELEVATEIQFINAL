@@ -45,12 +45,12 @@ resource "null_resource" "hostinger_vps_deploy" {
 
       "echo '=== [4/8] Building Python Virtual Environments ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
-      "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && cd /var/www/assessments/assessments && /var/www/assessments/venv/bin/pip install -r requirements.txt || true",
+      "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && (if [ -f 'requirements.txt' ]; then /var/www/assessments/venv/bin/pip install -r requirements.txt; elif [ -f 'assessments/requirements.txt' ]; then /var/www/assessments/venv/bin/pip install -r assessments/requirements.txt; fi) || true",
 
       "echo '=== [5/8] Provisioning Scaled Gunicorn Services (2000+ Concurrent Users) ==='",
       "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gevent --workers 8 --worker-connections 2000 --bind 127.0.0.1:5000 backend.run:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
 
-      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq-assessment.service\n[Unit]\nDescription=ElevateIQ Assessment Subdomain WSGI Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/assessments/assessments\nEnvironment=\"PATH=/var/www/assessments/venv/bin\"\nExecStart=/var/www/assessments/venv/bin/gunicorn --workers 4 --bind 127.0.0.1:5001 app:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
+      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq-assessment.service\n[Unit]\nDescription=ElevateIQ Assessment Subdomain WSGI Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/assessments\nEnvironment=\"PATH=/var/www/assessments/venv/bin\"\nExecStart=/var/www/assessments/venv/bin/gunicorn --workers 4 --bind 127.0.0.1:5001 app:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
 
       "echo '=== [6/8] Configuring Nginx Reverse Proxy & Reloading Services ==='",
       "sudo cp /var/www/elevateiq/nginx.conf /etc/nginx/sites-available/elevateiq || true",
