@@ -33,7 +33,7 @@ resource "null_resource" "hostinger_vps_deploy" {
     inline = [
       "echo '=== [1/8] Updating System Packages & Installing Core Tools ==='",
       "sudo apt-get update -y",
-      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw",
+      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx",
 
       "echo '=== [2/8] Setting Up Project Work Directories ==='",
       "sudo mkdir -p /var/www/elevateiq /var/www/assessments",
@@ -56,6 +56,9 @@ resource "null_resource" "hostinger_vps_deploy" {
       "sudo cp /var/www/elevateiq/nginx.conf /etc/nginx/sites-available/elevateiq || true",
       "sudo ln -sf /etc/nginx/sites-available/elevateiq /etc/nginx/sites-enabled/default",
       "sudo nginx -t",
+
+      "echo '=== [7/8] Issuing SSL Certificate for assessment.elevateiq-softtech.com ==='",
+      "sudo certbot --nginx -d assessment.elevateiq-softtech.com --non-interactive --agree-tos -m admin@elevateiq-softtech.com --redirect || true",
 
       "echo '=== [SUCCESS] ElevateIQ Platform & Assessment Subdomain Deployed Live on Hostinger VPS! ==='",
       "sudo systemctl daemon-reload",
