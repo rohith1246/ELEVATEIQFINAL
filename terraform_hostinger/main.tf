@@ -45,7 +45,7 @@ resource "null_resource" "hostinger_vps_deploy" {
 
       "echo '=== [4/8] Building Python Virtual Environments ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
-      "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && (if [ -f 'assessments/requirements.txt' ]; then /var/www/assessments/venv/bin/pip install -r assessments/requirements.txt; else /var/www/assessments/venv/bin/pip install -r requirements.txt; fi) || true",
+      "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && cd /var/www/assessments/assessments && /var/www/assessments/venv/bin/pip install -r requirements.txt || true",
 
       "echo '=== [5/8] Provisioning Scaled Gunicorn Services (2000+ Concurrent Users) ==='",
       "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gevent --workers 8 --worker-connections 2000 --bind 127.0.0.1:5000 backend.run:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
