@@ -1612,7 +1612,7 @@ function renderSidebar() {
             { id: "oversight", label: "Oversight", icon: "eye" },
             { id: "tickets", label: "Support Tickets", icon: "help-circle" }
         ];
-    } else if (currentUser.role === 'employee') {
+    } else if (currentUser.role === 'employee' || currentUser.role === 'team_leader') {
         list = [
             { id: "emp_overview", label: "Overview", icon: "layout-dashboard" },
             { id: "emp_attendance", label: "My Attendance", icon: "calendar-check" },

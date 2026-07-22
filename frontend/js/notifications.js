@@ -128,7 +128,7 @@ function handleNotificationRedirect(notif) {
 
     // Map role-specific views
     let targetView = target;
-    if (currentUser.role === 'employee') {
+    if (currentUser.role === 'employee' || currentUser.role === 'team_leader') {
         if (target === 'announcements') targetView = 'emp_announcements';
         if (target === 'messages') targetView = 'emp_messages';
         if (target === 'leaves') targetView = 'emp_leaves';
