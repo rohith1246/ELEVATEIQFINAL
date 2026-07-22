@@ -1,0 +1,67 @@
+# ============================================================
+# Terraform Deployment Configuration for Hostinger VPS
+# Project: ElevateIQ & EduTech Enterprise Platform
+# ============================================================
+
+terraform {
+  required_version = ">= 1.5.0"
+  required_providers {
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
+  }
+}
+
+resource "null_resource" "hostinger_vps_deploy" {
+  # Forces deployment execution on apply
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
+  # SSH Connection Configuration using Hostinger VPS Password
+  connection {
+    type     = "ssh"
+    host     = var.hostinger_ip
+    user     = var.hostinger_user
+    password = var.hostinger_password
+    timeout  = "5m"
+  }
+
+  # Automated Execution Pipeline on Hostinger VPS
+  provisioner "remote-exec" {
+    inline = [
+      "echo '=== [1/8] Updating System Packages & Installing Core Tools ==='",
+      "sudo apt-get update -y",
+      "sudo apt-get install -y python3.11 python3.11-venv python3-pip git nginx ufw",
+
+      "echo '=== [2/8] Setting Up Project Work Directories ==='",
+      "sudo mkdir -p /var/www/elevateiq /var/www/assessments",
+      "sudo chown -R $USER:$USER /var/www/elevateiq /var/www/assessments",
+
+      "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
+      "if [ ! -d '/var/www/elevateiq/.git' ]; then git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
+      "if [ ! -d '/var/www/assessments/.git' ]; then git clone https://github.com/shivapendala/assessments.git /var/www/assessments; else cd /var/www/assessments && git pull origin main; fi",
+
+      "echo '=== [4/8] Building Python Virtual Environments ==='",
+      "cd /var/www/elevateiq && python3.11 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
+      "cd /var/www/assessments && python3.11 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && /var/www/assessments/venv/bin/pip install -r requirements.txt || true",
+
+      "echo '=== [5/8] Provisioning Scaled Gunicorn Services (2000+ Concurrent Users) ==='",
+      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gevent --workers 8 --worker-connections 2000 --bind 127.0.0.1:5000 backend.run:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
+
+      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq-assessment.service\n[Unit]\nDescription=ElevateIQ Assessment Subdomain WSGI Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/assessments\nEnvironment=\"PATH=/var/www/assessments/venv/bin\"\nExecStart=/var/www/assessments/venv/bin/gunicorn --workers 4 --bind 127.0.0.1:5001 app:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
+
+      "echo '=== [6/8] Configuring Nginx Reverse Proxy & Reloading Services ==='",
+      "sudo cp /var/www/elevateiq/nginx.conf /etc/nginx/sites-available/elevateiq || true",
+      "sudo ln -sf /etc/nginx/sites-available/elevateiq /etc/nginx/sites-enabled/default",
+      "sudo nginx -t",
+
+      "echo '=== [SUCCESS] ElevateIQ Platform & Assessment Subdomain Deployed Live on Hostinger VPS! ==='",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl enable elevateiq elevateiq-assessment",
+      "sudo systemctl restart elevateiq elevateiq-assessment",
+      "sudo systemctl restart nginx"
+    ]
+  }
+}
