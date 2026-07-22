@@ -33,19 +33,19 @@ resource "null_resource" "hostinger_vps_deploy" {
     inline = [
       "echo '=== [1/8] Updating System Packages & Installing Core Tools ==='",
       "sudo apt-get update -y",
-      "sudo apt-get install -y python3.11 python3.11-venv python3-pip git nginx ufw",
+      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw",
 
       "echo '=== [2/8] Setting Up Project Work Directories ==='",
       "sudo mkdir -p /var/www/elevateiq /var/www/assessments",
       "sudo chown -R $USER:$USER /var/www/elevateiq /var/www/assessments",
 
       "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
-      "if [ ! -d '/var/www/elevateiq/.git' ]; then git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
-      "if [ ! -d '/var/www/assessments/.git' ]; then git clone https://github.com/shivapendala/assessments.git /var/www/assessments; else cd /var/www/assessments && git pull origin main; fi",
+      "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
+      "if [ ! -d '/var/www/assessments/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /var/www/assessments; else cd /var/www/assessments && git pull origin main; fi",
 
       "echo '=== [4/8] Building Python Virtual Environments ==='",
-      "cd /var/www/elevateiq && python3.11 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
-      "cd /var/www/assessments && python3.11 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && /var/www/assessments/venv/bin/pip install -r requirements.txt || true",
+      "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
+      "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip && /var/www/assessments/venv/bin/pip install -r requirements.txt || true",
 
       "echo '=== [5/8] Provisioning Scaled Gunicorn Services (2000+ Concurrent Users) ==='",
       "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gevent --workers 8 --worker-connections 2000 --bind 127.0.0.1:5000 backend.run:app\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
