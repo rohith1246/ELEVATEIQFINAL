@@ -41,8 +41,7 @@ resource "null_resource" "hostinger_vps_deploy" {
 
       "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
       "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
-      "if [ ! -d '/var/www/assessments/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /var/www/assessments; else cd /var/www/assessments && git pull origin main; fi",
-      "if [ -d '/var/www/assessments/assessments' ]; then cp -rf /var/www/assessments/assessments/* /var/www/assessments/; fi",
+      "if [ ! -f '/var/www/assessments/requirements.txt' ]; then sudo rm -rf /var/www/assessments && sudo mkdir -p /var/www/assessments /var/www/assessments/instance && sudo chown -R $USER:$USER /var/www/assessments && GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /var/www/assessments && (if [ -d '/var/www/assessments/assessments' ]; then cp -rf /var/www/assessments/assessments/* /var/www/assessments/; fi); else cd /var/www/assessments && git pull origin main || true; fi",
 
       "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
