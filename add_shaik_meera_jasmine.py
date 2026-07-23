@@ -82,17 +82,6 @@ def add_employee():
             )
             print(f"Enrolled {name} in company-wide 'ElevateIQ' group chat.")
 
-        # 4. Enroll in 'Zoning Team' group chat if present
-        c.execute("SELECT id FROM conversations WHERE type = 'group' AND name = 'Zoning Team'")
-        z_row = c.fetchone()
-        if z_row:
-            z_id = z_row[0]
-            c.execute(
-                "INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                (z_id, user_id)
-            )
-            print(f"Enrolled {name} in 'Zoning Team' group chat.")
-
         conn.commit()
 
         # Re-fetch to verify
