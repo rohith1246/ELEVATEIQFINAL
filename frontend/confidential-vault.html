@@ -637,13 +637,19 @@
       const token = localStorage.getItem('token');
 
       // Protected Stream URL
+      video.preload = "auto";
       video.src = `/api/confidential-projects/videos/${videoId}/stream?token=${token}`;
       modal.classList.add('active');
 
-      video.play().catch(e => console.log('Autoplay prevented:', e));
-      
-      // Update custom controls listener
+      // Bind media state listeners for seamless play/pause sync
+      video.onplay = () => syncPlayIcon(true);
+      video.onpause = () => syncPlayIcon(false);
       video.ontimeupdate = updateProgress;
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => console.log('Autoplay prevented:', e));
+      }
     }
 
     function closePlayerModal() {
@@ -654,18 +660,26 @@
       modal.classList.remove('active');
     }
 
+    function syncPlayIcon(isPlaying) {
+      const playIcon = document.getElementById('playIcon');
+      if (playIcon) {
+        playIcon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+        lucide.createIcons();
+      }
+    }
+
     // Custom Controls Implementation
     function togglePlayPause() {
       const video = document.getElementById('confidentialVideoPlayer');
-      const playIcon = document.getElementById('playIcon');
-      if (video.paused) {
-        video.play();
-        playIcon.setAttribute('data-lucide', 'pause');
+      if (video.paused || video.ended) {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => syncPlayIcon(true)).catch(e => console.log('Play error:', e));
+        }
       } else {
         video.pause();
-        playIcon.setAttribute('data-lucide', 'play');
+        syncPlayIcon(false);
       }
-      lucide.createIcons();
     }
 
     function toggleMute() {

@@ -210,8 +210,7 @@ def stream_video(video_id):
         resp.headers["Accept-Ranges"] = "bytes"
         resp.headers["Content-Disposition"] = "inline"
         resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
-        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Cache-Control"] = "private, max-age=3600, revalidate"
         return resp
     range_header = request.headers.get("Range", None)
     if range_header:
@@ -252,12 +251,10 @@ def stream_video(video_id):
         resp.headers["Content-Length"] = str(file_size)
         resp.headers["Accept-Ranges"] = "bytes"
 
-    # Anti-Download & Security Headers
+    # Anti-Download & Video Resume Headers
     resp.headers["Content-Disposition"] = "inline"
     resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
+    resp.headers["Cache-Control"] = "private, max-age=3600, revalidate"
     
     return resp
 
