@@ -102,6 +102,15 @@ CONFIDENTIAL_VIDEOS = {
 FALLBACK_VIDEO_PATH = os.path.join(BASE_DIR, "frontend", "logo_animated.mp4")
 CHUNK_SIZE = 1024 * 1024  # 1 MB streaming chunks for near-zero RAM footprint
 
+# Ensure sample video files exist in UPLOAD_FOLDER for slots 1..7 so Nginx X-Accel-Redirect never 404s
+for _vid in range(1, 8):
+    _t_path = os.path.join(UPLOAD_FOLDER, f"video_{_vid}.mp4")
+    if not os.path.exists(_t_path) and os.path.exists(FALLBACK_VIDEO_PATH):
+        try:
+            shutil.copyfile(FALLBACK_VIDEO_PATH, _t_path)
+        except Exception as _e:
+            pass
+
 
 def generate_video_chunks(file_path, start, length, chunk_size=CHUNK_SIZE):
     """
@@ -133,7 +142,7 @@ def get_videos():
     user_role = user.get("role", "").lower()
     allowed_roles = ["employee", "admin", "team_leader", "hr_manager", "hr", "tl"]
     if user_role not in allowed_roles:
-        return jsonify({"error": "Forbidden: Confidential media vault is restricted to internal employees."}), 403
+        return jsonify({"error": "Forbidden"}), 403
 
     videos_list = []
     for vid, data in CONFIDENTIAL_VIDEOS.items():
@@ -178,7 +187,11 @@ def stream_video(video_id):
     video_info = CONFIDENTIAL_VIDEOS[video_id]
     file_path = os.path.join(UPLOAD_FOLDER, video_info["filename"])
     if not os.path.exists(file_path):
-        file_path = FALLBACK_VIDEO_PATH
+        if os.path.exists(FALLBACK_VIDEO_PATH):
+            try:
+                shutil.copyfile(FALLBACK_VIDEO_PATH, file_path)
+            except Exception:
+                pass
 
     if not os.path.exists(file_path):
         return jsonify({"error": "Video file unavailable"}), 404
