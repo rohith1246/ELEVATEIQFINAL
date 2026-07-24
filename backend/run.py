@@ -1,8 +1,8 @@
 import os
 import sys
 
-# Perform gevent monkey patching before importing any other modules
-if os.getenv("USE_GEVENT", "true").lower() == "true":
+# Perform gevent monkey patching only if explicitly requested (disabled by default for Python 3.12 thread stability)
+if os.getenv("USE_GEVENT", "false").lower() == "true":
     try:
         from gevent import monkey
         monkey.patch_all()
