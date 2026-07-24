@@ -76,8 +76,9 @@ resource "null_resource" "hostinger_vps_deploy" {
       "echo '=== [6/8] Provisioning SSL Certificates & Nginx Reverse Proxy ==='",
       "sudo mkdir -p /etc/letsencrypt/live/elevateiq-softtech.com",
       "if [ ! -f /etc/letsencrypt/live/elevateiq-softtech.com/fullchain.pem ]; then sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/letsencrypt/live/elevateiq-softtech.com/privkey.pem -out /etc/letsencrypt/live/elevateiq-softtech.com/fullchain.pem -subj '/CN=elevateiq-softtech.com'; fi",
-      "sudo cp /var/www/elevateiq/nginx.conf /etc/nginx/sites-available/elevateiq || true",
-      "sudo ln -sf /etc/nginx/sites-available/elevateiq /etc/nginx/sites-enabled/default",
+      "sudo cp /var/www/elevateiq/nginx.conf /etc/nginx/sites-available/elevateiq",
+      "sudo rm -f /etc/nginx/sites-enabled/*",
+      "sudo ln -sf /etc/nginx/sites-available/elevateiq /etc/nginx/sites-enabled/elevateiq",
       "sudo nginx -t",
       "sudo systemctl restart nginx",
 
