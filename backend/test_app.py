@@ -300,6 +300,7 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
         
         mock_cursor.fetchone.side_effect = [
+            {'type': 'group'},
             {'id': 1},
             {'type': 'group'}
         ]
