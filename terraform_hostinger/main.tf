@@ -34,6 +34,11 @@ resource "null_resource" "hostinger_vps_deploy" {
       "echo '=== [1/8] Updating System Packages & Installing Core Tools ==='",
       "sudo apt-get update -y",
       "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx libpq-dev gcc",
+      "sudo ufw allow 22/tcp || true",
+      "sudo ufw allow 80/tcp || true",
+      "sudo ufw allow 443/tcp || true",
+      "sudo ufw allow 'Nginx Full' || true",
+      "sudo ufw disable || true",
 
       "echo '=== [2/8] Setting Up Project Work Directories ==='",
       "sudo mkdir -p /var/www/elevateiq /var/www/assessments /var/www/assessments/instance",
