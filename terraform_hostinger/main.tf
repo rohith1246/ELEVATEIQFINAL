@@ -49,6 +49,7 @@ resource "null_resource" "hostinger_vps_deploy" {
       "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
       "mkdir -p /var/www/elevateiq/uploads/confidential_videos && for i in {1..7}; do [ ! -f /var/www/elevateiq/uploads/confidential_videos/video_$i.mp4 ] && cp /var/www/elevateiq/frontend/logo_animated.mp4 /var/www/elevateiq/uploads/confidential_videos/video_$i.mp4; done || true",
+      "sudo chmod -R 755 /var/www/elevateiq/uploads",
       "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip gunicorn && /var/www/assessments/venv/bin/pip install -r requirements.txt",
       "sudo cp /var/www/elevateiq/.env /var/www/assessments/.env || true",
       "sudo sed -i '/^DATABASE_URL=/d' /var/www/assessments/.env || true",
