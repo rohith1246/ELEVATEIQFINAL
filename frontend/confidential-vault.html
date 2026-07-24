@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confidential Project Media Vault — ElevateIQ</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="shortcut icon" href="images/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="style.css?v=1.0.1">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --vault-accent: #7c3aed;
+      --vault-accent-glow: rgba(124, 58, 237, 0.35);
+      --danger-glow: rgba(239, 68, 68, 0.25);
+    }
+
+    body {
+      background-color: #060913;
+      color: #f3f4f6;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none; /* Prevent text copy on sensitive page */
+      -webkit-user-select: none;
+    }
+
+    /* Ambient Glow Canvas */
+    .bg-canvas {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.4;
+    }
+    .orb1 { width: 500px; height: 500px; background: #7c3aed; top: -100px; left: -100px; }
+    .orb2 { width: 600px; height: 600px; background: #3b82f6; bottom: -200px; right: -100px; }
+    .orb3 { width: 450px; height: 450px; background: #ec4899; top: 40%; left: 35%; }
+
+    /* Vault Navigation Header */
+    .vault-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 36px;
+      background: rgba(12, 18, 34, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .vault-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .vault-logo img { height: 36px; }
+    .vault-badge {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .vault-container {
+      max-width: 1280px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.8), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: 24px;
+      padding: 36px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 300px; height: 100%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .security-notice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-top: 18px;
+      color: #fca5a5;
+      font-size: 13px;
+    }
+
+    /* Video Cards Grid */
+    .videos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 28px;
+      margin-top: 24px;
+    }
+
+    .video-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .video-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(124, 58, 237, 0.5);
+      box-shadow: 0 16px 32px rgba(124, 58, 237, 0.2);
+    }
+
+    .thumbnail-box {
+      width: 100%;
+      height: 210px;
+      background: #090d16;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .thumbnail-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(15, 23, 42, 0.95) 100%);
+    }
+
+    .play-trigger-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      box-shadow: 0 0 24px rgba(124, 58, 237, 0.6);
+      transition: all 0.25s ease;
+    }
+    .video-card:hover .play-trigger-btn {
+      transform: scale(1.12);
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      box-shadow: 0 0 36px rgba(167, 139, 250, 0.8);
+    }
+
+    .slot-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c4b5fd;
+      z-index: 2;
+    }
+    .duration-badge {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      z-index: 3;
+    }
+
+    .card-content {
+      padding: 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 14px;
+      margin-top: auto;
+    }
+
+    .btn-watch {
+      background: linear-gradient(135deg, #7c3aed, #4c1d95);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-watch:hover {
+      background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+      box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
+    }
+
+    /* Modal Player Overlay */
+    .player-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 16, 0.95);
+      backdrop-filter: blur(24px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .player-modal.active {
+      display: flex;
+    }
+
+    .player-container {
+      width: 100%;
+      max-width: 1100px;
+      background: #090d16;
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(124, 58, 237, 0.3);
+    }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      background: #000;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+    }
+    .video-viewport video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Dynamic Floating Watermark to Deter Camera / Screen Recording */
+    .watermark-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      overflow: hidden;
+    }
+    .watermark-stamp {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.22);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+      white-space: nowrap;
+      transition: all 4s ease-in-out;
+      transform: rotate(-12deg);
+    }
+
+    /* Custom Player Controls Bar */
+    .controls-bar {
+      background: rgba(12, 18, 34, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a78bfa, #7c3aed);
+      border-radius: 3px;
+      width: 0%;
+      position: relative;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .left-controls, .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ctrl-btn {
+      background: none;
+      border: none;
+      color: #f3f4f6;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #c4b5fd;
+    }
+
+    .time-display {
+      font-size: 12px;
+      font-family: monospace;
+      color: #94a3b8;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+      transition: all 0.2s ease;
+    }
+    .modal-close-btn:hover {
+      background: #ef4444;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Visual Canvas -->
+  <div class="bg-canvas">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="vault-nav">
+    <a href="/dashboard.html" class="vault-logo">
+      <img src="images/logo.png" alt="ElevateIQ Logo">
+      <span style="font-weight: 800; font-size: 18px; letter-spacing: 0.5px;">ElevateIQ</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span class="vault-badge">🔒 CONFIDENTIAL VAULT</span>
+      <span id="userInfo" style="font-size: 13px; color: #94a3b8;"></span>
+      <a href="/dashboard.html" class="btn-ghost" style="padding: 6px 14px; font-size: 12px; border-radius: 8px;">Back to Dashboard</a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="vault-container">
+    <section class="hero-banner">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+        <i data-lucide="shield-alert" style="color: #ef4444; width: 24px; height: 24px;"></i>
+        <h1 style="font-size: 26px; font-weight: 800; margin: 0; color: #fff;">Confidential Project Media Vault</h1>
+      </div>
+      <p style="color: #cbd5e1; font-size: 14px; max-width: 800px; margin: 0; line-height: 1.6;">
+        Restricted internal media portal for <strong>Project Nexus</strong>. Only authenticated company employees are permitted to stream these project walkthroughs. Downloading, screen recording, or unauthorized distribution is strictly prohibited and tracked via dynamic digital watermark logging.
+      </p>
+
+      <div class="security-notice">
+        <i data-lucide="lock" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+        <span><strong>Anti-Theft Active:</strong> Direct downloads, right-click, and media URL copying are disabled. Your employee name, ID, and IP address are dynamically stamped on all video streams.</span>
+      </div>
+    </section>
+
+    <!-- Project Video Cards (6 Slots) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="font-size: 20px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="film" style="color: #a78bfa; width: 22px; height: 22px;"></i>
+        Project Nexus — Video Modules (6)
+      </h2>
+      <div id="adminUploadBtnContainer" style="display: none;">
+        <button onclick="openUploadModal()" class="btn-primary" style="padding: 8px 16px; font-size: 13px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669);">
+          <i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i> Replace / Upload Video File
+        </button>
+      </div>
+    </div>
+
+    <div class="videos-grid" id="videosGrid">
+      <!-- 6 Video Cards will be populated dynamically -->
+    </div>
+  </main>
+
+  <!-- Video Player Modal -->
+  <div class="player-modal" id="playerModal">
+    <div class="player-container" oncontextmenu="return false;">
+      <button class="modal-close-btn" onclick="closePlayerModal()" title="Close Player">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+
+      <!-- Viewport & Watermark -->
+      <div class="video-viewport" id="videoViewport">
+        <video id="confidentialVideoPlayer" controlsList="nodownload nofullscreen noremoteplayback" disablepictureinpicture oncontextmenu="return false;" playsinline>
+          Your browser does not support HTML5 video playback.
+        </video>
+
+        <!-- Dynamic Moving Watermark Overlay -->
+        <div class="watermark-layer">
+          <div class="watermark-stamp" id="watermarkStamp">CONFIDENTIAL - EMP SYSTEM</div>
+        </div>
+      </div>
+
+      <!-- Custom Player Controls Bar -->
+      <div class="controls-bar">
+        <div class="progress-bar-container" id="progressContainer" onclick="seekVideo(event)">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+
+        <div class="controls-row">
+          <div class="left-controls">
+            <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlayPause()" title="Play/Pause">
+              <i data-lucide="play" id="playIcon" style="width: 20px; height: 20px;"></i>
+            </button>
+            <button class="ctrl-btn" onclick="toggleMute()" title="Mute/Unmute">
+              <i data-lucide="volume-2" id="volumeIcon" style="width: 20px; height: 20px;"></i>
+            </button>
+            <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+          </div>
+
+          <div class="right-controls">
+            <span style="font-size: 11px; color: #a78bfa; font-weight: 700; letter-spacing: 0.5px;">PROPRIETARY & CONFIDENTIAL</span>
+            <select id="speedSelect" onchange="changeSpeed(this.value)" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; padding: 4px 8px; cursor: pointer;">
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x (Normal)</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+            <button class="ctrl-btn" onclick="toggleCustomFullscreen()" title="Fullscreen">
+              <i data-lucide="maximize" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Video Upload Modal -->
+  <div class="player-modal" id="uploadModal" style="z-index: 10000;">
+    <div style="background: #0f172a; border: 1px solid rgba(124,58,237,0.4); border-radius: 20px; width: 100%; max-width: 500px; padding: 28px; position: relative;">
+      <button class="modal-close-btn" onclick="closeUploadModal()"><i data-lucide="x"></i></button>
+      <h3 style="color: #fff; margin-top: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="upload" style="color: #10b981;"></i> Upload Confidential Video Slot
+      </h3>
+      <form id="uploadVideoForm" onsubmit="handleVideoUpload(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px;">Select Video Slot (1 - 6):</label>
+          <select id="uploadSlotSelect" style="width: 100%; background: #090d16; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 10px; border-radius: 8px;">
+            <option value="1">Video 1: Architecture & Core Engine Walkthrough</option>
+            <option value="2">Video 2: Confidential Database Schema & Security</option>
+            <option value="3">Video 3: High-Concurrency WSGI & Load Balancer</option>
+            <option value="4">Video 4: Real-Time Streaming & Event Bus</option>
+            <option value="5">Video 5: Enterprise RBAC & Security Audit</option>
+            <option value="6">Video 6: Production VPS Infrastructure & Deployment</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px;">Select .mp4 Video File:</label>
+          <input type="file" id="uploadFileInput" accept="video/mp4,video/webm" required style="width: 100%; background: #090d16; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 8px; font-size: 13px;">
+        </div>
+        <button type="submit" id="uploadSubmitBtn" class="btn-primary" style="width: 100%; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); border-radius: 10px;">
+          Upload Video File
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let currentVideoId = null;
+    let watermarkInterval = null;
+
+    // Security Safeguards: Block Shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Block Ctrl+S (Save), Ctrl+U (View Source), F12 (DevTools), Ctrl+Shift+I
+      if (
+        (e.ctrlKey && (e.key === 's' || e.key === 'u' || e.key === 'S' || e.key === 'U')) ||
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j'))
+      ) {
+        e.preventDefault();
+        alert('🔒 Security Notice: Saving, downloading, or inspecting confidential media source is restricted.');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      fetchVideos();
+    });
+
+    async function fetchVideos() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/confidential-projects/videos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          alert('Access Denied: The Confidential Vault is restricted to company employees.');
+          window.location.href = '/dashboard.html';
+          return;
+        }
+
+        const data = await res.json();
+        currentUser = data;
+        
+        document.getElementById('userInfo').innerText = `${data.user_name} (${data.user_role.toUpperCase()})`;
+
+        if (['admin', 'team_leader', 'tl'].includes(data.user_role.toLowerCase())) {
+          document.getElementById('adminUploadBtnContainer').style.display = 'block';
+        }
+
+        renderVideos(data.videos);
+      } catch (err) {
+        console.error('Failed to load confidential videos:', err);
+      }
+    }
+
+    function renderVideos(videos) {
+      const grid = document.getElementById('videosGrid');
+      grid.innerHTML = '';
+
+      videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.innerHTML = `
+          <div class="thumbnail-box" oncontextmenu="return false;">
+            <span class="slot-badge">MODULE 0${v.id}</span>
+            <button class="play-trigger-btn" onclick="openPlayerModal(${v.id})" title="Stream Video">
+              <i data-lucide="play" style="width: 28px; height: 28px; fill: #fff; margin-left: 3px;"></i>
+            </button>
+            <span class="duration-badge">${v.duration}</span>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">${v.title}</h3>
+            <p class="card-desc">${v.description}</p>
+            <div class="card-footer">
+              <button class="btn-watch" onclick="openPlayerModal(${v.id})">
+                <i data-lucide="lock" style="width: 14px; height: 14px;"></i> Watch Confidential Stream
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function openPlayerModal(videoId) {
+      currentVideoId = videoId;
+      const modal = document.getElementById('playerModal');
+      const video = document.getElementById('confidentialVideoPlayer');
+      const token = localStorage.getItem('token');
+
+      // Protected Stream URL
+      video.src = `/api/confidential-projects/videos/${videoId}/stream?token=${token}`;
+      modal.classList.add('active');
+
+      setupWatermark();
+      video.play().catch(e => console.log('Autoplay prevented:', e));
+      
+      // Update custom controls listener
+      video.ontimeupdate = updateProgress;
+    }
+
+    function closePlayerModal() {
+      const modal = document.getElementById('playerModal');
+      const video = document.getElementById('confidentialVideoPlayer');
+      video.pause();
+      video.src = '';
+      modal.classList.remove('active');
+      if (watermarkInterval) clearInterval(watermarkInterval);
+    }
+
+    function setupWatermark() {
+      const stamp = document.getElementById('watermarkStamp');
+      const name = currentUser ? currentUser.user_name : 'EMPLOYEE';
+      const email = currentUser ? currentUser.user_email : '';
+      const dateStr = new Date().toISOString().split('T')[0];
+      
+      stamp.innerText = `🔒 CONFIDENTIAL — ${name} (${email}) — ${dateStr}`;
+
+      // Move watermark stamp across screen every 4 seconds to deter camera recording
+      moveWatermark();
+      if (watermarkInterval) clearInterval(watermarkInterval);
+      watermarkInterval = setInterval(moveWatermark, 4000);
+    }
+
+    function moveWatermark() {
+      const stamp = document.getElementById('watermarkStamp');
+      const topPct = Math.floor(Math.random() * 70) + 15;
+      const leftPct = Math.floor(Math.random() * 60) + 10;
+      stamp.style.top = `${topPct}%`;
+      stamp.style.left = `${leftPct}%`;
+    }
+
+    // Custom Controls Implementation
+    function togglePlayPause() {
+      const video = document.getElementById('confidentialVideoPlayer');
+      const playIcon = document.getElementById('playIcon');
+      if (video.paused) {
+        video.play();
+        playIcon.setAttribute('data-lucide', 'pause');
+      } else {
+        video.pause();
+        playIcon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleMute() {
+      const video = document.getElementById('confidentialVideoPlayer');
+      const volumeIcon = document.getElementById('volumeIcon');
+      video.muted = !video.muted;
+      volumeIcon.setAttribute('data-lucide', video.muted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
+    }
+
+    function changeSpeed(val) {
+      const video = document.getElementById('confidentialVideoPlayer');
+      video.playbackRate = parseFloat(val);
+    }
+
+    function updateProgress() {
+      const video = document.getElementById('confidentialVideoPlayer');
+      const fill = document.getElementById('progressFill');
+      const timeDisp = document.getElementById('timeDisplay');
+      
+      if (video.duration) {
+        const pct = (video.currentTime / video.duration) * 100;
+        fill.style.width = `${pct}%`;
+
+        const curMin = Math.floor(video.currentTime / 60);
+        const curSec = Math.floor(video.currentTime % 60).toString().padStart(2, '0');
+        const durMin = Math.floor(video.duration / 60);
+        const durSec = Math.floor(video.duration % 60).toString().padStart(2, '0');
+        timeDisp.innerText = `${curMin}:${curSec} / ${durMin}:${durSec}`;
+      }
+    }
+
+    function seekVideo(e) {
+      const video = document.getElementById('confidentialVideoPlayer');
+      const container = document.getElementById('progressContainer');
+      const rect = container.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      if (video.duration) {
+        video.currentTime = pos * video.duration;
+      }
+    }
+
+    function toggleCustomFullscreen() {
+      const viewport = document.getElementById('videoViewport');
+      if (!document.fullscreenElement) {
+        viewport.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Admin Upload Modal
+    function openUploadModal() {
+      document.getElementById('uploadModal').classList.add('active');
+    }
+    function closeUploadModal() {
+      document.getElementById('uploadModal').classList.remove('active');
+    }
+
+    async function handleVideoUpload(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const slotId = document.getElementById('uploadSlotSelect').value;
+      const fileInput = document.getElementById('uploadFileInput');
+      const btn = document.getElementById('uploadSubmitBtn');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a video file to upload.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      btn.disabled = true;
+      btn.innerText = 'Uploading video file...';
+
+      try {
+        const res = await fetch(`/api/confidential-projects/videos/${slotId}/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Success: ${data.message}`);
+          closeUploadModal();
+          fetchVideos();
+        } else {
+          alert(`Upload failed: ${data.error}`);
+        }
+      } catch (err) {
+        alert(`Error uploading video: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Upload Video File';
+      }
+    }
+  </script>
+</body>
+</html>

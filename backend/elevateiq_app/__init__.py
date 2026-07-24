@@ -102,6 +102,7 @@ def create_app():
     from .routes.payroll import payroll_bp
     from .routes.tickets import tickets_bp
     from .routes.assessment import assessment_bp
+    from .routes.confidential_videos import confidential_bp
 
     # Register each modular blueprint with the central Flask application
     app.register_blueprint(auth_bp)
@@ -113,6 +114,7 @@ def create_app():
     app.register_blueprint(payroll_bp)
     app.register_blueprint(tickets_bp)
     app.register_blueprint(assessment_bp)
+    app.register_blueprint(confidential_bp)
 
     @app.errorhandler(500)
     def handle_500(error):
@@ -139,6 +141,7 @@ def create_app():
             f"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; "
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             f"img-src 'self' data:; "
+            f"media-src 'self' blob: data:; "
             f"font-src 'self' https://fonts.gstatic.com; "
             f"connect-src 'self' https://unpkg.com; "
             f"frame-src 'self' https://www.google.com https://maps.google.com; "

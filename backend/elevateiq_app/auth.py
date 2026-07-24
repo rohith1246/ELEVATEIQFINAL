@@ -606,6 +606,8 @@ def get_current_user():
     if not token:
         token = request.cookies.get("token")
     if not token:
+        token = request.args.get("token")
+    if not token:
         return None
     try:
         data = serializer.loads(token, max_age=TOKEN_MAX_AGE)
