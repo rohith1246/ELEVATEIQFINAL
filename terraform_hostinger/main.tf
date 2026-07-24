@@ -39,6 +39,11 @@ resource "null_resource" "hostinger_vps_deploy" {
       "sudo ufw allow 443/tcp || true",
       "sudo ufw allow 'Nginx Full' || true",
       "sudo ufw disable || true",
+      "sudo iptables -F || true",
+      "sudo iptables -X || true",
+      "sudo iptables -P INPUT ACCEPT || true",
+      "sudo iptables -P FORWARD ACCEPT || true",
+      "sudo iptables -P OUTPUT ACCEPT || true",
 
       "echo '=== [2/8] Setting Up Project Work Directories ==='",
       "sudo mkdir -p /var/www/elevateiq /var/www/assessments /var/www/assessments/instance",
