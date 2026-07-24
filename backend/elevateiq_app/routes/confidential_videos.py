@@ -85,6 +85,17 @@ CONFIDENTIAL_VIDEOS = {
         "filename": "video_6.mp4",
         "date_added": "2026-07-24",
         "security_level": "Restricted (Employee Only)"
+    },
+    7: {
+        "id": 7,
+        "title": "Project Nexus — Live Monitoring, Log Auditing & Operational Recovery",
+        "project": "Project Nexus",
+        "description": "Operational guide to real-time system monitoring, error log analysis, database backups, and disaster recovery procedures.",
+        "duration": "15:20",
+        "category": "Maintenance & Operations",
+        "filename": "video_7.mp4",
+        "date_added": "2026-07-24",
+        "security_level": "Restricted (Employee Only)"
     }
 }
 
@@ -235,7 +246,7 @@ def upload_video(video_id):
         return jsonify({"error": "Unauthorized. Only Admins/Team Leaders can upload project videos."}), 403
 
     if video_id not in CONFIDENTIAL_VIDEOS:
-        return jsonify({"error": "Invalid video slot ID (must be 1 to 6)"}), 400
+        return jsonify({"error": "Invalid video slot ID (must be 1 to 7)"}), 400
 
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400

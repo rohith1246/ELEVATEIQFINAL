@@ -446,11 +446,11 @@
       </div>
     </section>
 
-    <!-- Project Video Cards (6 Slots) -->
+    <!-- Project Video Cards (7 Slots) -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <h2 style="font-size: 20px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
         <i data-lucide="film" style="color: #a78bfa; width: 22px; height: 22px;"></i>
-        Project Nexus — Video Modules (6)
+        Project Nexus — Video Modules (7)
       </h2>
       <div id="adminUploadBtnContainer" style="display: none;">
         <button onclick="openUploadModal()" class="btn-primary" style="padding: 8px 16px; font-size: 13px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669);">
@@ -460,7 +460,7 @@
     </div>
 
     <div class="videos-grid" id="videosGrid">
-      <!-- 6 Video Cards will be populated dynamically -->
+      <!-- 7 Video Cards will be populated dynamically -->
     </div>
   </main>
 
@@ -527,7 +527,7 @@
       </h3>
       <form id="uploadVideoForm" onsubmit="handleVideoUpload(event)">
         <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px;">Select Video Slot (1 - 6):</label>
+          <label style="display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px;">Select Video Slot (1 - 7):</label>
           <select id="uploadSlotSelect" style="width: 100%; background: #090d16; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 10px; border-radius: 8px;">
             <option value="1">Video 1: Architecture & Core Engine Walkthrough</option>
             <option value="2">Video 2: Confidential Database Schema & Security</option>
@@ -535,6 +535,7 @@
             <option value="4">Video 4: Real-Time Streaming & Event Bus</option>
             <option value="5">Video 5: Enterprise RBAC & Security Audit</option>
             <option value="6">Video 6: Production VPS Infrastructure & Deployment</option>
+            <option value="7">Video 7: Live Monitoring, Log Auditing & Operational Recovery</option>
           </select>
         </div>
         <div style="margin-bottom: 20px;">
