@@ -35,7 +35,7 @@ def create_app():
     # Initialize the Flask instance with static routing pointing to the frontend directory
     app = Flask(__name__, static_url_path="", static_folder=frontend_dir)
     app.config.from_object(Config)
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB limit for confidential project videos
     
     # Configure Cross-Origin Resource Sharing (CORS) for external api access
     cors_origins = app.config.get("CORS_ORIGINS", "")

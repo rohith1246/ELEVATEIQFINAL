@@ -2,6 +2,7 @@
 Confidential Project Video Vault Blueprint.
 
 Provides secure, authenticated video streaming with HTTP Range support,
+zero-memory generator chunking (optimized for 300MB+ videos),
 anti-download headers, dynamic watermark metadata, and role-based access control.
 """
 
@@ -9,7 +10,7 @@ import os
 import re
 import mimetypes
 from flask import Blueprint, request, Response, jsonify, send_file
-from ..auth import get_current_user, require_role, audit_log
+from ..auth import get_current_user
 
 confidential_bp = Blueprint("confidential", __name__)
 
@@ -17,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "confidential_videos")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Master 6 Confidential Project Videos Metadata
+# Master 6 Confidential Project Videos Metadata (300 MB per file support)
 CONFIDENTIAL_VIDEOS = {
     1: {
         "id": 1,
@@ -87,8 +88,25 @@ CONFIDENTIAL_VIDEOS = {
     }
 }
 
-# Default sample fallback video if specific video file not uploaded yet
 FALLBACK_VIDEO_PATH = os.path.join(BASE_DIR, "frontend", "logo_animated.mp4")
+CHUNK_SIZE = 1024 * 1024  # 1 MB streaming chunks for near-zero RAM footprint
+
+
+def generate_video_chunks(file_path, start, length, chunk_size=CHUNK_SIZE):
+    """
+    Generator yielding 1 MB video chunks.
+    Ensures streaming 300MB+ video files uses < 2MB RAM per viewer.
+    """
+    with open(file_path, "rb") as f:
+        f.seek(start)
+        remaining = length
+        while remaining > 0:
+            bytes_to_read = min(chunk_size, remaining)
+            chunk = f.read(bytes_to_read)
+            if not chunk:
+                break
+            remaining -= len(chunk)
+            yield chunk
 
 
 @confidential_bp.route("/api/confidential-projects/videos", methods=["GET"])
@@ -111,6 +129,11 @@ def get_videos():
         v_copy = dict(data)
         video_file_path = os.path.join(UPLOAD_FOLDER, v_copy["filename"])
         v_copy["is_uploaded"] = os.path.exists(video_file_path)
+        if os.path.exists(video_file_path):
+            size_mb = round(os.path.getsize(video_file_path) / (1024 * 1024), 1)
+            v_copy["file_size_mb"] = f"{size_mb} MB"
+        else:
+            v_copy["file_size_mb"] = "Sample Preview"
         videos_list.append(v_copy)
 
     return jsonify({
@@ -126,8 +149,8 @@ def get_videos():
 @confidential_bp.route("/api/confidential-projects/videos/<int:video_id>/stream", methods=["GET"])
 def stream_video(video_id):
     """
-    Authenticated video streaming endpoint with HTTP Range header support.
-    Applies strict anti-download headers and user authorization.
+    Authenticated video streaming endpoint supporting 300MB+ files.
+    Uses generator chunking and HTTP Range requests for instant playback.
     """
     user = get_current_user()
     if not user:
@@ -152,7 +175,7 @@ def stream_video(video_id):
     file_size = os.path.getsize(file_path)
     mime_type = mimetypes.guess_type(file_path)[0] or "video/mp4"
 
-    # Support HTTP Range requests (crucial for video scrubbing & iOS/Safari playback)
+    # Support HTTP Range requests for seeking & scrubbing in 300MB+ files
     range_header = request.headers.get("Range", None)
     if range_header:
         match = re.search(r"bytes=(\d+)-(\d+)?", range_header)
@@ -163,12 +186,9 @@ def stream_video(video_id):
                 return jsonify({"error": "Range not satisfiable"}), 416
             
             length = end - start + 1
-            with open(file_path, "rb") as f:
-                f.seek(start)
-                data = f.read(length)
-
+            
             resp = Response(
-                data,
+                generate_video_chunks(file_path, start, length),
                 206,
                 mimetype=mime_type,
                 direct_passthrough=True
@@ -177,9 +197,23 @@ def stream_video(video_id):
             resp.headers["Accept-Ranges"] = "bytes"
             resp.headers["Content-Length"] = str(length)
         else:
-            resp = send_file(file_path, mimetype=mime_type)
+            resp = Response(
+                generate_video_chunks(file_path, 0, file_size),
+                200,
+                mimetype=mime_type,
+                direct_passthrough=True
+            )
+            resp.headers["Content-Length"] = str(file_size)
+            resp.headers["Accept-Ranges"] = "bytes"
     else:
-        resp = send_file(file_path, mimetype=mime_type)
+        resp = Response(
+            generate_video_chunks(file_path, 0, file_size),
+            200,
+            mimetype=mime_type,
+            direct_passthrough=True
+        )
+        resp.headers["Content-Length"] = str(file_size)
+        resp.headers["Accept-Ranges"] = "bytes"
 
     # Anti-Download & Security Headers
     resp.headers["Content-Disposition"] = "inline"
@@ -194,7 +228,7 @@ def stream_video(video_id):
 @confidential_bp.route("/api/confidential-projects/videos/<int:video_id>/upload", methods=["POST"])
 def upload_video(video_id):
     """
-    Allows Admin / TL to upload or replace a confidential video file (video_1.mp4 ... video_6.mp4).
+    Allows Admin / TL to upload or replace a 300MB+ confidential video file (video_1.mp4 ... video_6.mp4).
     """
     user = get_current_user()
     if not user or user.get("role", "").lower() not in ["admin", "team_leader", "tl"]:
@@ -212,11 +246,21 @@ def upload_video(video_id):
 
     filename = CONFIDENTIAL_VIDEOS[video_id]["filename"]
     save_path = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(save_path)
+
+    # Save large file in 1MB chunks to disk without memory exhaustion
+    with open(save_path, "wb") as f:
+        while True:
+            chunk = file.stream.read(1024 * 1024)
+            if not chunk:
+                break
+            f.write(chunk)
+
+    size_mb = round(os.path.getsize(save_path) / (1024 * 1024), 1)
 
     return jsonify({
         "status": "success",
-        "message": f"Successfully uploaded video for slot {video_id} ({CONFIDENTIAL_VIDEOS[video_id]['title']})",
+        "message": f"Successfully uploaded video for slot {video_id} ({CONFIDENTIAL_VIDEOS[video_id]['title']}) — Size: {size_mb} MB",
         "video_id": video_id,
-        "filename": filename
+        "filename": filename,
+        "size_mb": size_mb
     })
