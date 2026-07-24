@@ -22,7 +22,7 @@ max_requests = 2000
 max_requests_jitter = 100
 timeout = 60
 keepalive = 5
-preload_app = True
+preload_app = False
 
 
 import sys
