@@ -49,7 +49,7 @@ resource "null_resource" "hostinger_vps_deploy" {
       "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
       "mkdir -p /var/www/elevateiq/uploads/confidential_videos && for i in {1..7}; do [ ! -f /var/www/elevateiq/uploads/confidential_videos/video_$i.mp4 ] && cp /var/www/elevateiq/frontend/logo_animated.mp4 /var/www/elevateiq/uploads/confidential_videos/video_$i.mp4; done || true",
-      "sudo chmod -R 755 /var/www/elevateiq/uploads",
+      "sudo chmod -R 755 /var/www/elevateiq/uploads && sudo chown -R $USER:www-data /var/www/elevateiq/uploads || true",
       "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip gunicorn && /var/www/assessments/venv/bin/pip install -r requirements.txt",
       "sudo cp /var/www/elevateiq/.env /var/www/assessments/.env || true",
       "sudo sed -i '/^DATABASE_URL=/d' /var/www/assessments/.env || true",
@@ -59,7 +59,7 @@ resource "null_resource" "hostinger_vps_deploy" {
       "cd /var/www/assessments && /var/www/assessments/venv/bin/python seed_non_it_assessment.py || true",
 
       "echo '=== [5/8] Provisioning Scaled Gunicorn Services (Stable Multi-Threaded Workers) ==='",
-      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gthread --workers 4 --threads 4 -c gunicorn.conf.py --bind 127.0.0.1:5000 \"backend.run:app\"\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
+      "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -k gthread --workers 8 --threads 8 --timeout 600 -c gunicorn.conf.py --bind 127.0.0.1:5000 \"backend.run:app\"\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
 
       "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq-assessment.service\n[Unit]\nDescription=ElevateIQ Assessment Subdomain WSGI Service\nAfter=network.target\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/assessments\nEnvironment=\"PATH=/var/www/assessments/venv/bin\"\nEnvironmentFile=-/var/www/assessments/.env\nExecStart=/var/www/assessments/venv/bin/gunicorn -k sync --workers 4 -c gunicorn.conf.py --bind 127.0.0.1:5001 \"app:create_app()\"\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
 

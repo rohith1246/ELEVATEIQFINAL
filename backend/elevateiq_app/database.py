@@ -50,8 +50,8 @@ def init_db(app=None):
                 'keepalives_interval': 2,
                 'keepalives_count': 3
             }
-            # Initialize connection pool strictly capped at 15 max connections for Neon limit
-            db_pool = ThreadedConnectionPool(3, 15, dsn=dsn, **pool_kwargs)
+            # Initialize connection pool capped at 60 connections for high-concurrency 100+ member workloads
+            db_pool = ThreadedConnectionPool(5, 60, dsn=dsn, cursor_factory=RealDictCursor, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -152,8 +152,9 @@ def init_db(app=None):
             
             # Seed default designations if table is empty
             cursor.execute("SELECT COUNT(*) FROM designations")
-            count = cursor.fetchone()[0]
-            if count == 0:
+            count = cursor.fetchone()
+            count_val = count['count'] if isinstance(count, dict) else count[0]
+            if count_val == 0:
                 defaults = [
                     "HR Manager",
                     "Team Leader",
@@ -187,63 +188,59 @@ class PooledConnection:
     greenlet-safe operation under asynchronous frameworks.
     """
     def __init__(self, pool, conn, key):
-        """
-        Initializes the PooledConnection wrapper.
-
-        Args:
-            pool (ThreadedConnectionPool): The database connection pool instance.
-            conn (psycopg2.extensions.connection): The actual database connection object.
-            key (str): Unique UUID string assigned to this connection checkout instance.
-        """
         self._pool = pool
         self._conn = conn
         self._key = key
 
     def __getattr__(self, name):
-        """
-        Delegates attribute access to the underlying connection object.
-        """
         return getattr(self._conn, name)
 
     def cursor(self, *args, **kwargs):
-        """
-        Creates a cursor object using the underlying connection.
-        """
+        if "cursor_factory" not in kwargs:
+            kwargs["cursor_factory"] = RealDictCursor
         return self._conn.cursor(*args, **kwargs)
 
     def commit(self):
-        """
-        Commits any pending transactions.
-        """
-        self._conn.commit()
+        if self._conn:
+            self._conn.commit()
 
     def rollback(self):
-        """
-        Rolls back any pending transactions.
-        """
-        self._conn.rollback()
+        if self._conn:
+            self._conn.rollback()
 
     def close(self):
         """
         Returns the connection back to the connection pool rather than closing it.
         """
         if self._conn and self._pool:
-            # Safely return the connection to the pool using the unique checkout key
-            self._pool.putconn(self._conn, key=self._key)
+            try:
+                self._pool.putconn(self._conn, key=self._key)
+            except Exception:
+                pass
             self._conn = None
             self._pool = None
 
-_last_checked_ts = {}
 
 def get_connection():
     """
-    Direct psycopg2 connection to Neon PostgreSQL serverless PgBouncer pooler.
-    Eliminates dead-socket hang issues caused by client-side pool stale connections.
+    High-Performance Connection Retrieval for 100+ Member Load.
+    Reuses pooled connections from ThreadedConnectionPool to eliminate WAN TLS latency.
+    Falls back to direct connection if pool is uninitialized.
     """
+    global db_pool
     dsn = Config.DATABASE_URL
+    if db_pool:
+        try:
+            key = str(uuid.uuid4())
+            raw_conn = db_pool.getconn(key=key)
+            if raw_conn:
+                return PooledConnection(db_pool, raw_conn, key)
+        except Exception:
+            pass
+
     return psycopg2.connect(
         dsn,
-        connect_timeout=10,
+        connect_timeout=5,
         cursor_factory=RealDictCursor,
         keepalives=1,
         keepalives_idle=5,

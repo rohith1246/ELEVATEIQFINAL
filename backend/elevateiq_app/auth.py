@@ -81,6 +81,10 @@ def ensure_all_auth_tables():
             _tables_checked.update(['csrf_tokens', 'login_attempts', 'account_lockouts',
                                      'password_history', 'token_blacklist',
                                      'refresh_tokens', 'role_permissions'])
+            try:
+                load_blacklist_cache()
+            except Exception:
+                pass
         except Exception as e:
             conn.rollback()
             logger.error(f"Failed to ensure auth tables: {e}")

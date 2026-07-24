@@ -1,15 +1,29 @@
-# Environments
+# Environments & Secrets
 .env
+*.env
+terraform.tfvars
+*.tfvars
 
-# Python caching
+# Python Caching & Artifacts
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.pytest_cache/
 
-# Uploads
+# Uploads & Media
 uploads/
 
-# IDE files
+# IDE & OS Files
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+
+# Terraform Secrets, Cache & State
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform_hostinger/terraform.tfvars
+terraform_hostinger/.terraform/
