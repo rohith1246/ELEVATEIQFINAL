@@ -81,7 +81,7 @@ resource "null_resource" "hostinger_vps_deploy" {
       "sudo nginx -t",
       "sudo systemctl restart nginx",
 
-      "echo '=== [7/8] Requesting Let's Encrypt SSL Certificates ==='",
+      "echo '=== [7/8] Requesting Lets Encrypt SSL Certificates ==='",
       "sudo certbot --nginx -d elevateiq-softtech.com -d www.elevateiq-softtech.com -d assessment.elevateiq-softtech.com --non-interactive --agree-tos -m admin@elevateiq-softtech.com --redirect --register-unsafely-without-email || sudo certbot --nginx -d elevateiq-softtech.com --non-interactive --agree-tos -m admin@elevateiq-softtech.com --redirect || true",
 
       "echo '=== [SUCCESS] ElevateIQ Platform & Assessment Subdomain Deployed Live on Hostinger VPS! ==='",
