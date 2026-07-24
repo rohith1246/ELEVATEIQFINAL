@@ -17,6 +17,8 @@ function loadSavedNotifications() {
         const raw = localStorage.getItem(getStorageKey());
         if (raw) {
             systemNotifications = JSON.parse(raw);
+            // Clean up old read chat notifications so notifications bell is uncluttered
+            systemNotifications = systemNotifications.filter(n => n.category !== 'chat' || !n.isRead);
         }
     } catch(e) {
         systemNotifications = [];
@@ -246,24 +248,24 @@ async function pollRealtimeNotifications() {
             });
         }
 
-        // 2. Chat Conversations / Messages
+        // 2. Chat Conversations / Messages (Only notify on UNREAD messages for current user)
         const convs = await apiCall("/chat/conversations");
         if (convs && Array.isArray(convs)) {
             convs.forEach(c => {
-                if (c.last_message) {
+                if (c.last_message && c.unread_count > 0) {
                     const label = c.type === 'group' ? (c.group_name || 'Group Chat') : (c.dm_user ? c.dm_user.name : 'Direct Message');
                     const notifId = `chat_${c.id}_${c.last_message_id || Date.now()}`;
                     const timeStr = c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
                     addNotification({
                         id: notifId,
                         icon: '💬',
-                        title: `Message in ${label}`,
+                        title: `Unread Message in ${label}`,
                         message: c.last_message,
                         category: 'chat',
                         targetView: 'messages',
                         extraData: { conversationId: c.id, type: c.type, name: label },
                         time: timeStr
-                    }, !isFirstRun && c.unread_count > 0);
+                    }, !isFirstRun);
                 }
             });
         }
