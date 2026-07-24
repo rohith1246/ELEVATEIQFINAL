@@ -471,16 +471,11 @@
         <i data-lucide="x" style="width: 20px; height: 20px;"></i>
       </button>
 
-      <!-- Viewport & Watermark -->
+      <!-- Viewport -->
       <div class="video-viewport" id="videoViewport">
         <video id="confidentialVideoPlayer" controlsList="nodownload nofullscreen noremoteplayback" disablepictureinpicture oncontextmenu="return false;" playsinline>
           Your browser does not support HTML5 video playback.
         </video>
-
-        <!-- Dynamic Moving Watermark Overlay -->
-        <div class="watermark-layer">
-          <div class="watermark-stamp" id="watermarkStamp">CONFIDENTIAL - EMP SYSTEM</div>
-        </div>
       </div>
 
       <!-- Custom Player Controls Bar -->
@@ -645,7 +640,6 @@
       video.src = `/api/confidential-projects/videos/${videoId}/stream?token=${token}`;
       modal.classList.add('active');
 
-      setupWatermark();
       video.play().catch(e => console.log('Autoplay prevented:', e));
       
       // Update custom controls listener
@@ -658,29 +652,6 @@
       video.pause();
       video.src = '';
       modal.classList.remove('active');
-      if (watermarkInterval) clearInterval(watermarkInterval);
-    }
-
-    function setupWatermark() {
-      const stamp = document.getElementById('watermarkStamp');
-      const name = currentUser ? currentUser.user_name : 'EMPLOYEE';
-      const email = currentUser ? currentUser.user_email : '';
-      const dateStr = new Date().toISOString().split('T')[0];
-      
-      stamp.innerText = `🔒 CONFIDENTIAL — ${name} (${email}) — ${dateStr}`;
-
-      // Move watermark stamp across screen every 4 seconds to deter camera recording
-      moveWatermark();
-      if (watermarkInterval) clearInterval(watermarkInterval);
-      watermarkInterval = setInterval(moveWatermark, 4000);
-    }
-
-    function moveWatermark() {
-      const stamp = document.getElementById('watermarkStamp');
-      const topPct = Math.floor(Math.random() * 70) + 15;
-      const leftPct = Math.floor(Math.random() * 60) + 10;
-      stamp.style.top = `${topPct}%`;
-      stamp.style.left = `${leftPct}%`;
     }
 
     // Custom Controls Implementation
