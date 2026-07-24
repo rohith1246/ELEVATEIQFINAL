@@ -205,7 +205,7 @@ def stream_video(video_id):
     if request.headers.get("X-Forwarded-For") or request.headers.get("X-Real-IP"):
         filename = os.path.basename(file_path)
         resp = Response()
-        resp.headers["X-Accel-Redirect"] = f"/protected_videos/{filename}"
+        resp.headers["X-Accel-Redirect"] = f"/uploads/confidential_videos/{filename}"
         resp.headers["Content-Type"] = mime_type
         resp.headers["Content-Disposition"] = "inline"
         resp.headers["X-Content-Type-Options"] = "nosniff"
