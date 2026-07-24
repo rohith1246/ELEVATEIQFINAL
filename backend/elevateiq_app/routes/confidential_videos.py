@@ -8,6 +8,7 @@ anti-download headers, dynamic watermark metadata, and role-based access control
 
 import os
 import re
+import shutil
 import mimetypes
 from flask import Blueprint, request, Response, jsonify, send_file
 from ..auth import get_current_user
