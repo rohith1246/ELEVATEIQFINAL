@@ -1,0 +1,7 @@
+# Rename this file to terraform.tfvars and fill in your values
+# WARNING: Do not commit your actual terraform.tfvars file to public Git!
+
+hostinger_ip       = "YOUR_HOSTINGER_VPS_IP_OR_DOMAIN"
+hostinger_user     = "root"
+hostinger_password = "YOUR_HOSTINGER_VPS_PASSWORD"
+domain_name        = "elevateiq-softtech.com"
