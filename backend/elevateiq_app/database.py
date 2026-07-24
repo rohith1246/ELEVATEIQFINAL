@@ -237,63 +237,17 @@ _last_checked_ts = {}
 
 def get_connection():
     """
-    Checks out a database connection from the global pool.
-
-    Generates a unique UUID key for tracking checkouts, validates connection health,
-    and returns a PooledConnection wrapper safe for thread/greenlet usage.
-
-    Returns:
-        PooledConnection: A wrapped connection.
+    Direct psycopg2 connection to Neon PostgreSQL serverless PgBouncer pooler.
+    Eliminates dead-socket hang issues caused by client-side pool stale connections.
     """
-    global db_pool
-    if db_pool is None:
-        init_db()
-
-    import time
-    retries = 5
-    for attempt in range(retries):
-        key = str(uuid.uuid4())
-        try:
-            conn = db_pool.getconn(key=key)
-
-            if conn.closed != 0:
-                try:
-                    db_pool.putconn(conn, key=key, close=True)
-                except Exception:
-                    pass
-                continue
-
-            now = time.time()
-            conn_id = id(conn)
-            last_check = _last_checked_ts.get(conn_id, 0)
-
-            if now - last_check > 15:
-                try:
-                    c = conn.cursor()
-                    c.execute("SELECT 1")
-                    c.fetchone()
-                    c.close()
-                    _last_checked_ts[conn_id] = now
-                except Exception:
-                    _last_checked_ts.pop(conn_id, None)
-                    try:
-                        db_pool.putconn(conn, key=key, close=True)
-                    except Exception:
-                        pass
-                    continue
-
-            if conn.info.transaction_status != 0:
-                conn.rollback()
-            return PooledConnection(db_pool, conn, key)
-
-        except Exception as e:
-            if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
-                time.sleep(0.02 * (attempt + 1))
-                continue
-            raise e
-
-    # Fallback checkout
-    key = str(uuid.uuid4())
-    conn = db_pool.getconn(key=key)
-    return PooledConnection(db_pool, conn, key)
+    dsn = Config.DATABASE_URL
+    return psycopg2.connect(
+        dsn,
+        connect_timeout=10,
+        cursor_factory=RealDictCursor,
+        keepalives=1,
+        keepalives_idle=5,
+        keepalives_interval=2,
+        keepalives_count=3
+    )
 
