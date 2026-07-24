@@ -15,7 +15,7 @@ from ..auth import get_current_user
 
 confidential_bp = Blueprint("confidential", __name__)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "confidential_videos")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
