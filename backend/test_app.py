@@ -302,7 +302,9 @@ class ElevateIQTestCase(unittest.TestCase):
         mock_cursor.fetchone.side_effect = [
             {'type': 'group'},
             {'id': 1},
-            {'type': 'group'}
+            {'designation': ''},
+            {'type': 'group'},
+            {'role': 'employee'}
         ]
         
         response = self.client.post('/chat/conversations/1/messages', json={
