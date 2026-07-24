@@ -223,12 +223,33 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// Periodic real-time push polling for announcements, messages, leaves, and tickets
+let lastNotificationSummary = null;
+
+// Lightweight real-time push polling for announcements, messages, leaves, and tickets
 async function pollRealtimeNotifications() {
     if (typeof currentUser === 'undefined' || !currentUser) return;
 
     try {
         const isFirstRun = !initializedNotifs;
+
+        // Try lightweight summary badge check first
+        let shouldFetchFullDetails = isFirstRun;
+        try {
+            const summary = await apiCall("/api/notifications/summary");
+            if (summary) {
+                const summaryKey = `${summary.announcement_count}_${summary.unread_chat_count}_${summary.pending_leaves_count}_${summary.open_tickets_count}`;
+                if (summaryKey !== lastNotificationSummary) {
+                    lastNotificationSummary = summaryKey;
+                    shouldFetchFullDetails = true;
+                }
+            }
+        } catch (e) {
+            shouldFetchFullDetails = true; // Fallback to full details on endpoint error
+        }
+
+        if (!shouldFetchFullDetails) {
+            return;
+        }
 
         // 1. Announcements
         const notices = await apiCall("/announcements");
@@ -314,11 +335,11 @@ async function pollRealtimeNotifications() {
     }
 }
 
-// Initialize on page load
+// Initialize on page load with optimized 30-second interval
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         loadSavedNotifications();
         pollRealtimeNotifications();
-        setInterval(pollRealtimeNotifications, 10000);
+        setInterval(pollRealtimeNotifications, 30000);
     }, 800);
 });

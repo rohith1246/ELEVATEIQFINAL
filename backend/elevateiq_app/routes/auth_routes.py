@@ -497,6 +497,74 @@ def get_my_permissions():
     perms = get_permissions_for_role(user.get("role", ""))
     return jsonify({"permissions": list(perms)}), 200
 
+@auth_bp.route("/api/notifications/summary", methods=["GET"])
+def notifications_summary():
+    """
+    Consolidated lightweight badge counter for announcements, chat, leaves, and tickets.
+    Replaces 4 parallel heavy list queries with a single indexed aggregated query.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_id = user["id"]
+    role = user["role"]
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # 1. Total announcements
+        cursor.execute("SELECT COUNT(*) AS count FROM announcements")
+        ann_res = cursor.fetchone()
+        announcement_count = ann_res["count"] if ann_res else 0
+
+        # 2. Total unread messages across conversations for this user
+        cursor.execute("""
+            SELECT COUNT(*) AS count 
+            FROM messages m
+            JOIN conversation_members cm ON m.conversation_id = cm.conversation_id
+            LEFT JOIN message_reads mr ON mr.message_id = m.id AND mr.user_id = %s
+            WHERE cm.user_id = %s AND (m.sender_id IS NULL OR m.sender_id != %s) AND mr.id IS NULL
+        """, (user_id, user_id, user_id))
+        unread_res = cursor.fetchone()
+        unread_chat_count = unread_res["count"] if unread_res else 0
+
+        # 3. Pending leave requests
+        if role in ["admin", "hr_manager", "team_leader"]:
+            cursor.execute("SELECT COUNT(*) AS count FROM leaves WHERE status = 'Pending'")
+        else:
+            cursor.execute("""
+                SELECT COUNT(*) AS count FROM leaves l
+                JOIN employees e ON l.employee_id = e.id
+                WHERE e.user_id = %s AND l.status = 'Pending'
+            """, (user_id,))
+        leave_res = cursor.fetchone()
+        pending_leaves_count = leave_res["count"] if leave_res else 0
+
+        # 4. Unresolved tickets
+        if role in ["admin", "hr_manager"]:
+            cursor.execute("SELECT COUNT(*) AS count FROM tickets WHERE status IN ('Open', 'In Progress')")
+        else:
+            cursor.execute("SELECT COUNT(*) AS count FROM tickets WHERE user_id = %s AND status IN ('Open', 'In Progress')", (user_id,))
+        ticket_res = cursor.fetchone()
+        open_tickets_count = ticket_res["count"] if ticket_res else 0
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "announcement_count": announcement_count,
+            "unread_chat_count": unread_chat_count,
+            "pending_leaves_count": pending_leaves_count,
+            "open_tickets_count": open_tickets_count
+        }), 200
+    except Exception as e:
+        if conn:
+            conn.close()
+        logger.error(f"Error fetching notification summary: {e}")
+        return jsonify({"error": "Failed to fetch notification summary"}), 500
+
+
 @auth_bp.route("/api/audit-logs", methods=["GET"])
 @require_role(["admin"])
 def audit_logs():

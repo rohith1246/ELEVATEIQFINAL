@@ -245,6 +245,8 @@ CREATE INDEX IF NOT EXISTS idx_attendance_employee_id ON attendance(employee_id)
 -- Indexes for employee leaves (by employee and status)
 CREATE INDEX IF NOT EXISTS idx_leaves_employee_id ON leaves(employee_id);
 CREATE INDEX IF NOT EXISTS idx_leaves_status ON leaves(status);
+CREATE INDEX IF NOT EXISTS idx_leaves_emp_status ON leaves(employee_id, status);
+CREATE INDEX IF NOT EXISTS idx_attendance_emp_date ON attendance(employee_id, date);
 
 -- Index for job applications
 CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id);
@@ -255,6 +257,8 @@ CREATE INDEX IF NOT EXISTS idx_conversation_members_user_id ON conversation_memb
 -- Indexes for chat message history retrievals (single and composite)
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent_at ON messages(conversation_id, sent_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conv_sent ON messages(conversation_id, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_message_reads_user_msg ON message_reads(user_id, message_id);
 
 -- Index for client table user_id join keys
 CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);

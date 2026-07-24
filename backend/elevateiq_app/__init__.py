@@ -177,6 +177,9 @@ def create_app():
             return response
             
         content_type = response.headers.get("Content-Type", "").lower()
+        if getattr(response, "is_streamed", False) or "text/event-stream" in content_type or request.path == "/chat/stream":
+            return response
+
         is_compressible = (
             "text" in content_type or
             "javascript" in content_type or

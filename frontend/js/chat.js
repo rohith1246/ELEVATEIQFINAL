@@ -766,7 +766,7 @@ async function loadOversightPanel() {
     document.getElementById("oversightMainArea").style.display = "none";
     document.getElementById("oversightPlaceholder").style.display = "flex";
     await refreshOversightList();
-    chatPollingInterval = setInterval(pollOversight, 3000);
+    chatPollingInterval = setInterval(pollOversight, 15000);
 }
 
 /**

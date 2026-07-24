@@ -102,6 +102,11 @@ def init_db(app=None):
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_status ON tickets(user_id, status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_conv_sent ON messages(conversation_id, sent_at DESC)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_message_reads_user_msg ON message_reads(user_id, message_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_leaves_emp_status ON leaves(employee_id, status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_emp_date ON attendance(employee_id, date)")
 
             # Create authentication and brute force lockout helper tables
             cursor.execute("""
