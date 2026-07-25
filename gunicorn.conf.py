@@ -3,6 +3,9 @@ ElevateIQ — Gunicorn Production Configuration (High Performance)
 """
 import multiprocessing
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 # ── Binding ──────────────────────────────────────────────────
 bind = os.environ.get('BIND', '127.0.0.1:5000')
