@@ -197,9 +197,11 @@ def stream_video(video_id):
     resp = Response()
     resp.headers["X-Accel-Redirect"] = accel_path
     resp.headers["Content-Type"] = mime_type
+    resp.headers["Content-Length"] = str(file_size)
     resp.headers["Content-Disposition"] = "inline"
     resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.headers["Cache-Control"] = "public, max-age=86400"
+    # Allow browser to buffer/seek locally; private prevents proxy caching
+    resp.headers["Cache-Control"] = "private, max-age=3600"
     resp.headers["Accept-Ranges"] = "bytes"
     return resp
     range_header = request.headers.get("Range", None)
@@ -234,21 +236,6 @@ def stream_video(video_id):
     else:
         resp = Response(
             generate_video_chunks(file_path, 0, file_size),
-            200,
-            mimetype=mime_type,
-            direct_passthrough=True
-        )
-        resp.headers["Content-Length"] = str(file_size)
-        resp.headers["Accept-Ranges"] = "bytes"
-
-    # Anti-Download & Security Headers
-    resp.headers["Content-Disposition"] = "inline"
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    
-    return resp
 
 
 @confidential_bp.route("/api/confidential-projects/videos/<int:video_id>/upload", methods=["POST"])

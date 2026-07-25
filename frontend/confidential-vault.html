@@ -658,21 +658,66 @@
       lucide.createIcons();
     }
 
+    // Track listeners so we attach them only ONCE, not every open call
+    let playerListenersBound = false;
+
+    function bindPlayerListeners() {
+      if (playerListenersBound) return;
+      playerListenersBound = true;
+
+      const video = document.getElementById('confidentialVideoPlayer');
+
+      video.addEventListener('play',  () => syncPlayIcon(true));
+      video.addEventListener('pause', () => syncPlayIcon(false));
+      video.addEventListener('timeupdate', updateProgress);
+
+      // Auto-recover: when video stalls or errors after pause, reload from same position
+      video.addEventListener('stalled', () => recoverVideo());
+      video.addEventListener('waiting', () => { /* browser buffering — OK */ });
+      video.addEventListener('error',   () => recoverVideo());
+
+      video.addEventListener('ended', () => {
+        syncPlayIcon(false);
+        video.currentTime = 0;
+        updateProgress();
+      });
+    }
+
+    function recoverVideo() {
+      const video = document.getElementById('confidentialVideoPlayer');
+      if (!video || !video.src) return;
+      const savedTime = video.currentTime;
+      const wasPaused = video.paused;
+      console.log('[VideoPlayer] Recovering from stall at', savedTime, 's');
+      video.load();                  // re-load same src without changing it
+      video.addEventListener('loadedmetadata', function onMeta() {
+        video.removeEventListener('loadedmetadata', onMeta);
+        video.currentTime = savedTime;
+        if (!wasPaused) {
+          video.play().catch(e => console.log('Auto-recover play blocked:', e));
+        }
+      }, { once: true });
+    }
+
     function openPlayerModal(videoId) {
       currentVideoId = videoId;
       const modal = document.getElementById('playerModal');
       const video = document.getElementById('confidentialVideoPlayer');
       const token = localStorage.getItem('token');
 
-      // Protected Stream URL
-      video.preload = "auto";
-      video.src = `/api/confidential-projects/videos/${videoId}/stream?token=${token}`;
-      modal.classList.add('active');
+      // Bind event listeners once (never re-assign, prevents duplicate handler conflicts)
+      bindPlayerListeners();
 
-      // Bind media state listeners for seamless play/pause sync
-      video.onplay = () => syncPlayIcon(true);
-      video.onpause = () => syncPlayIcon(false);
-      video.ontimeupdate = updateProgress;
+      const streamUrl = `/api/confidential-projects/videos/${videoId}/stream?token=${token}`;
+
+      // Only reload src if opening a different video
+      if (video.dataset.currentVideoId !== String(videoId)) {
+        video.dataset.currentVideoId = String(videoId);
+        video.src = streamUrl;
+        video.load();
+      }
+
+      modal.classList.add('active');
 
       const playPromise = video.play();
       if (playPromise !== undefined) {
@@ -684,7 +729,8 @@
       const modal = document.getElementById('playerModal');
       const video = document.getElementById('confidentialVideoPlayer');
       video.pause();
-      video.src = '';
+      // Keep src alive — do NOT clear it. Clearing src destroys the buffer and causes freeze on reopen.
+      // video.src = '';    <-- this was the bug
       modal.classList.remove('active');
     }
 
@@ -699,10 +745,20 @@
     // Custom Controls Implementation
     function togglePlayPause() {
       const video = document.getElementById('confidentialVideoPlayer');
+      if (!video) return;
+
       if (video.paused || video.ended) {
+        // If readyState is too low, recover first
+        if (video.readyState < 2) {
+          recoverVideo();
+          return;
+        }
         const playPromise = video.play();
         if (playPromise !== undefined) {
-          playPromise.then(() => syncPlayIcon(true)).catch(e => console.log('Play error:', e));
+          playPromise.then(() => syncPlayIcon(true)).catch(e => {
+            console.log('Play error, attempting recovery:', e);
+            recoverVideo();
+          });
         }
       } else {
         video.pause();
