@@ -204,38 +204,6 @@ def stream_video(video_id):
     resp.headers["Cache-Control"] = "private, max-age=3600"
     resp.headers["Accept-Ranges"] = "bytes"
     return resp
-    range_header = request.headers.get("Range", None)
-    if range_header:
-        match = re.search(r"bytes=(\d+)-(\d+)?", range_header)
-        if match:
-            start = int(match.group(1))
-            end = int(match.group(2)) if match.group(2) else file_size - 1
-            if start >= file_size:
-                return jsonify({"error": "Range not satisfiable"}), 416
-            
-            length = end - start + 1
-            
-            resp = Response(
-                generate_video_chunks(file_path, start, length),
-                206,
-                mimetype=mime_type,
-                direct_passthrough=True
-            )
-            resp.headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
-            resp.headers["Accept-Ranges"] = "bytes"
-            resp.headers["Content-Length"] = str(length)
-        else:
-            resp = Response(
-                generate_video_chunks(file_path, 0, file_size),
-                200,
-                mimetype=mime_type,
-                direct_passthrough=True
-            )
-            resp.headers["Content-Length"] = str(file_size)
-            resp.headers["Accept-Ranges"] = "bytes"
-    else:
-        resp = Response(
-            generate_video_chunks(file_path, 0, file_size),
 
 
 @confidential_bp.route("/api/confidential-projects/videos/<int:video_id>/upload", methods=["POST"])
