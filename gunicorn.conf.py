@@ -10,18 +10,19 @@ import time
 # ── Binding ──────────────────────────────────────────────────
 bind = os.environ.get('BIND', '127.0.0.1:5000')
 
-# ── Workers & Connections (Async High Performance) ─────────────
-# Use gevent worker class for asynchronous I/O and high concurrency (1000+ SSE/HTTP connections)
+# ── Workers & Threads ─────────────────────────────────────────
+# Rule of thumb: (2 × CPU cores) + 1 workers, with multi-threading
 workers = int(os.environ.get('WORKERS', multiprocessing.cpu_count() * 2 + 1))
-worker_class = 'gevent'
-worker_connections = 2000
+worker_class = 'gthread'
+threads = 4
+worker_connections = 1000
 
 # ── Memory & Process Hygiene ─────────────────────────
-max_requests = 5000
-max_requests_jitter = 250
-timeout = 120
-keepalive = 65
-preload_app = False
+max_requests = 2000
+max_requests_jitter = 100
+timeout = 60
+keepalive = 5
+preload_app = True
 
 
 import sys
@@ -49,15 +50,6 @@ def _neon_keepalive_loop():
 
 
 def post_fork(server, worker):
-    """
-    Apply gevent monkey patching to psycopg2 for non-blocking DB greenlets,
-    and start the Neon keepalive background thread in each worker process.
-    """
-    try:
-        from psycogreen.gevent import patch_psycopg
-        patch_psycopg()
-    except Exception:
-        pass
-
+    """Start the Neon keepalive background thread in each worker process."""
     t = threading.Thread(target=_neon_keepalive_loop, daemon=True)
     t.start()

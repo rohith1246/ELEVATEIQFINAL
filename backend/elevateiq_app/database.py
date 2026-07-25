@@ -50,8 +50,8 @@ def init_db(app=None):
                 'keepalives_interval': 2,
                 'keepalives_count': 3
             }
-            # Initialize connection pool capped at 60 connections for high-concurrency 100+ member workloads
-            db_pool = ThreadedConnectionPool(5, 60, dsn=dsn, cursor_factory=RealDictCursor, **pool_kwargs)
+            # Initialize connection pool strictly capped at 15 max connections for Neon limit
+            db_pool = ThreadedConnectionPool(3, 15, dsn=dsn, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -102,11 +102,6 @@ def init_db(app=None):
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tickets_user_status ON tickets(user_id, status)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_conv_sent ON messages(conversation_id, sent_at DESC)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_message_reads_user_msg ON message_reads(user_id, message_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_leaves_emp_status ON leaves(employee_id, status)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_emp_date ON attendance(employee_id, date)")
 
             # Create authentication and brute force lockout helper tables
             cursor.execute("""
@@ -157,9 +152,8 @@ def init_db(app=None):
             
             # Seed default designations if table is empty
             cursor.execute("SELECT COUNT(*) FROM designations")
-            count = cursor.fetchone()
-            count_val = count['count'] if isinstance(count, dict) else count[0]
-            if count_val == 0:
+            count = cursor.fetchone()[0]
+            if count == 0:
                 defaults = [
                     "HR Manager",
                     "Team Leader",
@@ -193,63 +187,113 @@ class PooledConnection:
     greenlet-safe operation under asynchronous frameworks.
     """
     def __init__(self, pool, conn, key):
+        """
+        Initializes the PooledConnection wrapper.
+
+        Args:
+            pool (ThreadedConnectionPool): The database connection pool instance.
+            conn (psycopg2.extensions.connection): The actual database connection object.
+            key (str): Unique UUID string assigned to this connection checkout instance.
+        """
         self._pool = pool
         self._conn = conn
         self._key = key
 
     def __getattr__(self, name):
+        """
+        Delegates attribute access to the underlying connection object.
+        """
         return getattr(self._conn, name)
 
     def cursor(self, *args, **kwargs):
-        if "cursor_factory" not in kwargs:
-            kwargs["cursor_factory"] = RealDictCursor
+        """
+        Creates a cursor object using the underlying connection.
+        """
         return self._conn.cursor(*args, **kwargs)
 
     def commit(self):
-        if self._conn:
-            self._conn.commit()
+        """
+        Commits any pending transactions.
+        """
+        self._conn.commit()
 
     def rollback(self):
-        if self._conn:
-            self._conn.rollback()
+        """
+        Rolls back any pending transactions.
+        """
+        self._conn.rollback()
 
     def close(self):
         """
         Returns the connection back to the connection pool rather than closing it.
         """
         if self._conn and self._pool:
-            try:
-                self._pool.putconn(self._conn, key=self._key)
-            except Exception:
-                pass
+            # Safely return the connection to the pool using the unique checkout key
+            self._pool.putconn(self._conn, key=self._key)
             self._conn = None
             self._pool = None
 
+_last_checked_ts = {}
 
 def get_connection():
     """
-    High-Performance Connection Retrieval for 100+ Member Load.
-    Reuses pooled connections from ThreadedConnectionPool to eliminate WAN TLS latency.
-    Falls back to direct connection if pool is uninitialized.
+    Checks out a database connection from the global pool.
+
+    Generates a unique UUID key for tracking checkouts, validates connection health,
+    and returns a PooledConnection wrapper safe for thread/greenlet usage.
+
+    Returns:
+        PooledConnection: A wrapped connection.
     """
     global db_pool
-    dsn = Config.DATABASE_URL
-    if db_pool:
-        try:
-            key = str(uuid.uuid4())
-            raw_conn = db_pool.getconn(key=key)
-            if raw_conn:
-                return PooledConnection(db_pool, raw_conn, key)
-        except Exception:
-            pass
+    if db_pool is None:
+        init_db()
 
-    return psycopg2.connect(
-        dsn,
-        connect_timeout=5,
-        cursor_factory=RealDictCursor,
-        keepalives=1,
-        keepalives_idle=5,
-        keepalives_interval=2,
-        keepalives_count=3
-    )
+    import time
+    retries = 5
+    for attempt in range(retries):
+        key = str(uuid.uuid4())
+        try:
+            conn = db_pool.getconn(key=key)
+
+            if conn.closed != 0:
+                try:
+                    db_pool.putconn(conn, key=key, close=True)
+                except Exception:
+                    pass
+                continue
+
+            now = time.time()
+            conn_id = id(conn)
+            last_check = _last_checked_ts.get(conn_id, 0)
+
+            if now - last_check > 15:
+                try:
+                    c = conn.cursor()
+                    c.execute("SELECT 1")
+                    c.fetchone()
+                    c.close()
+                    _last_checked_ts[conn_id] = now
+                except Exception:
+                    _last_checked_ts.pop(conn_id, None)
+                    try:
+                        db_pool.putconn(conn, key=key, close=True)
+                    except Exception:
+                        pass
+                    continue
+
+            if conn.info.transaction_status != 0:
+                conn.rollback()
+            return PooledConnection(db_pool, conn, key)
+
+        except Exception as e:
+            if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
+                time.sleep(0.02 * (attempt + 1))
+                continue
+            raise e
+
+    # Fallback checkout
+    key = str(uuid.uuid4())
+    conn = db_pool.getconn(key=key)
+    return PooledConnection(db_pool, conn, key)
 
