@@ -472,7 +472,7 @@
       </button>
 
       <!-- Viewport -->
-      <div class="video-viewport" id="videoViewport">
+      <div class="video-viewport" id="videoViewport" onclick="togglePlayPause()" style="cursor: pointer;">
         <video id="confidentialVideoPlayer" controlsList="nodownload nofullscreen noremoteplayback" disablepictureinpicture oncontextmenu="return false;" playsinline>
           Your browser does not support HTML5 video playback.
         </video>
@@ -549,7 +549,7 @@
     let currentVideoId = null;
     let watermarkInterval = null;
 
-    // Security Safeguards: Block Shortcuts
+    // Security Safeguards: Block Shortcuts & Support Player Hotkeys
     document.addEventListener('keydown', (e) => {
       // Block Ctrl+S (Save), Ctrl+U (View Source), F12 (DevTools), Ctrl+Shift+I
       if (
@@ -559,6 +559,28 @@
       ) {
         e.preventDefault();
         alert('🔒 Security Notice: Saving, downloading, or inspecting confidential media source is restricted.');
+        return;
+      }
+
+      // Hotkey Player Controls when Modal is Open
+      const modal = document.getElementById('playerModal');
+      if (modal && modal.classList.contains('active')) {
+        const video = document.getElementById('confidentialVideoPlayer');
+        if (!video) return;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          togglePlayPause();
+        } else if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+        } else if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
+        } else if (e.code === 'KeyF') {
+          e.preventDefault();
+          toggleCustomFullscreen();
+        }
       }
     });
 
