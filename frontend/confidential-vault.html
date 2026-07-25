@@ -610,6 +610,12 @@
         const data = await res.json();
         currentUser = data;
         
+        if (!data.user_role || data.user_role.toLowerCase() === 'client') {
+          alert('Access Denied: The Confidential Vault is restricted to company employees.');
+          window.location.href = '/dashboard.html';
+          return;
+        }
+
         document.getElementById('userInfo').innerText = `${data.user_name} (${data.user_role.toUpperCase()})`;
 
         if (['admin', 'team_leader', 'tl'].includes(data.user_role.toLowerCase())) {

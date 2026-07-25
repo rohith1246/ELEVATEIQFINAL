@@ -37,7 +37,7 @@
   <div class="nav-right" style="position:relative; display:flex; align-items:center; gap:14px;">
     <span id="userGreeting" style="font-size:14px; color:var(--ink-soft); margin-right:4px;"></span>
 
-    <a href="/confidential-vault.html" style="padding: 6px 14px; font-size:13px; border-radius:10px; background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(124, 58, 237, 0.5); color: #c4b5fd; text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:700; transition:all 0.2s;" title="Confidential Media Vault">
+    <a href="/confidential-vault.html" id="confidentialVaultBtn" style="padding: 6px 14px; font-size:13px; border-radius:10px; background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(124, 58, 237, 0.5); color: #c4b5fd; text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:700; transition:all 0.2s;" title="Confidential Media Vault">
       🔒 Confidential Vault
     </a>
 
@@ -1681,6 +1681,10 @@ async function initDashboard() {
             if (greeting) {
                 greeting.textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
             }
+            const vaultBtn = document.getElementById("confidentialVaultBtn");
+            if (vaultBtn && currentUser.role === "client") {
+                vaultBtn.style.display = "none";
+            }
         } catch (err) {
             console.error("Failed to parse cached user", err);
         }
@@ -1698,6 +1702,10 @@ async function initDashboard() {
         const greeting = document.getElementById("userGreeting");
         if (greeting) {
             greeting.textContent = `Hello, ${currentUser.name} (${currentUser.role.toUpperCase()})`;
+        }
+        const vaultBtn = document.getElementById("confidentialVaultBtn");
+        if (vaultBtn && currentUser.role === "client") {
+            vaultBtn.style.display = "none";
         }
         renderSidebar();
     } catch (e) {
