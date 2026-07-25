@@ -671,10 +671,16 @@
       video.addEventListener('pause', () => syncPlayIcon(false));
       video.addEventListener('timeupdate', updateProgress);
 
-      // Auto-recover: when video stalls or errors after pause, reload from same position
-      video.addEventListener('stalled', () => recoverVideo());
+      // Auto-recover: only reload when video stalls while actively playing. Paused stalling is normal.
+      video.addEventListener('stalled', () => {
+        if (video && !video.paused) {
+          recoverVideo(false);
+        }
+      });
       video.addEventListener('waiting', () => { /* browser buffering — OK */ });
-      video.addEventListener('error',   () => recoverVideo());
+      video.addEventListener('error',   () => {
+        recoverVideo(false);
+      });
 
       video.addEventListener('ended', () => {
         syncPlayIcon(false);
@@ -683,17 +689,17 @@
       });
     }
 
-    function recoverVideo() {
+    function recoverVideo(shouldPlay = false) {
       const video = document.getElementById('confidentialVideoPlayer');
       if (!video || !video.src) return;
       const savedTime = video.currentTime;
-      const wasPaused = video.paused;
-      console.log('[VideoPlayer] Recovering from stall at', savedTime, 's');
+      const startPlayback = shouldPlay || !video.paused;
+      console.log('[VideoPlayer] Recovering from stall at', savedTime, 's, play after load:', startPlayback);
       video.load();                  // re-load same src without changing it
       video.addEventListener('loadedmetadata', function onMeta() {
         video.removeEventListener('loadedmetadata', onMeta);
         video.currentTime = savedTime;
-        if (!wasPaused) {
+        if (startPlayback) {
           video.play().catch(e => console.log('Auto-recover play blocked:', e));
         }
       }, { once: true });
@@ -748,16 +754,16 @@
       if (!video) return;
 
       if (video.paused || video.ended) {
-        // If readyState is too low, recover first
+        // If readyState is too low, recover and play
         if (video.readyState < 2) {
-          recoverVideo();
+          recoverVideo(true);
           return;
         }
         const playPromise = video.play();
         if (playPromise !== undefined) {
           playPromise.then(() => syncPlayIcon(true)).catch(e => {
             console.log('Play error, attempting recovery:', e);
-            recoverVideo();
+            recoverVideo(true);
           });
         }
       } else {
