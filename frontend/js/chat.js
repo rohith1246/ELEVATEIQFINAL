@@ -63,33 +63,53 @@ let lastGroupListJson = "";
  */
 function initChatSSE() {
     if (chatEventSource) {
-        chatEventSource.close();
+        try { chatEventSource.close(); } catch(e) {}
     }
-    const sseUrl = token ? `${API_BASE}/chat/stream?token=${encodeURIComponent(token)}` : `${API_BASE}/chat/stream`;
-    chatEventSource = new EventSource(sseUrl, { withCredentials: true });
-    chatEventSource.onmessage = function(event) {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'message') {
-                if (activeConversationId === data.conversation_id) {
-                    refreshDMThread(false);
+    
+    const curToken = localStorage.getItem('token') || (typeof token !== 'undefined' ? token : '');
+    const apiPrefix = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : '';
+    const sseUrl = curToken ? `${apiPrefix}/chat/stream?token=${encodeURIComponent(curToken)}` : `${apiPrefix}/chat/stream`;
+    
+    try {
+        chatEventSource = new EventSource(sseUrl, { withCredentials: true });
+        chatEventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'message') {
+                    if (activeConversationId === data.conversation_id) {
+                        refreshDMThread(false);
+                    }
+                    if (activeGroupConversationId === data.conversation_id) {
+                        refreshGroupThread(false);
+                    }
+                    refreshDMList();
+                    refreshGroupList();
+                } else if (data.type === 'conversation_update') {
+                    refreshDMList();
+                    refreshGroupList();
                 }
-                if (activeGroupConversationId === data.conversation_id) {
-                    refreshGroupThread(false);
-                }
-                refreshDMList();
-                refreshGroupList();
-            } else if (data.type === 'conversation_update') {
-                refreshDMList();
-                refreshGroupList();
+            } catch (e) {
+                console.error("SSE parsing error", e);
             }
-        } catch (e) {
-            console.error("SSE parsing error", e);
-        }
-    };
-    chatEventSource.onerror = function(err) {
-        console.error("SSE connection dropped, auto-reconnecting...", err);
-    };
+        };
+        chatEventSource.onerror = function(err) {
+            console.warn("SSE connection dropped, falling back to smart poller...", err);
+        };
+    } catch (err) {
+        console.error("Could not initialize SSE:", err);
+    }
+
+    // Start 2.5-second automatic fast poller to ensure messages update dynamically without reload
+    if (!chatPollingInterval) {
+        chatPollingInterval = setInterval(() => {
+            if (activeConversationId) {
+                refreshDMThread(false);
+            }
+            if (activeGroupConversationId) {
+                refreshGroupThread(false);
+            }
+        }, 2500);
+    }
 }
 
 /**
@@ -104,6 +124,7 @@ async function loadMessagesPanel() {
     lastDMListJson = "";
     document.getElementById("dmMainArea").style.display = "none";
     document.getElementById("dmPlaceholder").style.display = "flex";
+    initChatSSE();
     await refreshDMList();
 }
 
@@ -425,6 +446,7 @@ async function loadGroupsPanel() {
     lastGroupListJson = "";
     document.getElementById("groupMainArea").style.display = "none";
     document.getElementById("groupPlaceholder").style.display = "flex";
+    initChatSSE();
     
     const isTLOrAdmin = currentUser.role === 'admin' || currentUser.is_team_leader;
     document.getElementById("btnCreateGroupSidebar").style.display = isTLOrAdmin ? "block" : "none";
