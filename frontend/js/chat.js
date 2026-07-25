@@ -43,6 +43,15 @@ function formatToIST(dateStr) {
     return `${datePart}, ${timePart}`;
 }
 
+function formatMessageBody(text) {
+    if (!text) return '';
+    let escaped = escapeHTML(text);
+    const urlRegex = /(https?:\/\/[^\s<]+)/gi;
+    return escaped.replace(urlRegex, function(url) {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="chat-link" onclick="event.stopPropagation();">${url}</a>`;
+    });
+}
+
 let lastDMMessagesJson = "";
 let lastDMListJson = "";
 let lastGroupMessagesJson = "";
@@ -217,7 +226,7 @@ async function refreshDMThread(forceScroll = false) {
                 messagesDiv.innerHTML += `
                     <div class="msg-bubble ${bubbleClass}">
                         ${senderHtml}
-                        <div>${escapeHTML(m.content)}</div>
+                        <div>${formatMessageBody(m.content)}</div>
                         <div class="time">${timeStr}</div>
                     </div>
                 `;
@@ -249,7 +258,7 @@ async function sendChatMessage(type) {
         const tempId = "temp_" + Date.now();
         messagesDiv.innerHTML += `
             <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
-                <div>${escapeHTML(val)}</div>
+                <div>${formatMessageBody(val)}</div>
                 <div class="time">${timeStr} (sending...)</div>
             </div>
         `;
@@ -279,7 +288,7 @@ async function sendChatMessage(type) {
         const tempId = "temp_" + Date.now();
         messagesDiv.innerHTML += `
             <div class="msg-bubble outgoing" id="${tempId}" style="opacity: 0.7;">
-                <div>${escapeHTML(val)}</div>
+                <div>${formatMessageBody(val)}</div>
                 <div class="time">${timeStr} (sending...)</div>
             </div>
         `;
@@ -563,7 +572,7 @@ async function refreshGroupThread(forceScroll = false) {
             messagesDiv.innerHTML += `
                 <div class="msg-bubble ${bubbleClass}">
                     ${senderHtml}
-                    <div>${escapeHTML(m.content)}</div>
+                    <div>${formatMessageBody(m.content)}</div>
                     <div class="time">${timeStr}</div>
                 </div>
             `;
@@ -865,7 +874,7 @@ async function refreshOversightThread() {
             messagesDiv.innerHTML += `
                 <div class="msg-bubble incoming" style="align-self: flex-start; max-width: 80%;">
                     <div class="sender" style="color: var(--orange);">${escapeHTML(m.sender_name)}</div>
-                    <div>${escapeHTML(m.content)}</div>
+                    <div>${formatMessageBody(m.content)}</div>
                     <div class="time">${timeStr}</div>
                 </div>
             `;

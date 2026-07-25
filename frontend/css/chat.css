@@ -13,6 +13,7 @@
 }
 .chat-sidebar {
     width: 320px;
+    flex-shrink: 0;
     border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
@@ -24,6 +25,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 .chat-list {
     flex: 1;
@@ -32,6 +34,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 .chat-list-item {
     padding: 16px 20px;
@@ -43,6 +47,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    overflow: hidden;
 }
 .chat-list-item:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -58,6 +63,9 @@
     font-size: 14.5px;
     color: #fff;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .chat-list-item .subtitle {
     font-size: 12px;
@@ -65,7 +73,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    max-width: 180px;
+    display: block;
 }
 .chat-list-item.active .subtitle {
     color: rgba(255, 255, 255, 0.85);
@@ -85,6 +94,8 @@
     display: flex;
     flex-direction: column;
     background: rgba(6, 14, 34, 0.15);
+    min-width: 0;
+    overflow: hidden;
 }
 .chat-main-header {
     padding: 18px 24px;
@@ -93,6 +104,7 @@
     justify-content: space-between;
     align-items: center;
     background: rgba(6, 14, 34, 0.2);
+    flex-shrink: 0;
 }
 .chat-messages {
     flex: 1;
@@ -101,6 +113,9 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 
@@ -109,12 +124,14 @@
    ========================================================================== */
 
 .msg-bubble {
-    max-width: 65%;
+    max-width: 70%;
     padding: 12px 18px;
     border-radius: 14px;
     font-size: 14px;
     line-height: 1.5;
     position: relative;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 .msg-bubble.incoming {
     background: rgba(255, 255, 255, 0.06);
@@ -144,6 +161,15 @@
 .msg-bubble.outgoing .time {
     color: rgba(255, 255, 255, 0.65);
 }
+.chat-link {
+    color: #60a5fa !important;
+    text-decoration: underline;
+    word-break: break-all;
+    transition: color 0.2s ease;
+}
+.chat-link:hover {
+    color: #93c5fd !important;
+}
 
 
 /* ==========================================================================
@@ -156,6 +182,7 @@
     display: flex;
     gap: 12px;
     background: rgba(6, 14, 34, 0.2);
+    flex-shrink: 0;
 }
 .chat-input {
     flex: 1;
@@ -192,11 +219,14 @@
    ========================================================================== */
 
 .group-members-pane {
-    width: 250px;
+    width: 240px;
+    flex-shrink: 0;
     border-left: 1px solid var(--glass-border);
     background: rgba(6, 14, 34, 0.25);
     display: flex;
     flex-direction: column;
+    z-index: 2;
+    overflow: hidden;
 }
 .member-card {
     background: rgba(255, 255, 255, 0.03);
@@ -206,11 +236,15 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: hidden;
 }
 .member-card .name {
     font-weight: 600;
     font-size: 13px;
     color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .member-card .status {
     font-size: 10.5px;
