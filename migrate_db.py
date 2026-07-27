@@ -7,12 +7,27 @@ def migrate():
     neon_url = "postgresql://neondb_owner:npg_cS5VsRvqxl9H@ep-icy-dust-ainl946k-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     local_url = "postgresql://postgres@/elevateiq"
 
+    # Change working directory so relative file opens (e.g. open("schema.sql")) work correctly
+    os.chdir("/var/www/elevateiq")
+
     # Set environment variables so database init scripts target local database
     os.environ["DATABASE_URL"] = local_url
     
     # Add paths so we can import elevateiq_app
     sys.path.insert(0, "/var/www/elevateiq")
     sys.path.insert(0, "/var/www/elevateiq/backend")
+
+    # Clean local DB to resolve stale/outdated table schemas
+    print("Resetting local database public schema...")
+    try:
+        conn_local_reset = psycopg2.connect(local_url)
+        cur_local_reset = conn_local_reset.cursor()
+        cur_local_reset.execute("DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public; GRANT ALL ON SCHEMA public TO postgres;")
+        conn_local_reset.commit()
+        conn_local_reset.close()
+        print("Schema reset successful!")
+    except Exception as reset_err:
+        print(f"Schema reset warning: {reset_err}")
 
     # 1. Run local schema creation and seeding via init_db.py
     print("Initializing local schema and seeding defaults...")
