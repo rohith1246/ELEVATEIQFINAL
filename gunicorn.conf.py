@@ -1,5 +1,5 @@
 """
-ElevateIQ — Gunicorn Production Configuration (High Performance)
+ElevateIQ — Gunicorn Production Configuration (Python 3.12 Stable)
 """
 import multiprocessing
 import os
@@ -10,15 +10,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 # ── Binding ──────────────────────────────────────────────────
 bind = os.environ.get('BIND', '127.0.0.1:5000')
 
-# ── Workers & Threads ─────────────────────────────────────────
-# Rule of thumb: (2 × CPU cores) + 1 workers
-workers = int(os.environ.get('WORKERS', multiprocessing.cpu_count() * 2 + 1))
-worker_class = 'gevent'
+# ── Workers & Threads (Python 3.12 Compatible) ────────────────
+workers = int(os.environ.get('WORKERS', 4))
+worker_class = 'gthread'
+threads = 4
 worker_connections = 1000
 
 # ── Memory & Process Hygiene ─────────────────────────
-max_requests = 2000
-max_requests_jitter = 100
+max_requests = 1000
+max_requests_jitter = 50
 timeout = 60
 keepalive = 5
-preload_app = True
+graceful_timeout = 30
+preload_app = False
+worker_tmp_dir = '/dev/shm'
