@@ -4,7 +4,7 @@ from psycopg2.extras import DictCursor
 
 def migrate():
     neon_url = "postgresql://neondb_owner:npg_cS5VsRvqxl9H@ep-icy-dust-ainl946k-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-    local_url = "postgresql://elevateiq_user:Eiq_SecurePass_2026_Db@127.0.0.1:5432/elevateiq"
+    local_url = "postgresql://postgres@/elevateiq"
 
     print("Connecting to Neon...")
     conn_neon = psycopg2.connect(neon_url)
