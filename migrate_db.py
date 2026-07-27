@@ -1,10 +1,34 @@
 import os
+import sys
 import psycopg2
 from psycopg2.extras import DictCursor
 
 def migrate():
     neon_url = "postgresql://neondb_owner:npg_cS5VsRvqxl9H@ep-icy-dust-ainl946k-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     local_url = "postgresql://postgres@/elevateiq"
+
+    # Set environment variables so database init scripts target local database
+    os.environ["DATABASE_URL"] = local_url
+    
+    # Add paths so we can import elevateiq_app
+    sys.path.insert(0, "/var/www/elevateiq")
+    sys.path.insert(0, "/var/www/elevateiq/backend")
+
+    # 1. Run local schema creation and seeding via init_db.py
+    print("Initializing local schema and seeding defaults...")
+    try:
+        import init_db
+    except Exception as init_err:
+        print(f"init_db execution: {init_err}")
+
+    # 2. Initialize Flask app to trigger creation of dynamic auth/token tables
+    print("Initializing Flask app to create dynamic tables...")
+    try:
+        from elevateiq_app import create_app
+        app = create_app()
+    except Exception as app_err:
+        print(f"Flask app init error: {app_err}")
+
 
     print("Connecting to Neon...")
     conn_neon = psycopg2.connect(neon_url)
@@ -13,15 +37,6 @@ def migrate():
     print("Connecting to Local PostgreSQL...")
     conn_local = psycopg2.connect(local_url)
     cur_local = conn_local.cursor()
-
-    # Read and execute schema.sql on local DB to initialize structure
-    print("Reading schema.sql...")
-    with open("/var/www/elevateiq/schema.sql", "r") as f:
-        schema_sql = f.read()
-
-    print("Creating tables on local database...")
-    cur_local.execute(schema_sql)
-    conn_local.commit()
 
     # Disable constraints temporarily for bulk data loading
     cur_local.execute("SET session_replication_role = 'replica';")
