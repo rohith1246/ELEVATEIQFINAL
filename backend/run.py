@@ -1,8 +1,8 @@
 import os
 import sys
 
-# Perform gevent monkey patching before importing any other modules
-if os.getenv("USE_GEVENT", "true").lower() == "true":
+# Perform gevent monkey patching only when explicitly requested (e.g., when running with gevent worker)
+if os.getenv("USE_GEVENT", "false").lower() == "true":
     try:
         from gevent import monkey
         monkey.patch_all()
