@@ -13,8 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Track which tables have been checked to avoid repeated CREATE TABLE IF NOT EXISTS
-_tables_checked = {'csrf_tokens', 'login_attempts', 'account_lockouts', 'password_history', 'refresh_tokens', 'role_permissions'}
-_permissions_seeded = False
+_tables_checked = {'csrf_tokens', 'login_attempts', 'account_lockouts', 'password_history', 'token_blacklist', 'refresh_tokens', 'role_permissions', 'audit_log'}
+_permissions_seeded = True
 
 def _bcrypt_check(password_bytes, hashed_bytes):
     return bcrypt.checkpw(password_bytes, hashed_bytes)
@@ -213,22 +213,20 @@ def _ensure_lockout_tables():
         conn.close()
 
 def record_failed_attempt(user_id, ip_address):
-    _ensure_lockout_tables()
     conn = get_connection()
     c = conn.cursor()
     try:
         c.execute("INSERT INTO login_attempts (user_id, ip_address) VALUES (%s, %s)", (user_id, ip_address))
         c.execute("""SELECT COUNT(*) FROM login_attempts
-            WHERE user_id = %s AND attempted_at > NOW() - INTERVAL '%s minutes'""",
-            (user_id, BRUTE_FORCE_WINDOW_MINUTES))
+            WHERE user_id = %s AND attempted_at > NOW() - INTERVAL '15 minutes'""",
+            (user_id,))
         count = c.fetchone()[0]
         if count >= BRUTE_FORCE_THRESHOLD:
             c.execute("""INSERT INTO account_lockouts (user_id, locked_until, attempt_count)
-                VALUES (%s, NOW() + INTERVAL '%s minutes', %s)
+                VALUES (%s, NOW() + INTERVAL '15 minutes', %s)
                 ON CONFLICT (user_id) DO UPDATE
-                SET locked_until = NOW() + INTERVAL '%s minutes', attempt_count = %s""",
-                (user_id, BRUTE_FORCE_WINDOW_MINUTES, count,
-                 BRUTE_FORCE_WINDOW_MINUTES, count))
+                SET locked_until = NOW() + INTERVAL '15 minutes', attempt_count = %s""",
+                (user_id, count, count))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -238,22 +236,19 @@ def record_failed_attempt(user_id, ip_address):
         conn.close()
 
 def record_failed_attempt_conn(conn, user_id, ip_address):
-    if 'login_attempts' not in _tables_checked or 'account_lockouts' not in _tables_checked:
-        _ensure_lockout_tables()
     c = conn.cursor()
     try:
         c.execute("INSERT INTO login_attempts (user_id, ip_address) VALUES (%s, %s)", (user_id, ip_address))
         c.execute("""SELECT COUNT(*) FROM login_attempts
-            WHERE user_id = %s AND attempted_at > NOW() - INTERVAL '%s minutes'""",
-            (user_id, BRUTE_FORCE_WINDOW_MINUTES))
+            WHERE user_id = %s AND attempted_at > NOW() - INTERVAL '15 minutes'""",
+            (user_id,))
         count = c.fetchone()[0]
         if count >= BRUTE_FORCE_THRESHOLD:
             c.execute("""INSERT INTO account_lockouts (user_id, locked_until, attempt_count)
-                VALUES (%s, NOW() + INTERVAL '%s minutes', %s)
+                VALUES (%s, NOW() + INTERVAL '15 minutes', %s)
                 ON CONFLICT (user_id) DO UPDATE
-                SET locked_until = NOW() + INTERVAL '%s minutes', attempt_count = %s""",
-                (user_id, BRUTE_FORCE_WINDOW_MINUTES, count,
-                 BRUTE_FORCE_WINDOW_MINUTES, count))
+                SET locked_until = NOW() + INTERVAL '15 minutes', attempt_count = %s""",
+                (user_id, count, count))
         conn.commit()
     except Exception as e:
         conn.rollback()
