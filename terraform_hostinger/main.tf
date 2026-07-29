@@ -32,8 +32,8 @@ resource "null_resource" "hostinger_vps_deploy" {
   provisioner "remote-exec" {
     inline = [
       "echo '=== [1/8] Updating System Packages & Installing Core Tools & PostgreSQL ==='",
-      "sudo apt-get update -y",
-      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx libpq-dev gcc openssl postgresql postgresql-contrib",
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get update -y",
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx libpq-dev gcc openssl postgresql postgresql-contrib",
       "sudo ufw allow 80/tcp || true",
       "sudo ufw allow 443/tcp || true",
       "sudo ufw allow 22/tcp || true",
