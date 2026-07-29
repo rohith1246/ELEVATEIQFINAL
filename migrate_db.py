@@ -5,7 +5,7 @@ from psycopg2.extras import DictCursor
 
 def migrate():
     neon_url = "postgresql://neondb_owner:npg_cS5VsRvqxl9H@ep-icy-dust-ainl946k-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-    local_url = "postgresql://postgres@/elevateiq"
+    local_url = os.getenv("DATABASE_URL", "postgresql://elevateiq:Password123!@127.0.0.1:5432/elevateiq")
 
     # Change working directory so relative file opens (e.g. open("schema.sql")) work correctly
     os.chdir("/var/www/elevateiq")

@@ -31,30 +31,41 @@ resource "null_resource" "hostinger_vps_deploy" {
   # Automated Execution Pipeline on Hostinger VPS
   provisioner "remote-exec" {
     inline = [
-      "echo '=== [1/8] Updating System Packages & Installing Core Tools ==='",
+      "echo '=== [1/8] Updating System Packages & Installing Core Tools & PostgreSQL ==='",
       "sudo apt-get update -y",
-      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx libpq-dev gcc openssl",
+      "sudo apt-get install -y python3 python3-venv python3-pip git nginx ufw certbot python3-certbot-nginx libpq-dev gcc openssl postgresql postgresql-contrib",
       "sudo ufw allow 80/tcp || true",
       "sudo ufw allow 443/tcp || true",
       "sudo ufw allow 22/tcp || true",
 
-      "echo '=== [2/8] Setting Up Project Work Directories ==='",
+      "echo '=== [2/8] Setting Up Hostinger VPS Local PostgreSQL Database ==='",
+      "sudo systemctl start postgresql",
+      "sudo systemctl enable postgresql",
+      "sudo -u postgres psql -c \"CREATE USER elevateiq WITH PASSWORD 'Password123!';\" || true",
+      "sudo -u postgres psql -c \"CREATE DATABASE elevateiq OWNER elevateiq;\" || true",
+      "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE elevateiq TO elevateiq;\" || true",
+      "sudo -u postgres psql -c \"ALTER USER elevateiq WITH SUPERUSER;\" || true",
+
+      "echo '=== [3/8] Setting Up Project Work Directories ==='",
       "sudo mkdir -p /var/www/elevateiq /var/www/assessments /var/www/assessments/instance",
       "sudo chown -R $USER:$USER /var/www/elevateiq /var/www/assessments",
 
-      "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
+      "echo '=== [4/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
       "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git fetch origin && git reset --hard origin/main; fi",
       "sudo rm -rf /tmp/assessments_clone /var/www/assessments && sudo mkdir -p /var/www/assessments /var/www/assessments/instance && sudo chown -R $USER:$USER /var/www/assessments",
       "GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /tmp/assessments_clone",
       "if [ -f '/tmp/assessments_clone/requirements.txt' ]; then cp -a /tmp/assessments_clone/. /var/www/assessments/; elif [ -f '/tmp/assessments_clone/assessments/requirements.txt' ]; then cp -a /tmp/assessments_clone/assessments/. /var/www/assessments/; fi",
       "rm -rf /tmp/assessments_clone",
 
-      "echo '=== [4/8] Building Python Virtual Environments & Seeding DB ==='",
+      "echo '=== [5/8] Building Python Virtual Environments & Provisioning Local VPS DB ==='",
       "cd /var/www/elevateiq && python3 -m venv venv && /var/www/elevateiq/venv/bin/pip install --upgrade pip && /var/www/elevateiq/venv/bin/pip install -r requirements.txt",
       "cd /var/www/assessments && python3 -m venv venv && /var/www/assessments/venv/bin/pip install --upgrade pip gunicorn psycopg2-binary && /var/www/assessments/venv/bin/pip install -r requirements.txt",
-      "sudo cp /var/www/elevateiq/.env /var/www/assessments/.env || true",
-      "sudo sed -i '/^DATABASE_URL=/d' /var/www/assessments/.env || true",
-      "sudo bash -c 'echo \"DATABASE_URL=postgresql://neondb_owner:npg_2R1gVAJNrsTM@ep-jolly-mode-ai5ahwdi-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" >> /var/www/assessments/.env'",
+      
+      "sudo bash -c 'cat <<EOT > /var/www/elevateiq/.env\nDATABASE_URL=postgresql://elevateiq:Password123!@127.0.0.1:5432/elevateiq\nPORT=5000\nFLASK_ENV=production\nEOT'",
+      "sudo cp /var/www/elevateiq/.env /var/www/assessments/.env",
+
+      "cd /var/www/elevateiq && /var/www/elevateiq/venv/bin/python migrate_db.py || true",
+      "cd /var/www/elevateiq && /var/www/elevateiq/venv/bin/python -c 'import bcrypt, psycopg2; conn=psycopg2.connect(\"postgresql://elevateiq:Password123!@127.0.0.1:5432/elevateiq\"); cur=conn.cursor(); pw=bcrypt.hashpw(b\"Password123!\", bcrypt.gensalt()).decode(\"utf-8\"); cur.execute(\"UPDATE users SET password=%s, portal=\\\"elevateiq\\\" WHERE role IN (\\\"employee\\\", \\\"team_leader\\\", \\\"admin\\\", \\\"hr\\\", \\\"hr_manager\\\") OR email LIKE \\\"%%@gmail.com\\\";\", (pw,)); cur.execute(\"TRUNCATE TABLE account_lockouts, login_attempts;\"); conn.commit(); conn.close()' || true",
       "cd /var/www/assessments && /var/www/assessments/venv/bin/python reset_assessment_db.py || true",
       "cd /var/www/assessments && /var/www/assessments/venv/bin/python -c 'import app; app_obj = getattr(app, \"create_app\", lambda: getattr(app, \"app\", None))(); admin_fn = getattr(app, \"_create_default_admin\", lambda a: None); admin_fn(app_obj)' || true",
       "cd /var/www/assessments && /var/www/assessments/venv/bin/python seed_jd_assessment.py || true",
