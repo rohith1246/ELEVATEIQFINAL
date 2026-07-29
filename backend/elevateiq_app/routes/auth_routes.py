@@ -320,7 +320,7 @@ def login():
             FROM users u
             LEFT JOIN employees e ON u.id = e.user_id
             LEFT JOIN clients c ON u.id = c.user_id
-            WHERE u.email = %s OR e.employee_id = %s OR c.client_id = %s
+            WHERE LOWER(u.email) = LOWER(%s) OR UPPER(e.employee_id) = UPPER(%s) OR UPPER(c.client_id) = UPPER(%s)
             LIMIT 1
             """,
             (login_id, login_id, login_id)
