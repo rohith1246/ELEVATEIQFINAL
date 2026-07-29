@@ -66,10 +66,6 @@ resource "null_resource" "hostinger_vps_deploy" {
 
       "cd /var/www/elevateiq && /var/www/elevateiq/venv/bin/python migrate_db.py || true",
       "cd /var/www/elevateiq && /var/www/elevateiq/venv/bin/python -c 'import bcrypt, psycopg2; conn=psycopg2.connect(\"postgresql://elevateiq:Password123!@127.0.0.1:5432/elevateiq\"); cur=conn.cursor(); pw=bcrypt.hashpw(b\"Password123!\", bcrypt.gensalt()).decode(\"utf-8\"); cur.execute(\"UPDATE users SET password=%s, portal=\\\"elevateiq\\\" WHERE role IN (\\\"employee\\\", \\\"team_leader\\\", \\\"admin\\\", \\\"hr\\\", \\\"hr_manager\\\") OR email LIKE \\\"%%@gmail.com\\\";\", (pw,)); cur.execute(\"TRUNCATE TABLE account_lockouts, login_attempts;\"); conn.commit(); conn.close()' || true",
-      "cd /var/www/assessments && /var/www/assessments/venv/bin/python reset_assessment_db.py || true",
-      "cd /var/www/assessments && /var/www/assessments/venv/bin/python -c 'import app; app_obj = getattr(app, \"create_app\", lambda: getattr(app, \"app\", None))(); admin_fn = getattr(app, \"_create_default_admin\", lambda a: None); admin_fn(app_obj)' || true",
-      "cd /var/www/assessments && /var/www/assessments/venv/bin/python seed_jd_assessment.py || true",
-      "cd /var/www/assessments && /var/www/assessments/venv/bin/python seed_non_it_assessment.py || true",
 
       "sudo bash -c 'cat <<EOT > /etc/systemd/system/elevateiq.service\n[Unit]\nDescription=ElevateIQ High-Concurrency WSGI Application Service\nAfter=network.target\nStartLimitIntervalSec=0\n\n[Service]\nUser=root\nWorkingDirectory=/var/www/elevateiq\nEnvironment=\"PATH=/var/www/elevateiq/venv/bin\"\nEnvironmentFile=-/var/www/elevateiq/.env\nExecStart=/var/www/elevateiq/venv/bin/gunicorn -c gunicorn.conf.py --bind 127.0.0.1:5000 backend.run:app\nRestart=always\nRestartSec=3s\n\n[Install]\nWantedBy=multi-user.target\nEOT'",
 
