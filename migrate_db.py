@@ -67,10 +67,31 @@ def migrate():
 
     for table in tables:
         print(f"Migrating table: {table}...")
-        # Clear existing data first to prevent duplicate key violations on re-run
-        cur_local.execute(f"TRUNCATE TABLE {table} CASCADE;")
-        
-        cur_neon.execute(f"SELECT * FROM {table}")
+        try:
+            cur_local.execute(f"TRUNCATE TABLE {table} CASCADE;")
+        except Exception as trunc_err:
+            conn_local.rollback()
+            # Fetch columns and types from Neon to create missing table
+            cur_neon.execute("""
+                SELECT column_name, data_type, character_maximum_length, is_nullable
+                FROM information_schema.columns
+                WHERE table_name = %s
+                ORDER BY ordinal_position;
+            """, (table,))
+            cols = cur_neon.fetchall()
+            col_defs = []
+            for col in cols:
+                c_name, c_type, c_len, c_null = col['column_name'], col['data_type'], col['character_maximum_length'], col['is_nullable']
+                t_str = c_type
+                if c_len:
+                    t_str += f"({c_len})"
+                col_defs.append(f'"{c_name}" {t_str}')
+            create_sql = f'CREATE TABLE IF NOT EXISTS "{table}" ({", ".join(col_defs)});'
+            cur_local.execute(create_sql)
+            conn_local.commit()
+            cur_local.execute(f'TRUNCATE TABLE "{table}" CASCADE;')
+
+        cur_neon.execute(f'SELECT * FROM "{table}"')
         rows = cur_neon.fetchall()
         if not rows:
             print(f"Table {table} is empty. Skipping.")
