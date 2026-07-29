@@ -42,7 +42,6 @@ def init_db(app=None):
             raise ValueError("CRITICAL: DATABASE_URL environment variable is missing or empty. Please check your config.")
         
         try:
-            # Initialize thread-safe connection pool with TCP keepalives to prevent Neon serverless socket stalls
             pool_kwargs = {
                 'connect_timeout': 5,
                 'keepalives': 1,
@@ -50,8 +49,8 @@ def init_db(app=None):
                 'keepalives_interval': 2,
                 'keepalives_count': 3
             }
-            # Initialize connection pool strictly capped at 1 min and 2 max connections per worker for Neon's 20-connection ceiling across 8 Gunicorn workers
-            db_pool = ThreadedConnectionPool(1, 2, dsn=dsn, **pool_kwargs)
+            # Initialize thread-safe connection pool for Hostinger VPS local PostgreSQL
+            db_pool = ThreadedConnectionPool(5, 50, dsn=dsn, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
@@ -290,10 +289,9 @@ def get_connection():
             if "exhausted" in str(e).lower() or "closed" in str(e).lower() or "unexpectedly" in str(e).lower():
                 time.sleep(0.02 * (attempt + 1))
                 continue
-            raise e
+            break
 
-    # Fallback checkout
-    key = str(uuid.uuid4())
-    conn = db_pool.getconn(key=key)
-    return PooledConnection(db_pool, conn, key)
-
+    # Fallback to direct psycopg2 connection if pool is busy or failing
+    dsn = Config.DATABASE_URL
+    direct_conn = psycopg2.connect(dsn, connect_timeout=5)
+    return direct_conn
