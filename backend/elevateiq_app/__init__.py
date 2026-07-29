@@ -56,21 +56,6 @@ def create_app():
         if not hasattr(request, "csp_nonce"):
             request.csp_nonce = secrets.token_urlsafe(16)
 
-    # Per-endpoint request body size limits
-    @app.before_request
-    def limit_request_size():
-        size_limits = {
-            "/login": 1024,
-            "/register": 1024,
-            "/api/contact": 2048,
-            "/api/newsletter": 512,
-            "/api/auth/refresh": 256,
-            "/profile": 4096,
-        }
-        for path, limit in size_limits.items():
-            if request.path == path and request.content_length and request.content_length > limit:
-                return jsonify({"error": f"Request body too large for {path}"}), 413
-
     @app.route("/")
     def index():
         """
