@@ -43,7 +43,7 @@ resource "null_resource" "hostinger_vps_deploy" {
       "sudo chown -R $USER:$USER /var/www/elevateiq /var/www/assessments",
 
       "echo '=== [3/8] Fetching Latest ElevateIQ & Assessments Repositories ==='",
-      "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git pull origin main; fi",
+      "if [ ! -d '/var/www/elevateiq/.git' ]; then GIT_TERMINAL_PROMPT=0 git clone https://github.com/rohith1246/ELEVATEIQFINAL.git /var/www/elevateiq; else cd /var/www/elevateiq && git fetch origin && git reset --hard origin/main; fi",
       "sudo rm -rf /tmp/assessments_clone /var/www/assessments && sudo mkdir -p /var/www/assessments /var/www/assessments/instance && sudo chown -R $USER:$USER /var/www/assessments",
       "GIT_TERMINAL_PROMPT=0 git clone https://github.com/shivapendala/assessments.git /tmp/assessments_clone",
       "if [ -f '/tmp/assessments_clone/requirements.txt' ]; then cp -a /tmp/assessments_clone/. /var/www/assessments/; elif [ -f '/tmp/assessments_clone/assessments/requirements.txt' ]; then cp -a /tmp/assessments_clone/assessments/. /var/www/assessments/; fi",
