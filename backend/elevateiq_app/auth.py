@@ -774,6 +774,9 @@ def require_permission(permission):
     return decorator
 
 def seed_default_permissions():
+    global _permissions_seeded
+    if _permissions_seeded:
+        return
     _ensure_permissions_table()
     conn = get_connection()
     c = conn.cursor()
@@ -794,11 +797,17 @@ def seed_default_permissions():
                 "chat:read", "chat:write",
             ],
         }
+        values = []
         for role, perms in role_perms.items():
             for p in perms:
-                c.execute("INSERT INTO role_permissions (role, permission) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (role, p))
+                values.append((role, p))
+        
+        args_str = ",".join(c.mxc_format if hasattr(c, 'mxc_format') else "(%s,%s)" for _ in values)
+        # Single batched query instead of 88 individual DB roundtrips
+        from psycopg2.extras import execute_values
+        execute_values(c, "INSERT INTO role_permissions (role, permission) VALUES %s ON CONFLICT DO NOTHING", values)
         conn.commit()
+        _permissions_seeded = True
     except Exception as e:
         conn.rollback()
         logger.error(f"Seed permissions error: {e}")
