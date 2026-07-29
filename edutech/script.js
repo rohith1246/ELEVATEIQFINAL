@@ -329,9 +329,9 @@
 
     // Dynamically update Login/Dashboard navbar link based on session state
     const navLogin = document.getElementById("navLoginLink");
-    if (navLogin && localStorage.getItem("edutech_token")) {
+    if (navLogin && (localStorage.getItem("edutech_token") || localStorage.getItem("token"))) {
       navLogin.textContent = "Dashboard";
-      navLogin.href = "dashboard.html";
+      navLogin.href = "student-dashboard.html";
     }
 
     try {
@@ -357,10 +357,15 @@
       const q = search.value.trim().toLowerCase();
       const filtered = activeCourses.filter(c=>{
         const matchesFilter = activeFilter==="all" || c.level===activeFilter;
-        const matchesSearch = !q || 
-                              c.title.toLowerCase().includes(q) || 
-                              (c.description || "").toLowerCase().includes(q) || 
-                              (c.category || "").toLowerCase().includes(q);
+        const titleMatch = (c.title || "").toLowerCase().includes(q);
+        const descMatch = (c.description || "").toLowerCase().includes(q);
+        const catMatch = (c.category || "").toLowerCase().includes(q);
+        const levelMatch = (c.level || "").toLowerCase().includes(q);
+        const durationMatch = (c.duration || "").toLowerCase().includes(q);
+        const rawPriceStr = c.price ? String(c.price) : "";
+        const priceMatch = rawPriceStr.includes(q) || (q.endsWith("k") && rawPriceStr.includes(q.replace("k", "000")));
+
+        const matchesSearch = !q || titleMatch || descMatch || catMatch || levelMatch || durationMatch || priceMatch;
         return matchesFilter && matchesSearch;
       });
       renderCourses(filtered, false);
@@ -372,6 +377,43 @@
       activeFilter = p.dataset.filter;
       apply();
     }));
+
+    // Bind Pricing Track Action Buttons
+    document.querySelectorAll(".btn-pricing").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const plan = btn.getAttribute("data-plan");
+        if (plan === "starter") {
+          const coursesSec = document.getElementById("courses");
+          if (coursesSec) coursesSec.scrollIntoView({ behavior: "smooth" });
+          pills.forEach(x => x.classList.remove("active"));
+          const begPill = Array.from(pills).find(p => p.dataset.filter === "Beginner");
+          if (begPill) begPill.classList.add("active");
+          activeFilter = "Beginner";
+          apply();
+        } else if (plan === "cohort") {
+          const coursesSec = document.getElementById("courses");
+          if (coursesSec) coursesSec.scrollIntoView({ behavior: "smooth" });
+          pills.forEach(x => x.classList.remove("active"));
+          const intPill = Array.from(pills).find(p => p.dataset.filter === "Intermediate");
+          if (intPill) intPill.classList.add("active");
+          activeFilter = "Intermediate";
+          apply();
+        } else if (plan === "enterprise") {
+          window.openContactModal("Enterprise Sponsorship & Corporate Hiring", `
+            <p style="margin-bottom:10px;">Sponsor talent cohorts or integrate custom syllabus tracks for your enterprise workforce:</p>
+            <ul style="padding-left:20px; display:grid; gap:6px; margin:10px 0;">
+              <li>Pre-screened candidates roster with full portfolio verification</li>
+              <li>Brand hiring hackathons &amp; customized skill assessments</li>
+              <li>Dedicated account manager &amp; custom invoice billing</li>
+            </ul>
+            <div style="background:rgba(255,122,0,0.1); border:1px solid rgba(255,122,0,0.25); padding:14px; border-radius:12px; margin-top:12px; color:white;">
+              <strong>Enterprise Desk:</strong> Call +91 95153 12345 or email <a href="mailto:support@elevateiq-softtech.com" style="color:var(--secondary);">support@elevateiq-softtech.com</a>
+            </div>
+          `);
+        }
+      });
+    });
 
     window.highlightCourseCard = function(event) {
       event.preventDefault();
@@ -420,6 +462,13 @@
   function setupRoadmap(){
     const nodes = document.querySelectorAll("[data-node]");
     const fill = document.getElementById("railFill");
+
+    nodes.forEach(node => {
+      node.addEventListener("click", () => {
+        node.classList.toggle("open");
+      });
+    });
+
     if (hasGSAP && typeof ScrollTrigger !== "undefined"){
       gsap.to(fill, {
         height:"100%", ease:"none",
@@ -470,10 +519,11 @@
   }
 
   /**
-   * Renders and binds accordion animations to FAQ cards.
+   * Renders and binds accordion animations to FAQ cards. Multi-open allowed.
    */
   function renderFAQ(){
     const list = document.getElementById("faqList");
+    if (!list) return;
     list.innerHTML = FAQS.map((f,i) => `
       <div class="glass-card faq-item reveal" data-i="${i}">
         <div class="faq-q"><h4>${f.q}</h4><span class="plus"></span></div>
@@ -484,10 +534,10 @@
       const a = item.querySelector(".faq-a");
       item.querySelector(".faq-q").addEventListener("click", ()=>{
         const isOpen = item.classList.contains("open");
-        list.querySelectorAll(".faq-item.open").forEach(o=>{
-          o.classList.remove("open"); o.querySelector(".faq-a").style.maxHeight = null;
-        });
-        if (!isOpen){
+        if (isOpen){
+          item.classList.remove("open");
+          a.style.maxHeight = null;
+        } else {
           item.classList.add("open");
           a.style.maxHeight = a.scrollHeight + "px";
         }
@@ -530,12 +580,82 @@
   function setupForm(){
     const form = document.getElementById("contactForm");
     const success = document.getElementById("formSuccess");
+    if (!form) return;
+
+    const nameInput = form.querySelector("#name");
+    const emailInput = form.querySelector("#email");
+    const phoneInput = form.querySelector("#phone");
+    const msgInput = form.querySelector("#message");
+    const charCount = document.getElementById("messageCharCount");
+
+    // Real-time input constraints & sanitization
+    if (nameInput) {
+      nameInput.addEventListener("input", () => {
+        nameInput.value = nameInput.value.replace(/[^a-zA-Z\s.-]/g, "").slice(0, 50);
+      });
+    }
+    if (emailInput) {
+      emailInput.addEventListener("input", () => {
+        emailInput.value = emailInput.value.toLowerCase().slice(0, 100);
+      });
+    }
+    if (phoneInput) {
+      phoneInput.addEventListener("input", () => {
+        phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, "").slice(0, 15);
+      });
+    }
+    if (msgInput && charCount) {
+      msgInput.addEventListener("input", () => {
+        if (msgInput.value.length > 500) msgInput.value = msgInput.value.slice(0, 500);
+        charCount.textContent = `${msgInput.value.length} / 500 characters`;
+      });
+    }
+
+    // Interactive Contact Options (Call, Email, WhatsApp, Campus Visit)
+    document.querySelectorAll(".interactive-contact").forEach(card => {
+      card.addEventListener("click", () => {
+        const action = card.getAttribute("data-action");
+        if (action === "call") {
+          window.openContactModal("Call Us — Support & Support Desk", `
+            <p style="margin-bottom:12px;">Connect directly with an ElevateIQ career advisor:</p>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px;">
+              <h4 style="color:white; margin-bottom:4px; font-family:'Space Grotesk';">📞 Direct Helpline</h4>
+              <a href="tel:+919515312345" style="color:var(--secondary); font-size:18px; font-weight:700; text-decoration:underline;">+91 95153 12345</a>
+              <p style="font-size:12.5px; color:var(--muted); margin-top:6px;">Landline: 08647-459254</p>
+              <p style="font-size:12px; color:var(--muted); margin-top:4px;">Operating Hours: Monday – Saturday (9:00 AM – 8:00 PM IST)</p>
+            </div>
+          `);
+        } else if (action === "email") {
+          window.location.href = "mailto:support@elevateiq-softtech.com?subject=EduTech%20Course%20Inquiry";
+        } else if (action === "whatsapp") {
+          window.open("https://wa.me/919515312345?text=Hello%20ElevateIQ%20EduTech%20Team!%20I%20want%20to%20know%20more%20about%20your%20programs.", "_blank");
+        } else if (action === "campus") {
+          window.openContactModal("Campus Visit & Center Location", `
+            <p style="margin-bottom:12px;">Visit our state-of-the-art training campus for in-person counseling &amp; lab tours:</p>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px;">
+              <h4 style="color:white; margin-bottom:4px; font-family:'Space Grotesk';">📍 Campus Address</h4>
+              <p>ElevateIQ Softtech Private Limited<br>Narasaraopet, Palnadu District, Andhra Pradesh 522601</p>
+              <hr style="border:none; border-top:1px solid var(--line); margin:10px 0;">
+              <h4 style="color:white; margin-bottom:4px; font-family:'Space Grotesk';">⏰ Center Hours</h4>
+              <p style="font-size:13px; color:var(--muted);">Monday to Saturday: 9:00 AM – 6:00 PM IST</p>
+            </div>
+          `);
+        }
+      });
+    });
+
+    window.openContactModal = function(title, htmlContent) {
+      document.getElementById("contactModalTitle").textContent = title;
+      document.getElementById("contactModalBody").innerHTML = htmlContent;
+      if (typeof openModal === "function") openModal("contactInfoModal");
+    };
+
     const validators = {
-      name: v => v.trim().length >= 2 || "Enter your full name",
-      email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || "Enter a valid email address",
-      phone: v => /^[0-9+\-\s()]{7,16}$/.test(v) || "Enter a valid phone number",
+      name: v => (v.trim().length >= 2 && /^[a-zA-Z\s.-]+$/.test(v)) || "Enter a valid full name (letters only, max 50)",
+      email: v => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 100) || "Enter a valid email address (max 100)",
+      phone: v => (/^[0-9+]{7,15}$/.test(v)) || "Enter a valid phone number (digits only, max 15)",
       track: v => v !== "" || "Select a track you're interested in",
-      message: v => v.trim().length >= 10 || "Tell us a little more (10+ characters)",
+      message: v => (v.trim().length >= 10 && v.length <= 500) || "Tell us a little more (10 to 500 characters)",
     };
     
     // Submits main advisory inquiry contact details
