@@ -37,12 +37,8 @@ def create_app():
     app.config.from_object(Config)
     app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB limit for confidential project videos
     
-    # Configure Cross-Origin Resource Sharing (CORS) for external api access
-    cors_origins = app.config.get("CORS_ORIGINS", "")
-    if cors_origins:
-        CORS(app, origins=cors_origins.split(), supports_credentials=True)
-    else:
-        CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
+    # Configure Cross-Origin Resource Sharing (CORS) across all application routes
+    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
     
     # Initialize database tables and connection pool
     init_db(app)
