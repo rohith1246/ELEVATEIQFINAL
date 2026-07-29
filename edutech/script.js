@@ -630,14 +630,24 @@
         } else if (action === "whatsapp") {
           window.open("https://wa.me/919515312345?text=Hello%20ElevateIQ%20EduTech%20Team!%20I%20want%20to%20know%20more%20about%20your%20programs.", "_blank");
         } else if (action === "campus") {
-          window.openContactModal("Campus Visit & Center Location", `
-            <p style="margin-bottom:12px;">Visit our state-of-the-art training campus for in-person counseling &amp; lab tours:</p>
-            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px;">
-              <h4 style="color:white; margin-bottom:4px; font-family:'Space Grotesk';">📍 Campus Address</h4>
-              <p>ElevateIQ Softtech Private Limited<br>Narasaraopet, Palnadu District, Andhra Pradesh 522601</p>
-              <hr style="border:none; border-top:1px solid var(--line); margin:10px 0;">
-              <h4 style="color:white; margin-bottom:4px; font-family:'Space Grotesk';">⏰ Center Hours</h4>
-              <p style="font-size:13px; color:var(--muted);">Monday to Saturday: 9:00 AM – 6:00 PM IST</p>
+          window.openContactModal("Campus Locations & Center Visit", `
+            <p style="margin-bottom:12px;">Visit any of our official training centers for in-person counseling &amp; lab tours:</p>
+            <div style="display:grid; gap:12px; max-height:360px; overflow-y:auto; padding-right:4px;">
+              <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:14px;">
+                <h4 style="color:var(--primary); margin-bottom:4px; font-family:'Space Grotesk'; font-size:14px;">📍 Headquarters — Narasaraopet (AP)</h4>
+                <p style="font-size:13px; color:#cbd5e1;">Arundelpet, Narasaraopet, Palnadu District, Andhra Pradesh 522601</p>
+                <a href="https://maps.app.goo.gl/38yG9suYsnHgWUuM6" target="_blank" style="color:var(--secondary); font-size:12px; font-weight:600; display:inline-block; margin-top:4px;">🗺️ Google Maps Location &rarr;</a>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:14px;">
+                <h4 style="color:var(--success); margin-bottom:4px; font-family:'Space Grotesk'; font-size:14px;">📍 Kochi Branch — Kerala</h4>
+                <p style="font-size:13px; color:#cbd5e1;">LR Towers, SJRRA 104, S Janatha Rd, Palarivattom, Kochi, Ernakulam, Kerala 682025</p>
+                <a href="https://maps.google.com/?q=LR+Towers+SJRRA+104+S+Janatha+Rd+Palarivattom+Kochi+Kerala+682025" target="_blank" style="color:var(--secondary); font-size:12px; font-weight:600; display:inline-block; margin-top:4px;">🗺️ Google Maps Location &rarr;</a>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:14px;">
+                <h4 style="color:var(--secondary); margin-bottom:4px; font-family:'Space Grotesk'; font-size:14px;">📍 Chennai Branch — Tamil Nadu</h4>
+                <p style="font-size:13px; color:#cbd5e1;">ElevateIQ Soft Tech Pvt. Ltd, Guindy / Little Mount, Chennai, Tamil Nadu 600032</p>
+                <a href="https://www.google.com/maps/place/ElevateIQ+Soft+Tech+Pvt.Ltd-Chennai/@13.0132402,80.2223289,849m/data=!3m2!1e3!4b1!4m6!3m5!1s0x3a5267e3064c92d1:0xbe6c7978a0d9f301!8m2!3d13.0132402!4d80.2223289" target="_blank" style="color:var(--secondary); font-size:12px; font-weight:600; display:inline-block; margin-top:4px;">🗺️ Google Maps Location &rarr;</a>
+              </div>
             </div>
           `);
         }

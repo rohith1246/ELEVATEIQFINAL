@@ -22,14 +22,64 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- GFM Structured Schema Metadata -->
+<!-- Local Business & Educational Campus Multi-Location JSON-LD SEO Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
-  "name": "ElevateIQ",
-  "description": "Career-first tech academy offering Full Stack, AI/ML, Cloud, Data Science and Design programs.",
-  "sameAs": []
+  "name": "ElevateIQ EduTech Academy",
+  "url": "https://elevateiq-softtech.com/edutech/",
+  "description": "Career-first tech academy offering Full Stack, AI/ML, Cloud, Data Science and Design programs across multiple campuses.",
+  "subOrganization": [
+    {
+      "@type": "CollegeOrUniversity",
+      "name": "ElevateIQ Campus — Headquarters",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Arundelpet",
+        "addressLocality": "Narasaraopet",
+        "addressRegion": "Andhra Pradesh",
+        "postalCode": "522601",
+        "addressCountry": "IN"
+      }
+    },
+    {
+      "@type": "CollegeOrUniversity",
+      "name": "ElevateIQ Campus — Kochi Branch",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "LR Towers, SJRRA 104, S Janatha Rd, Palarivattom",
+        "addressLocality": "Kochi, Ernakulam",
+        "addressRegion": "Kerala",
+        "postalCode": "682025",
+        "addressCountry": "IN"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 9.9981,
+        "longitude": 76.3045
+      },
+      "hasMap": "https://maps.google.com/?q=LR+Towers+SJRRA+104+S+Janatha+Rd+Palarivattom+Kochi+Kerala+682025"
+    },
+    {
+      "@type": "CollegeOrUniversity",
+      "name": "ElevateIQ Campus — Chennai Branch",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Guindy / Little Mount",
+        "addressLocality": "Chennai",
+        "addressRegion": "Tamil Nadu",
+        "postalCode": "600032",
+        "addressCountry": "IN"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 13.0132402,
+        "longitude": 80.2223289
+      },
+      "hasMap": "https://www.google.com/maps/place/ElevateIQ+Soft+Tech+Pvt.Ltd-Chennai/@13.0132402,80.2223289,849m/data=!3m2!1e3!4b1!4m6!3m5!1s0x3a5267e3064c92d1:0xbe6c7978a0d9f301!8m2!3d13.0132402!4d80.2223289"
+    }
+  ]
 }
 </script>
 </head>
