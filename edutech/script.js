@@ -634,7 +634,7 @@
             <p style="margin-bottom:12px;">Visit any of our official training centers for in-person counseling &amp; lab tours:</p>
             <div style="display:grid; gap:12px; max-height:360px; overflow-y:auto; padding-right:4px;">
               <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:12px; padding:14px;">
-                <h4 style="color:var(--primary); margin-bottom:4px; font-family:'Space Grotesk'; font-size:14px;">📍 Headquarters — Narasaraopet (AP)</h4>
+                <h4 style="color:var(--primary); margin-bottom:4px; font-family:'Space Grotesk'; font-size:14px;">📍 Narasaraopet Branch — Andhra Pradesh</h4>
                 <p style="font-size:13px; color:#cbd5e1;">Arundelpet, Narasaraopet, Palnadu District, Andhra Pradesh 522601</p>
                 <a href="https://maps.app.goo.gl/38yG9suYsnHgWUuM6" target="_blank" style="color:var(--secondary); font-size:12px; font-weight:600; display:inline-block; margin-top:4px;">🗺️ Google Maps Location &rarr;</a>
               </div>
