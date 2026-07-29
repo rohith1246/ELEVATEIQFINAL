@@ -50,8 +50,8 @@ def init_db(app=None):
                 'keepalives_interval': 2,
                 'keepalives_count': 3
             }
-            # Initialize connection pool strictly capped at 15 max connections for Neon limit
-            db_pool = ThreadedConnectionPool(3, 15, dsn=dsn, **pool_kwargs)
+            # Initialize connection pool strictly capped at 1 min and 2 max connections per worker for Neon's 20-connection ceiling across 8 Gunicorn workers
+            db_pool = ThreadedConnectionPool(1, 2, dsn=dsn, **pool_kwargs)
         except Exception as e:
             raise RuntimeError(f"CRITICAL: Failed to create database connection pool: {e}")
         
