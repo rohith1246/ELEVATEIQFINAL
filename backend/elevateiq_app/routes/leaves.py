@@ -462,8 +462,8 @@ def check_in():
             - 500: Database insertion exceptions.
     """
     user = get_current_user()
-    if not user or user.get("role") not in ["employee", "admin", "team_leader"]:
-        return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
+    if not user:
+        return jsonify({"error": "Unauthorized: Please log in first"}), 401
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -478,16 +478,18 @@ def check_in():
             emp_row = cursor.fetchone()
             if emp_row:
                 emp_db_id = emp_row[0]
-            else:
+            elif user.get("role") in ["employee", "admin", "team_leader"]:
                 cursor.execute(
                     "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
                     (user["id"], f"EMP_{user['id']}")
                 )
                 emp_db_id = cursor.fetchone()[0]
                 conn.commit()
+            else:
+                return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
             
         if not emp_db_id:
-            return jsonify({"error": "Employee profile record not found"}), 404
+            return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
 
         # Enforce unique check-ins per day per employee
         cursor.execute(
@@ -531,8 +533,8 @@ def check_out():
             - 500: Database update exceptions.
     """
     user = get_current_user()
-    if not user or user.get("role") not in ["employee", "admin", "team_leader"]:
-        return jsonify({"error": "Forbidden"}), 403
+    if not user:
+        return jsonify({"error": "Unauthorized: Please log in first"}), 401
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -548,16 +550,18 @@ def check_out():
             emp_row = cursor.fetchone()
             if emp_row:
                 emp_db_id = emp_row["id"]
-            else:
+            elif user.get("role") in ["employee", "admin", "team_leader"]:
                 cursor.execute(
                     "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
                     (user["id"], f"EMP_{user['id']}")
                 )
                 emp_db_id = cursor.fetchone()["id"]
                 conn.commit()
-            
+            else:
+                return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
+
         if not emp_db_id:
-            return jsonify({"error": "Employee profile record not found"}), 404
+            return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
 
         cursor.execute(
             "SELECT * FROM attendance WHERE employee_id = %s AND date = %s",
