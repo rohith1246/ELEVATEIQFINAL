@@ -296,7 +296,7 @@ def reset_password():
 
 
 @auth_bp.route("/login", methods=["POST"])
-@rate_limit(limit=10, period=60)
+@rate_limit(limit=60, period=60)
 def login():
     import time
     t0 = time.time()
