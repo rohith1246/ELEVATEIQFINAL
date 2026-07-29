@@ -63,12 +63,14 @@ def migrate():
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     """)
     tables = [r[0] for r in cur_neon.fetchall()]
+    tables.sort(key=lambda t: 0 if t == 'users' else (1 if t == 'employees' else 2))
     print(f"Discovered tables to migrate: {tables}")
 
     for table in tables:
+        cur_local.execute("SET session_replication_role = 'replica';")
         print(f"Migrating table: {table}...")
         try:
-            cur_local.execute(f"TRUNCATE TABLE {table} CASCADE;")
+            cur_local.execute(f'TRUNCATE TABLE "{table}" CASCADE;')
         except Exception as trunc_err:
             conn_local.rollback()
             # Fetch columns and types from Neon to create missing table
