@@ -1,10 +1,24 @@
 const API_BASE = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
-let _memoryToken = null;
-let _memoryUser = null;
-try {
-  _memoryToken = localStorage.getItem("token");
-  _memoryUser = JSON.parse(localStorage.getItem("user") || "null");
-} catch (e) { /* ignore */ }
+
+function getActiveToken() {
+    let t = localStorage.getItem("token") || localStorage.getItem("edutech_token") ||
+            sessionStorage.getItem("token") || sessionStorage.getItem("edutech_token");
+    if (!t) {
+        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+        if (match) t = decodeURIComponent(match[1]);
+    }
+    return t || "";
+}
+
+function getActiveRefreshToken() {
+    let rt = localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token");
+    if (!rt) {
+        const match = document.cookie.match(/(?:^|; )refresh_token=([^;]*)/);
+        if (match) rt = decodeURIComponent(match[1]);
+    }
+    return rt || "";
+}
+
 let csrfToken = null;
 let isRefreshing = false;
 let refreshQueue = [];
@@ -12,7 +26,7 @@ let refreshQueue = [];
 async function fetchCsrfToken() {
     try {
         const res = await fetch(`${API_BASE}/api/auth/csrf-token`, {
-            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+            headers: { "Authorization": `Bearer ${getActiveToken()}` }
         });
         if (res.ok) {
             const data = await res.json();
@@ -24,7 +38,7 @@ async function fetchCsrfToken() {
 }
 
 async function refreshAccessToken() {
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = getActiveRefreshToken();
     if (!refreshToken) return false;
     try {
         const res = await fetch(`${API_BASE}/api/auth/refresh`, {
@@ -33,9 +47,13 @@ async function refreshAccessToken() {
         });
         if (res.ok) {
             const data = await res.json();
-            _memoryToken = data.token;
             localStorage.setItem("token", data.token);
-            localStorage.setItem("refresh_token", data.refresh_token);
+            sessionStorage.setItem("token", data.token);
+            document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+            if (data.refresh_token) {
+                localStorage.setItem("refresh_token", data.refresh_token);
+                sessionStorage.setItem("refresh_token", data.refresh_token);
+            }
             if (data.csrf_token) csrfToken = data.csrf_token;
             return true;
         }
@@ -58,17 +76,13 @@ async function apiCall(endpoint, method = "GET", body = null) {
     }
 
     try {
-        const activeToken = _memoryToken || 
-                            localStorage.getItem("token") || 
-                            localStorage.getItem("edutech_token") || 
-                            sessionStorage.getItem("token") || 
-                            sessionStorage.getItem("edutech_token");
+        const activeToken = getActiveToken();
 
         const options = {
             method,
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${activeToken || ''}`
+                "Authorization": `Bearer ${activeToken}`
             }
         };
         if (body) options.body = JSON.stringify(body);
