@@ -102,7 +102,7 @@ async function apiCall(endpoint, method = "GET", body = null) {
                 const refreshed = await refreshAccessToken();
                 isRefreshing = false;
                 if (refreshed) {
-                    options.headers["Authorization"] = `Bearer ${_memoryToken || localStorage.getItem("token")}`;
+                    options.headers["Authorization"] = `Bearer ${getActiveToken()}`;
                     if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
                         options.headers["X-CSRF-Token"] = csrfToken;
                     }
