@@ -1650,8 +1650,30 @@
 <!-- ==================== JAVASCRIPT STATE CONTROLLER ==================== -->
 <script>
 const API_BASE = window.location.origin;
-const token = localStorage.getItem("edutech_token") || localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("edutech_user") || localStorage.getItem("user") || "null");
+function getStoredSession() {
+    let token = localStorage.getItem("edutech_token") || localStorage.getItem("token") ||
+                sessionStorage.getItem("edutech_token") || sessionStorage.getItem("token");
+    let userStr = localStorage.getItem("edutech_user") || localStorage.getItem("user") ||
+                  sessionStorage.getItem("edutech_user") || sessionStorage.getItem("user");
+
+    if (!token) {
+        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+        if (match) token = decodeURIComponent(match[1]);
+    }
+    if (!userStr) {
+        const match = document.cookie.match(/(?:^|; )user=([^;]*)/);
+        if (match) userStr = decodeURIComponent(match[1]);
+    }
+
+    let user = null;
+    try {
+        if (userStr) user = JSON.parse(userStr);
+    } catch(e) {}
+
+    return { token, user };
+}
+
+const { token, user } = getStoredSession();
 
 if (!token || !user) {
     window.location.href = "login.html";

@@ -371,6 +371,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       localStorage.setItem("edutech_user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      sessionStorage.setItem("edutech_token", data.token);
+      sessionStorage.setItem("edutech_user", JSON.stringify(data.user));
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
+
+      document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=86400; SameSite=Lax`;
       
       const params = new URLSearchParams(window.location.search);
       const redir = params.get("redirect");

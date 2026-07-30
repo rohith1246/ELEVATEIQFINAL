@@ -61,11 +61,17 @@ async function apiCall(endpoint, method = "GET", body = null) {
     }
 
     try {
+        const activeToken = _memoryToken || 
+                            localStorage.getItem("token") || 
+                            localStorage.getItem("edutech_token") || 
+                            sessionStorage.getItem("token") || 
+                            sessionStorage.getItem("edutech_token");
+
         const options = {
             method,
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${_memoryToken || localStorage.getItem("token")}`
+                "Authorization": `Bearer ${activeToken || ''}`
             }
         };
         if (body) options.body = JSON.stringify(body);
