@@ -101,12 +101,18 @@ async function apiCall(endpoint, method = "GET", body = null) {
                     }
                     return retryData;
                 }
-                localStorage.removeItem("token");
-                localStorage.removeItem("refresh_token");
-                localStorage.removeItem("user");
-                localStorage.removeItem("csrf_token");
-                window.location.href = "/";
-                return;
+                const currentPath = window.location.pathname.toLowerCase();
+                const isProtectedPage = currentPath.includes("dashboard") || currentPath.includes("crm") || currentPath.includes("vault");
+                if (isProtectedPage && !currentPath.includes("login")) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("refresh_token");
+                    localStorage.removeItem("user");
+                    localStorage.removeItem("csrf_token");
+                    window.location.href = "login.html";
+                    return;
+                }
+                const errMsg = (data && data.error) ? data.error : `Unauthorized access (${res.status})`;
+                throw new Error(errMsg);
             }
             if (!res.ok) {
                 const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;
