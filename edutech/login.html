@@ -369,6 +369,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       successMsg.style.display = 'block';
       localStorage.setItem("edutech_token", data.token);
       localStorage.setItem("edutech_user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       
       const params = new URLSearchParams(window.location.search);
       const redir = params.get("redirect");

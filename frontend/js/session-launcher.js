@@ -97,8 +97,6 @@
 
       // Customize text according to target
       let customText = 'Connecting Session';
-      const lowerHref = href.toLowerCase();
-      
       if (lowerHref.includes('login.html')) {
         customText = 'Authenticating Gate';
       } else if (lowerHref.includes('register.html')) {

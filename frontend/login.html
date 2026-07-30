@@ -126,9 +126,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if (res.ok) {
       successMsg.textContent = data.message || 'Login successful.';
       successMsg.style.display = 'block';
-      // Cache token and user detail elements locally for persistent session state
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("edutech_token", data.token);
+      localStorage.setItem("edutech_user", JSON.stringify(data.user));
       if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
       if (data.csrf_token) localStorage.setItem("csrf_token", data.csrf_token);
       window.location.href = 'dashboard.html';
