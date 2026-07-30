@@ -21,7 +21,9 @@ function getStoredSession() {
     return { token, user };
 }
 
-const { token, user } = getStoredSession();
+const _sessionData = getStoredSession();
+var token = _sessionData.token;
+var user = _sessionData.user;
 
 // Enforcement guard: Redirect unauthenticated requests on protected pages to login interface
 const currentPath = window.location.pathname.toLowerCase();

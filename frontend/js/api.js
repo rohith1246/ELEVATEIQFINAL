@@ -5,9 +5,6 @@ try {
   _memoryToken = localStorage.getItem("token");
   _memoryUser = JSON.parse(localStorage.getItem("user") || "null");
 } catch (e) { /* ignore */ }
-const token = _memoryToken;
-const user = _memoryUser;
-
 let csrfToken = null;
 let isRefreshing = false;
 let refreshQueue = [];
