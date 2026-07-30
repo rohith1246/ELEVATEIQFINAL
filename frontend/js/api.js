@@ -37,9 +37,39 @@ async function fetchCsrfToken() {
     }
 }
 
+function clearInvalidSession() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("edutech_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("edutech_user");
+    localStorage.removeItem("csrf_token");
+
+    sessionStorage.clear();
+
+    const cookieList = document.cookie.split(";");
+    for (let i = 0; i < cookieList.length; i++) {
+        const cookie = cookieList[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        if (name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0; SameSite=Lax`;
+        }
+    }
+
+    const currentPath = window.location.pathname.toLowerCase();
+    const isProtectedPage = currentPath.includes("dashboard") || currentPath.includes("crm") || currentPath.includes("vault");
+    if (isProtectedPage && !currentPath.includes("login")) {
+        window.location.href = "login.html";
+    }
+}
+
 async function refreshAccessToken() {
     const refreshToken = getActiveRefreshToken();
-    if (!refreshToken) return false;
+    if (!refreshToken) {
+        clearInvalidSession();
+        return false;
+    }
     try {
         const res = await fetch(`${API_BASE}/api/auth/refresh`, {
             method: "POST",
@@ -56,6 +86,9 @@ async function refreshAccessToken() {
             }
             if (data.csrf_token) csrfToken = data.csrf_token;
             return true;
+        } else {
+            clearInvalidSession();
+            return false;
         }
     } catch (e) {
         return false;
