@@ -10,6 +10,7 @@ active SSE event queues.
 import json
 import queue
 import logging
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, Response
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
@@ -51,6 +52,7 @@ def unregister_queue(user_id, q):
 
 
 @chat_bp.route("/chat/stream")
+@chat_bp.route("/api/chat/stream")
 def chat_stream():
     """
     Serves a persistent HTTP Server-Sent Events (SSE) data stream.
@@ -157,6 +159,7 @@ def chat_user_details():
 
 
 @chat_bp.route("/chat/heartbeat", methods=["POST"])
+@chat_bp.route("/api/chat/heartbeat", methods=["POST"])
 def chat_heartbeat():
     user = get_current_user()
     if not user:
@@ -176,6 +179,7 @@ def chat_heartbeat():
 
 
 @chat_bp.route("/chat/users", methods=["GET"])
+@chat_bp.route("/api/chat/users", methods=["GET"])
 def chat_list_users():
     """
     Lists all system users eligible for chat (Employees and Admins), excluding self.
@@ -221,6 +225,7 @@ def chat_list_users():
 
 
 @chat_bp.route("/chat/conversations", methods=["POST"])
+@chat_bp.route("/api/chat/conversations", methods=["POST"])
 def chat_create_conversation():
     """
     Initializes a Direct Message session or a Group Chat room.
@@ -344,7 +349,9 @@ def chat_create_conversation():
 
 
 @chat_bp.route("/chat/conversations", methods=["GET"])
+@chat_bp.route("/api/chat/conversations", methods=["GET"])
 @chat_bp.route("/chat/groups", methods=["GET"])
+@chat_bp.route("/api/chat/groups", methods=["GET"])
 def chat_list_conversations():
     """
     Lists all active conversation channels the current user is a member of.
@@ -470,6 +477,7 @@ def chat_list_conversations():
 
 
 @chat_bp.route("/chat/conversations/<int:conv_id>/messages", methods=["GET"])
+@chat_bp.route("/api/chat/conversations/<int:conv_id>/messages", methods=["GET"])
 def chat_get_messages(conv_id):
     """
     Fetches the conversation message history and member profile list.
@@ -594,6 +602,7 @@ def chat_get_messages(conv_id):
 
 
 @chat_bp.route("/chat/conversations/<int:conv_id>/messages", methods=["POST"])
+@chat_bp.route("/api/chat/conversations/<int:conv_id>/messages", methods=["POST"])
 def chat_send_message(conv_id):
     """
     Submits a message text string and broadcasts it to all conversation members.
@@ -670,7 +679,13 @@ def chat_send_message(conv_id):
         )
         res = cursor.fetchone()
         msg_id = res["id"]
-        sent_at = res["sent_at"].isoformat()
+        sent_at_val = res.get("sent_at")
+        if hasattr(sent_at_val, "isoformat"):
+            sent_at = sent_at_val.isoformat()
+        elif sent_at_val:
+            sent_at = str(sent_at_val)
+        else:
+            sent_at = datetime.now(timezone.utc).isoformat()
         
         # Self-mark as read
         cursor.execute(
