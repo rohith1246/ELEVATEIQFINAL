@@ -27,15 +27,12 @@ var user = _sessionData.user;
 
 // Enforcement guard: Redirect unauthenticated requests on protected pages to login interface
 const currentPath = window.location.pathname.toLowerCase();
-const isPublicPage = currentPath.endsWith("login.html") || 
-                     currentPath.endsWith("register.html") || 
-                     currentPath.endsWith("forgot-password.html") || 
-                     currentPath.endsWith("reset-password.html") || 
-                     currentPath.endsWith("index.html") || 
-                     currentPath === "/" || 
-                     currentPath.endsWith("/edutech/");
+const isProtectedPage = currentPath.includes("dashboard") || 
+                        currentPath.includes("crm") || 
+                        currentPath.includes("vault") || 
+                        currentPath.includes("reports");
 
-if ((!token || !user) && !isPublicPage) {
+if ((!token || !user) && isProtectedPage && !currentPath.includes("login")) {
     window.location.href = "login.html";
 }
 
