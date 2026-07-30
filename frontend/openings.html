@@ -224,17 +224,50 @@
     let allJobs = [];
 
     // Session check and dynamic navbar modifications
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (token && user) {
-      document.getElementById("navRight").innerHTML = `
-    <a href="dashboard.html" class="btn-login" style="margin-right:15px; font-weight:600;">Dashboard</a>
-    <a href="#" onclick="logout(event)" class="btn-primary" style="padding:9px 20px;">Log out</a>
-  `;
+    let navToken = localStorage.getItem("token") || localStorage.getItem("edutech_token") ||
+                   sessionStorage.getItem("token") || sessionStorage.getItem("edutech_token");
+    let navUserStr = localStorage.getItem("user") || localStorage.getItem("edutech_user") ||
+                     sessionStorage.getItem("user") || sessionStorage.getItem("edutech_user");
+    if (!navToken) {
+      const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+      if (match) navToken = decodeURIComponent(match[1]);
     }
-    function logout(e) {
-      e.preventDefault();
+    if (!navUserStr) {
+      const match = document.cookie.match(/(?:^|; )user=([^;]*)/);
+      if (match) navUserStr = decodeURIComponent(match[1]);
+    }
+    if (navToken && navUserStr) {
+      const navRight = document.getElementById("navRight");
+      if (navRight) {
+        navRight.innerHTML = `
+          <a href="dashboard.html" class="btn-login" style="margin-right:15px; font-weight:600;">Dashboard</a>
+          <a href="#" onclick="logout(event)" class="btn-primary" style="padding:9px 20px;">Log out</a>
+        `;
+      }
+    }
+    async function logout(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      try {
+        const activeToken = navToken;
+        const apiBase = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
+        if (activeToken) {
+          await fetch(`${apiBase}/logout`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${activeToken}` }
+          }).catch(() => {});
+        }
+      } catch(err) {}
       localStorage.clear();
+      sessionStorage.clear();
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        if (name) {
+          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0; SameSite=Lax`;
+        }
+      }
       window.location.reload();
     }
 

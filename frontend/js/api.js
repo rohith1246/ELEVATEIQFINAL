@@ -50,7 +50,7 @@ async function refreshAccessToken() {
 
 async function apiCall(endpoint, method = "GET", body = null) {
     const activeBtn = document.activeElement;
-    const isButton = activeBtn && (activeBtn.tagName === 'BUTTON' || (activeBtn.tagName === 'INPUT' && ['submit', 'button'].includes(activeBtn.type)));
+    const isButton = method !== "GET" && activeBtn && (activeBtn.tagName === 'BUTTON' || (activeBtn.tagName === 'INPUT' && ['submit', 'button'].includes(activeBtn.type)));
     let originalHtml = "";
     if (isButton && !activeBtn.disabled) {
         activeBtn.disabled = true;

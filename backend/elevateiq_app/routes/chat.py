@@ -261,23 +261,29 @@ def chat_create_conversation():
                 return jsonify({"error": "Only Admins and Team Leaders can create group chats."}), 403
             if not name:
                 return jsonify({"error": "Group name is required."}), 400
+        # Filter out self-messages and parse target members
+        clean_members = []
+        for m_id in members:
+            try:
+                parsed_id = int(m_id)
+                if parsed_id != user["id"]:
+                    clean_members.append(parsed_id)
+            except (ValueError, TypeError):
+                pass
+
+        if conv_type == "dm":
+            if len(clean_members) != 1:
+                return jsonify({"error": "DM requires exactly 1 valid counterparty user ID."}), 400
+            counterparty_id = clean_members[0]
+            if user.get("role") == "client":
+                cursor.execute("SELECT role FROM users WHERE id = %s", (counterparty_id,))
+                counterparty = cursor.fetchone()
+                if not counterparty or counterparty["role"] != "admin":
+                    return jsonify({"error": "Clients can only initiate chats with administrators."}), 403
+            all_member_ids = [user["id"], counterparty_id]
         else:
-            if len(members) != 1:
-                return jsonify({"error": "DM requires exactly 1 counterparty user ID."}), 400
-                
-        if user.get("role") == "client":
-            if conv_type != "dm":
-                return jsonify({"error": "Clients are only allowed to start direct messages."}), 403
-            counterparty_id = members[0]
-            cursor.execute("SELECT role FROM users WHERE id = %s", (counterparty_id,))
-            counterparty = cursor.fetchone()
-            if not counterparty or counterparty["role"] != "admin":
-                return jsonify({"error": "Clients can only initiate chats with administrators."}), 403
-                
-        # Exclude sender from members array before compiling final participants list
-        members = [m_id for m_id in members if m_id != user["id"]]
-        all_member_ids = list(set([user["id"]] + members))
-        
+            all_member_ids = list(set([user["id"]] + clean_members))
+
         # Prevent duplicate Direct Message channels
         if conv_type == "dm":
             cursor.execute(
@@ -499,6 +505,11 @@ def chat_get_messages(conv_id):
         is_tl = check_is_team_leader(user, cursor)
         is_admin = user.get("role") == "admin"
         
+        if not is_member and conv["type"] == "group" and user.get("role") in ["admin", "employee", "team_leader"]:
+            cursor.execute("INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (conv_id, user["id"]))
+            conn.commit()
+            is_member = True
+
         # Restrict history access to members, admins, or group team leaders
         allowed = is_member or is_admin or (is_tl and conv["type"] == "group")
         if not allowed:
@@ -628,9 +639,10 @@ def chat_send_message(conv_id):
         is_admin = user.get("role") == "admin"
         
         if not is_member:
-            if conv["type"] == "group" and (is_admin or is_tl):
+            if conv["type"] == "group" and user.get("role") in ["admin", "employee", "team_leader"]:
                 cursor.execute("INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (conv_id, user["id"]))
                 conn.commit()
+                is_member = True
             else:
                 return jsonify({"error": "You are not a member of this conversation"}), 403
             

@@ -272,7 +272,11 @@ async function sendChatMessage(type) {
     if (type === 'dm') {
         const input = document.getElementById("dmInput");
         const val = input.value.trim();
-        if (!val || !activeConversationId) return;
+        if (!val) return;
+        if (!activeConversationId) {
+            alert("Please select or start a direct message conversation first.");
+            return;
+        }
         
         const messagesDiv = document.getElementById("dmMessages");
         const timeStr = formatToIST(new Date());
@@ -302,7 +306,11 @@ async function sendChatMessage(type) {
     } else {
         const input = document.getElementById("groupInput");
         const val = input.value.trim();
-        if (!val || !activeGroupConversationId) return;
+        if (!val) return;
+        if (!activeGroupConversationId) {
+            alert("Please select a group conversation first.");
+            return;
+        }
         
         const messagesDiv = document.getElementById("groupMessages");
         const timeStr = formatToIST(new Date());
@@ -340,6 +348,7 @@ async function sendChatMessage(type) {
  */
 function handleChatKey(e, type) {
     if (e.key === 'Enter') {
+        e.preventDefault();
         sendChatMessage(type);
     }
 }

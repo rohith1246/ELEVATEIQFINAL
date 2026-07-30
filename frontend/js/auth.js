@@ -44,10 +44,36 @@ if (greetingElem && user) {
 }
 
 /**
- * Clears cached local session state and redirects to the index homepage.
+ * Clears all cached session tokens, user data, and cookies across local storage, 
+ * session storage, and document cookies before redirecting to login.html.
  */
-function logout() {
+async function logout(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    try {
+        const activeToken = localStorage.getItem("token") || sessionStorage.getItem("token");
+        const apiBase = (typeof API_BASE !== 'undefined') ? API_BASE : (window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin);
+        if (activeToken) {
+            await fetch(`${apiBase}/logout`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${activeToken}` }
+            }).catch(() => {});
+        }
+    } catch(err) {}
+
     localStorage.clear();
-    window.location.href = "index.html";
+    sessionStorage.clear();
+
+    const cookieList = document.cookie.split(";");
+    for (let i = 0; i < cookieList.length; i++) {
+        const cookie = cookieList[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        if (name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0; SameSite=Lax`;
+        }
+    }
+
+    window.location.href = "login.html";
 }
+
 

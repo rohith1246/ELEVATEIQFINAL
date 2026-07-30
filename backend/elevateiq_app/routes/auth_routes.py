@@ -572,6 +572,7 @@ def audit_logs():
     return jsonify(logs), 200
 
 @auth_bp.route("/logout", methods=["POST"])
+@auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
     token = None
     auth_header = request.headers.get("Authorization")

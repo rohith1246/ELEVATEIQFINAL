@@ -1734,9 +1734,29 @@ async function apiCall(endpoint, method = "GET", body = null) {
   }
 }
 
-function logout() {
-  localStorage.removeItem("edutech_token");
-  localStorage.removeItem("edutech_user");
+async function logout(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  try {
+    const activeToken = localStorage.getItem("edutech_token") || localStorage.getItem("token") || sessionStorage.getItem("edutech_token");
+    const apiBase = window.location.origin.startsWith('file:') ? "http://localhost:5000" : window.location.origin;
+    if (activeToken) {
+      await fetch(`${apiBase}/logout`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${activeToken}` }
+      }).catch(() => {});
+    }
+  } catch(err) {}
+  localStorage.clear();
+  sessionStorage.clear();
+  const cookies = document.cookie.split(";");
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i];
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+    if (name) {
+      document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0; SameSite=Lax`;
+    }
+  }
   window.location.href = "index.html";
 }
 
