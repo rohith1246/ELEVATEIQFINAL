@@ -1146,6 +1146,12 @@ def get_dashboard_stats():
             }
             return jsonify(stats), 200
         elif user["role"] == "employee":
+            emp_db_id = user.get("emp_db_id")
+            if not emp_db_id:
+                cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
+                emp_row = cursor.fetchone()
+                if emp_row:
+                    emp_db_id = emp_row["id"]
             cursor.execute(
                 """
                 SELECT 
@@ -1154,13 +1160,13 @@ def get_dashboard_stats():
                     (SELECT COUNT(*) FROM leaves WHERE employee_id = %s AND status LIKE 'Pending%%') AS pending_leaves,
                     (SELECT COALESCE(SUM(end_date - start_date + 1), 0) FROM leaves WHERE employee_id = %s AND status = 'Approved') AS total_leaves
                 """,
-                (user["emp_db_id"], user["emp_db_id"], user["emp_db_id"], user["emp_db_id"])
+                (emp_db_id, emp_db_id, emp_db_id, emp_db_id)
             )
             row = cursor.fetchone()
             stats = {
-                "total_present_days": row["p_count"] + row["h_count"],
-                "total_leaves": row["total_leaves"],
-                "pending_leaves": row["pending_leaves"]
+                "total_present_days": (row["p_count"] if row else 0) + (row["h_count"] if row else 0),
+                "total_leaves": row["total_leaves"] if row else 0,
+                "pending_leaves": row["pending_leaves"] if row else 0
             }
             return jsonify(stats), 200
         else:
