@@ -18,4 +18,4 @@ Disallow: /edutech/student-dashboard.html
 Disallow: /edutech/payment.html
 Disallow: /edutech/invoice.html
 
-Sitemap: https://elevateiq.com/sitemap.xml
+Sitemap: https://elevateiq-softtech.com/sitemap.xml

@@ -73,6 +73,20 @@ def create_app():
         """
         return send_from_directory(app.static_folder, "images/logo.png")
 
+    @app.route("/sitemap.xml")
+    def sitemap():
+        """
+        Serves the XML sitemap for search engine crawlers.
+        """
+        return send_from_directory(app.static_folder, "sitemap.xml", mimetype="application/xml")
+
+    @app.route("/robots.txt")
+    def robots():
+        """
+        Serves the robots.txt file for web crawlers.
+        """
+        return send_from_directory(app.static_folder, "robots.txt", mimetype="text/plain")
+
     # Lazy import and register Blueprints to prevent circular dependency issues
     from .routes.auth_routes import auth_bp
     from .routes.crm_routes import crm_bp
