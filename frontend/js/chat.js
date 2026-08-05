@@ -99,16 +99,15 @@ function initChatSSE() {
         console.error("Could not initialize SSE:", err);
     }
 
-    // Start 2.5-second automatic fast poller to ensure messages update dynamically without reload
+    // Start smart automatic poller as fallback when SSE is not connected
     if (!chatPollingInterval) {
         chatPollingInterval = setInterval(() => {
-            if (activeConversationId) {
-                refreshDMThread(false);
+            const isSSEActive = (chatEventSource && chatEventSource.readyState === 1);
+            if (!isSSEActive) {
+                if (activeConversationId) refreshDMThread(false);
+                if (activeGroupConversationId) refreshGroupThread(false);
             }
-            if (activeGroupConversationId) {
-                refreshGroupThread(false);
-            }
-        }, 2500);
+        }, 8000);
     }
 }
 
