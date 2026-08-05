@@ -301,7 +301,7 @@ def chat_create_conversation():
                 return jsonify({"id": existing["id"], "message": "DM already exists"}), 200
                 
         cursor.execute(
-            "INSERT INTO conversations (type, name, created_by) VALUES (%s, %s, %s) RETURNING id",
+            "INSERT INTO conversations (type, name, created_by, created_at) VALUES (%s, %s, %s, NOW()) RETURNING id",
             (conv_type, name if conv_type == "group" else None, user["id"])
         )
         row = cursor.fetchone()
@@ -461,9 +461,12 @@ def chat_list_conversations():
             else:
                 valid_conversations.append(c)
 
-            if c["last_message_time"]:
-                c["last_message_time"] = c["last_message_time"].isoformat()
-            c["created_at"] = c["created_at"].isoformat()
+            if c.get("last_message_time"):
+                c["last_message_time"] = c["last_message_time"].isoformat() if hasattr(c["last_message_time"], "isoformat") else str(c["last_message_time"])
+            if c.get("created_at"):
+                c["created_at"] = c["created_at"].isoformat() if hasattr(c["created_at"], "isoformat") else str(c["created_at"])
+            else:
+                c["created_at"] = ""
             
         return jsonify(valid_conversations), 200
     except Exception as e:
