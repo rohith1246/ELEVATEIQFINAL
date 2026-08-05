@@ -265,7 +265,7 @@ def get_all_assessments():
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -306,7 +306,7 @@ def get_assessment_answers(assessment_id):
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -336,7 +336,7 @@ def resend_assessment_email(assessment_id):
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -373,7 +373,7 @@ def get_questions():
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -412,7 +412,7 @@ def create_question():
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -454,7 +454,7 @@ def update_question(q_id):
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
@@ -488,7 +488,7 @@ def delete_question(q_id):
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "hr", "hr_manager", "team_leader", "employee"]:
         return jsonify({"error": "Forbidden"}), 403
 
     conn = get_connection()
