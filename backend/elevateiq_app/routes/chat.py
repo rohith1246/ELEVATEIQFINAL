@@ -226,34 +226,30 @@ def chat_list_users():
 
 @chat_bp.route("/chat/conversations", methods=["POST"])
 @chat_bp.route("/api/chat/conversations", methods=["POST"])
+@chat_bp.route("/chat/groups", methods=["POST"])
+@chat_bp.route("/api/chat/groups", methods=["POST"])
 def chat_create_conversation():
     """
     Initializes a Direct Message session or a Group Chat room.
-
-    Checks permissions for group creation. Returns existing direct message metadata 
-    if a session between the two users already exists. Disseminates updates to all members.
-
-    JSON Parameters:
-        type (str, optional): 'dm' or 'group'. Defaults to 'dm'.
-        name (str, optional): The label of the group chat. Required for group.
-        members (list of int): List of participant user IDs.
-
-    Returns:
-        tuple: (JSON response, HTTP status code)
-            - 200/201: Conversation configuration metadata.
-            - 400: Validation exceptions.
-            - 403: Security restriction (e.g. groups restricted to Leaders/Admins).
-            - 500: Database insertion or broadcast failures.
     """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
     
-    data = request.json
-    conv_type = data.get("type", "dm")
-    name = data.get("name")
-    members = data.get("members", [])
-    
+    data = request.json or {}
+    conv_type = data.get("type")
+    if not conv_type:
+        conv_type = "group" if (data.get("is_group") or data.get("name")) else "dm"
+
+    name = data.get("name") or data.get("group_name")
+    members_raw = data.get("members") if data.get("members") is not None else data.get("member_ids", [])
+    if isinstance(members_raw, str):
+        members = [m.strip() for m in members_raw.split(",") if m.strip()]
+    elif isinstance(members_raw, list):
+        members = members_raw
+    else:
+        members = []
+
     if conv_type not in ["dm", "group"]:
         return jsonify({"error": "Invalid conversation type"}), 400
     
@@ -261,11 +257,10 @@ def chat_create_conversation():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         if conv_type == "group":
-            is_tl = check_is_team_leader(user, cursor)
-            if not is_tl:
-                return jsonify({"error": "Only Admins and Team Leaders can create group chats."}), 403
+            if user.get("role") == "client":
+                return jsonify({"error": "Clients cannot create group chats."}), 403
             if not name:
-                return jsonify({"error": "Group name is required."}), 400
+                name = "New Group Chat"
         # Filter out self-messages and parse target members
         clean_members = []
         for m_id in members:
@@ -446,6 +441,8 @@ def chat_list_conversations():
         valid_conversations = []
         # Append DM counterparty user info (filter out DMs with deleted users)
         for c in conversations:
+            c["is_group"] = (c["type"] == "group")
+            c["name"] = c.get("group_name") or c.get("name") or "Group Chat"
             if c["type"] == "dm":
                 cursor.execute(
                     """
