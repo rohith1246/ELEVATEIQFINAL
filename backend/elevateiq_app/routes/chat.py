@@ -304,7 +304,8 @@ def chat_create_conversation():
             "INSERT INTO conversations (type, name, created_by) VALUES (%s, %s, %s) RETURNING id",
             (conv_type, name if conv_type == "group" else None, user["id"])
         )
-        conv_id = cursor.fetchone()["id"]
+        row = cursor.fetchone()
+        conv_id = row["id"] if isinstance(row, dict) else (row[0] if row else None)
         
         # Link member IDs in intermediate mapping table
         for m_id in all_member_ids:
