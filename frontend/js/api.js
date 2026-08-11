@@ -151,6 +151,7 @@ async function apiCall(endpoint, method = "GET", body = null) {
                     }
                     return retryData;
                 } else {
+                    handleUnauthorizedSession();
                     const errMsg = (data && data.error) ? data.error : `Unauthorized access (401)`;
                     throw new Error(errMsg);
                 }
