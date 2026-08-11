@@ -368,7 +368,7 @@ def login():
             try:
                 cursor.execute("DELETE FROM login_attempts WHERE user_id = %s;", (user_id,))
                 cursor.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = %s AND revoked = FALSE;", (user_id,))
-                cursor.execute("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (%s, %s, NOW() + INTERVAL '7 days');", (user_id, refresh_hash))
+                cursor.execute("INSERT INTO refresh_tokens (user_id, token_hash, revoked, created_at, expires_at) VALUES (%s, %s, FALSE, NOW(), NOW() + INTERVAL '7 days');", (user_id, refresh_hash))
                 cursor.execute("INSERT INTO csrf_tokens (user_id, token) VALUES (%s, %s);", (user_id, csrf_token))
                 try:
                     cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s;", (user_id,))

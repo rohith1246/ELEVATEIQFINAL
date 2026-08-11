@@ -475,7 +475,7 @@ def validate_and_rotate_refresh_token(token):
     c = conn.cursor()
     try:
         c.execute("""SELECT user_id FROM refresh_tokens
-            WHERE token_hash = %s AND (revoked = FALSE OR created_at > NOW() - INTERVAL '60 seconds') AND expires_at > NOW()""", (token_hash,))
+            WHERE token_hash = %s AND (COALESCE(revoked, FALSE) = FALSE OR COALESCE(created_at, NOW()) > NOW() - INTERVAL '60 seconds') AND expires_at > NOW()""", (token_hash,))
         row = c.fetchone()
         if not row:
             return None, None
@@ -483,8 +483,8 @@ def validate_and_rotate_refresh_token(token):
         c.execute("UPDATE refresh_tokens SET revoked = TRUE WHERE token_hash = %s", (token_hash,))
         new_token = secrets.token_urlsafe(64)
         new_hash = hashlib.sha256(new_token.encode()).hexdigest()
-        c.execute("""INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-            VALUES (%s, %s, NOW() + INTERVAL '7 days')""", (uid, new_hash))
+        c.execute("""INSERT INTO refresh_tokens (user_id, token_hash, revoked, created_at, expires_at)
+            VALUES (%s, %s, FALSE, NOW(), NOW() + INTERVAL '7 days')""", (uid, new_hash))
         conn.commit()
         return uid, new_token
     except Exception as e:
