@@ -612,6 +612,11 @@ def get_current_user():
         data = serializer.loads(token, max_age=TOKEN_MAX_AGE)
         if is_token_blacklisted(token):
             return None
+        if isinstance(data, dict):
+            uid = data.get("user_id") or data.get("id")
+            if uid:
+                data["id"] = uid
+                data["user_id"] = uid
         return data
     except (SignatureExpired, BadSignature):
         return None

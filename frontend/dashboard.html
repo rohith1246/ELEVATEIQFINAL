@@ -1534,7 +1534,7 @@ Object.keys(layouts).forEach(panelId => {
 
 <!-- ==================== EXTERNAL JS MODULES ==================== -->
 <script src="js/alert-override.js?v=7.0.0"></script>
-<script src="js/api.js?v=11.0.0"></script>
+<script src="js/api.js?v=12.0.0"></script>
 <script src="js/auth.js?v=9.0.0"></script>
 <script src="js/chat.js?v=7.0.0"></script>
 <script src="js/crm.js?v=7.0.0"></script>
@@ -1672,6 +1672,13 @@ function renderSidebar() {
 }
 
 async function initDashboard() {
+    // 0. Proactively refresh the access token FIRST before touching any API
+    // This ensures a fresh valid token is stored before any endpoint is called,
+    // preventing cascading 401 errors on first dashboard load.
+    if (typeof refreshAccessToken === 'function') {
+        try { await refreshAccessToken(); } catch(e) {}
+    }
+
     // 1. Try to load cached user details to render UI immediately
     const cachedUser = localStorage.getItem("user");
     if (cachedUser) {

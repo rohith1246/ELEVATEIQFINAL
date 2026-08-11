@@ -351,6 +351,7 @@ def login():
 
             payload = {
                 "id": user_id,
+                "user_id": user_id,
                 "name": user_record["name"],
                 "email": user_record["email"],
                 "role": user_record["role"],
@@ -437,7 +438,7 @@ def refresh_token():
         cursor.execute(
             """
             SELECT u.*, 
-                   e.id as emp_db_id, e.employee_id,
+                   e.id as emp_db_id, e.employee_id, e.shift,
                    c.id as client_db_id, c.client_id, c.company_name
             FROM users u
             LEFT JOIN employees e ON u.id = e.user_id
@@ -452,12 +453,14 @@ def refresh_token():
 
         payload = {
             "id": user_record["id"],
+            "user_id": user_record["id"],
             "name": user_record["name"],
             "email": user_record["email"],
             "role": user_record["role"],
             "employee_id": user_record.get("employee_id"),
             "emp_db_id": user_record.get("emp_db_id"),
             "client_db_id": user_record.get("client_db_id"),
+            "shift": user_record.get("shift") or "Day Shift"
         }
         new_access = serializer.dumps(payload)
         csrf_token = get_csrf_token(user_id)
