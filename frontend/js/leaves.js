@@ -1146,17 +1146,30 @@ async function loadProfile() {
     document.getElementById("profDeptField").style.display = "none";
     document.getElementById("profDesgField").style.display = "none";
     document.getElementById("profPhoneField").style.display = "none";
+    const shiftField = document.getElementById("profShiftField");
+    if (shiftField) shiftField.style.display = "none";
 
     if (user.role === "employee") {
         document.getElementById("profEmpIdField").style.display = "block";
         document.getElementById("profDeptField").style.display = "block";
         document.getElementById("profDesgField").style.display = "block";
         document.getElementById("profPhoneField").style.display = "block";
+        if (shiftField) shiftField.style.display = "block";
 
         document.getElementById("profEmpId").value = prof.employee_id;
         document.getElementById("profDept").value = prof.department;
         document.getElementById("profDesg").value = prof.designation;
         document.getElementById("profPhone").value = prof.phone_number || "";
+
+        // Load current shift
+        try {
+            const shiftData = await apiCall("/attendance/shift");
+            const shiftSelect = document.getElementById("profShift");
+            if (shiftSelect && shiftData.shift) {
+                shiftSelect.value = shiftData.shift;
+            }
+        } catch(e) { /* silent fail */ }
+
     } else if (user.role === "client") {
         document.getElementById("profPhoneField").style.display = "block";
         document.getElementById("profPhone").value = prof.phone_number || "";
@@ -1179,6 +1192,19 @@ if (profileForm) {
         if (pwd) payload.password = pwd;
 
         await apiCall("/profile", "PUT", payload);
+
+        // Save shift if employee
+        const shiftSelect = document.getElementById("profShift");
+        if (shiftSelect && user.role === "employee") {
+            const selectedShift = shiftSelect.value;
+            try {
+                await apiCall("/attendance/shift", "POST", { shift: selectedShift });
+                // Update local user object with new shift
+                user.shift = selectedShift;
+                localStorage.setItem("user", JSON.stringify(user));
+            } catch(e) { /* silent fail */ }
+        }
+
         alert("Profile settings saved successfully!");
         
         user.name = payload.name;

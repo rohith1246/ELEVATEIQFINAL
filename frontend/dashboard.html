@@ -1154,6 +1154,17 @@ const layouts = {
                 <div class="field" id="profDeptField" style="display:none;"><label>Department</label><input type="text" id="profDept" disabled></div>
                 <div class="field" id="profDesgField" style="display:none;"><label>Designation</label><input type="text" id="profDesg" disabled></div>
                 <div class="field" id="profPhoneField" style="display:none;"><label>Phone Number</label><input type="text" id="profPhone"></div>
+                <div class="field" id="profShiftField" style="display:none;">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Work Shift
+                    </label>
+                    <select id="profShift" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--ink); font-size:14px; cursor:pointer;">
+                        <option value="Day Shift">&#9728; Day Shift &nbsp;(9:00 AM – 6:00 PM)</option>
+                        <option value="Night Shift">&#9790; Night Shift (9:00 PM – 6:00 AM)</option>
+                    </select>
+                    <small style="color:var(--ink-soft); font-size:12px; margin-top:4px; display:block;">You can change your shift anytime from your profile.</small>
+                </div>
                 <div class="field"><label>New Password (Leave blank to keep current)</label><input type="password" id="profPassword"></div>
                 <button type="submit" class="btn-primary" style="width: 100%; margin-top:10px;">Save Profile Information</button>
             </form>
@@ -1539,7 +1550,7 @@ Object.keys(layouts).forEach(panelId => {
 <script src="js/chat.js?v=7.0.0"></script>
 <script src="js/crm.js?v=7.0.0"></script>
 <script src="js/recruitment.js?v=7.0.0"></script>
-<script src="js/leaves.js?v=7.0.0"></script>
+<script src="js/leaves.js?v=8.0.0"></script>
 <script src="js/payroll.js?v=7.0.0"></script>
 <script src="js/notifications.js?v=7.0.0"></script>
 
