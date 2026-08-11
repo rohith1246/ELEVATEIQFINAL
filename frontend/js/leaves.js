@@ -384,9 +384,15 @@ async function loadAdminLeaves() {
     const isHrOrAdmin = currentUser.role === 'admin' || (currentUser.designation && (currentUser.designation.toLowerCase().includes("hr") || currentUser.designation.toLowerCase().includes("human resource")));
 
     leaves.forEach(l => {
-        const start = new Date(l.start_date).toLocaleDateString();
-        const end = new Date(l.end_date).toLocaleDateString();
-        const leaveDays = Math.ceil((new Date(l.end_date) - new Date(l.start_date)) / (1000 * 60 * 60 * 24)) + 1;
+        // Parse dates as explicit UTC midnight to avoid local timezone offset skewing the diff
+        function parseUTCDate(str) {
+            if (!str) return new Date(0);
+            const parts = str.split('-').map(Number);
+            return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+        }
+        const start = parseUTCDate(l.start_date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const end = parseUTCDate(l.end_date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const leaveDays = Math.round((parseUTCDate(l.end_date) - parseUTCDate(l.start_date)) / 86400000) + 1;
 
         let actionBtn = "";
         const isPending = l.status.toLowerCase().includes("pending");
@@ -407,13 +413,6 @@ async function loadAdminLeaves() {
                     </div>
                 `;
             } else if (l.status === "Pending HR Approval" && isHrOrAdmin) {
-                actionBtn = `
-                    <div style="display:flex; gap:6px;">
-                        <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>
-                        <button onclick="reviewLeave(${l.id}, 'Rejected')" class="btn-action btn-reject" style="padding:4px 8px; font-size:11px; margin:0;">Reject</button>
-                    </div>
-                `;
-            } else if (l.status === "Pending TL Approval" && isHrOrAdmin) {
                 actionBtn = `
                     <div style="display:flex; gap:6px;">
                         <button onclick="reviewLeave(${l.id}, 'Approved')" class="btn-action btn-approve" style="padding:4px 8px; font-size:11px; margin:0;">Approve</button>

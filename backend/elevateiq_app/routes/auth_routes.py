@@ -315,7 +315,7 @@ def login():
         cursor.execute(
             """
             SELECT u.*, 
-                   e.id as emp_db_id, e.employee_id,
+                   e.id as emp_db_id, e.employee_id, e.shift,
                    c.id as client_db_id, c.client_id, c.company_name,
                    (SELECT locked_until FROM account_lockouts WHERE user_id = u.id AND locked_until > NOW() LIMIT 1) as locked_until
             FROM users u
@@ -357,6 +357,7 @@ def login():
                 "employee_id": user_record.get("employee_id"),
                 "emp_db_id": user_record.get("emp_db_id"),
                 "client_db_id": user_record.get("client_db_id"),
+                "shift": user_record.get("shift") or "Day Shift"
             }
             token = serializer.dumps(payload)
             refresh_token = secrets.token_urlsafe(64)
@@ -391,13 +392,13 @@ def login():
             is_secure = os.getenv("FLASK_ENV") == "production" or request.is_secure
             response.set_cookie(
                 "token", token,
-                httponly=True, secure=is_secure,
-                samesite="Strict", max_age=ACCESS_TOKEN_MAX_AGE
+                httponly=False, secure=is_secure,
+                samesite="Lax", max_age=ACCESS_TOKEN_MAX_AGE
             )
             response.set_cookie(
                 "refresh_token", refresh_token,
-                httponly=True, secure=is_secure,
-                samesite="Strict", path="/api/auth/refresh",
+                httponly=False, secure=is_secure,
+                samesite="Lax", path="/",
                 max_age=REFRESH_TOKEN_MAX_AGE
             )
             return response, 200
@@ -415,7 +416,7 @@ def login():
 
 
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
-@rate_limit(limit=5, period=60)
+@rate_limit(limit=60, period=60)
 def refresh_token():
     refresh_token_str = None
     auth_header = request.headers.get("X-Refresh-Token")
@@ -468,8 +469,8 @@ def refresh_token():
             "user": payload
         })
         is_secure = os.getenv("FLASK_ENV") == "production" or request.is_secure
-        response.set_cookie("token", new_access, httponly=True, secure=is_secure, samesite="Strict", max_age=ACCESS_TOKEN_MAX_AGE)
-        response.set_cookie("refresh_token", new_refresh, httponly=True, secure=is_secure, samesite="Strict", path="/api/auth/refresh", max_age=REFRESH_TOKEN_MAX_AGE)
+        response.set_cookie("token", new_access, httponly=False, secure=is_secure, samesite="Lax", max_age=ACCESS_TOKEN_MAX_AGE)
+        response.set_cookie("refresh_token", new_refresh, httponly=False, secure=is_secure, samesite="Lax", path="/", max_age=REFRESH_TOKEN_MAX_AGE)
         return response, 200
     except Exception as e:
         logger.error(f"Token refresh error: {e}")

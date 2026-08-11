@@ -331,7 +331,11 @@ async function pollRealtimeNotifications() {
 
         initializedNotifs = true;
     } catch(e) {
-        console.error("Error polling notifications:", e);
+        if (e && e.message && e.message.includes("Unauthorized")) {
+            // User session expired or unauthenticated; stop polling
+            return;
+        }
+        console.warn("Realtime notifications update status:", e.message || e);
     }
 }
 

@@ -20,8 +20,14 @@ function getActiveRefreshToken() {
 }
 
 let csrfToken = null;
-let isRefreshing = false;
-let refreshQueue = [];
+let refreshPromise = null;
+let failed401Count = 0;
+
+function handleUnauthorizedSession() {
+    failed401Count++;
+    // Background API failures should log errors but NEVER force redirect the user away from their active session
+    console.warn("Unauthorized API call encountered. Count:", failed401Count);
+}
 
 async function fetchCsrfToken() {
     try {
@@ -38,29 +44,43 @@ async function fetchCsrfToken() {
 }
 
 async function refreshAccessToken() {
+    if (refreshPromise) return refreshPromise;
+
     const refreshToken = getActiveRefreshToken();
-    if (!refreshToken) return false;
-    try {
-        const res = await fetch(`${API_BASE}/api/auth/refresh`, {
-            method: "POST",
-            headers: { "X-Refresh-Token": refreshToken }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            localStorage.setItem("token", data.token);
-            sessionStorage.setItem("token", data.token);
-            document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
-            if (data.refresh_token) {
-                localStorage.setItem("refresh_token", data.refresh_token);
-                sessionStorage.setItem("refresh_token", data.refresh_token);
-            }
-            if (data.csrf_token) csrfToken = data.csrf_token;
-            return true;
-        }
-    } catch (e) {
+    if (!refreshToken) {
         return false;
     }
-    return false;
+
+    refreshPromise = (async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+                method: "POST",
+                headers: { "X-Refresh-Token": refreshToken }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem("token", data.token);
+                sessionStorage.setItem("token", data.token);
+                document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+                if (data.refresh_token) {
+                    localStorage.setItem("refresh_token", data.refresh_token);
+                    sessionStorage.setItem("refresh_token", data.refresh_token);
+                }
+                if (data.csrf_token) csrfToken = data.csrf_token;
+                failed401Count = 0;
+                return true;
+            } else if (res.status === 401 || res.status === 403) {
+                handleUnauthorizedSession();
+            }
+        } catch (e) {
+            // Network error
+        } finally {
+            refreshPromise = null;
+        }
+        return false;
+    })();
+
+    return refreshPromise;
 }
 
 async function apiCall(endpoint, method = "GET", body = null) {
@@ -97,10 +117,9 @@ async function apiCall(endpoint, method = "GET", body = null) {
             if (contentType && contentType.includes("application/json")) {
                 data = await res.json();
             }
-            if (res.status === 401 && !isRefreshing) {
-                isRefreshing = true;
+
+            if (res.status === 401) {
                 const refreshed = await refreshAccessToken();
-                isRefreshing = false;
                 if (refreshed) {
                     options.headers["Authorization"] = `Bearer ${getActiveToken()}`;
                     if (csrfToken && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
@@ -117,9 +136,10 @@ async function apiCall(endpoint, method = "GET", body = null) {
                         throw new Error(errMsg);
                     }
                     return retryData;
+                } else {
+                    const errMsg = (data && data.error) ? data.error : `Unauthorized access (401)`;
+                    throw new Error(errMsg);
                 }
-                const errMsg = (data && data.error) ? data.error : `Unauthorized access (${res.status})`;
-                throw new Error(errMsg);
             }
             if (!res.ok) {
                 const errMsg = (data && data.error) ? data.error : `Request failed with status ${res.status}`;

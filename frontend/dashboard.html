@@ -1534,8 +1534,8 @@ Object.keys(layouts).forEach(panelId => {
 
 <!-- ==================== EXTERNAL JS MODULES ==================== -->
 <script src="js/alert-override.js?v=7.0.0"></script>
-<script src="js/api.js?v=7.0.0"></script>
-<script src="js/auth.js?v=7.0.0"></script>
+<script src="js/api.js?v=9.0.0"></script>
+<script src="js/auth.js?v=9.0.0"></script>
 <script src="js/chat.js?v=7.0.0"></script>
 <script src="js/crm.js?v=7.0.0"></script>
 <script src="js/recruitment.js?v=7.0.0"></script>
@@ -2066,6 +2066,171 @@ async function deleteQuestion(qId) {
         alert('Failed to delete question: ' + e.message);
     }
 }
+</script>
+
+<!-- ── Shift Selection Modal Popup ────────────────────────────────────────── -->
+<div id="shiftSelectionModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center;">
+  <div class="modal-content glass-card shadow-lg" style="background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.3); max-width: 460px; width: 90%; border-radius: 20px; padding: 32px; position: relative; animation: modalPop 0.3s ease-out;">
+    
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(139, 92, 246, 0.15); border-radius: 50%; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 32px; margin-bottom: 16px;">
+        ⏰
+      </div>
+      <h2 style="font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 6px; letter-spacing: -0.3px;">Work Shift Selection</h2>
+      <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin: 0;">Welcome back! Please update your work shift schedule for today before continuing to your dashboard.</p>
+    </div>
+
+    <form id="shiftSelectionForm" onsubmit="handleShiftSave(event)">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+        
+        <!-- Day Shift Option -->
+        <label id="shiftOptDay" onclick="selectShiftOption('Day Shift')" style="cursor: pointer; padding: 20px 14px; border: 2px solid #8b5cf6; background: rgba(139, 92, 246, 0.15); border-radius: 14px; text-align: center; transition: all 0.2s ease; display: block; position: relative;">
+          <input type="radio" name="shiftChoice" value="Day Shift" checked style="position: absolute; opacity: 0;">
+          <div style="font-size: 32px; margin-bottom: 8px;">☀️</div>
+          <div style="font-weight: 700; color: #ffffff; font-size: 15px;">Day Shift</div>
+          <div style="font-size: 11px; color: #a78bfa; margin-top: 4px; font-weight: 500;">09:00 AM – 06:00 PM</div>
+        </label>
+
+        <!-- Night Shift Option -->
+        <label id="shiftOptNight" onclick="selectShiftOption('Night Shift')" style="cursor: pointer; padding: 20px 14px; border: 2px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); border-radius: 14px; text-align: center; transition: all 0.2s ease; display: block; position: relative;">
+          <input type="radio" name="shiftChoice" value="Night Shift" style="position: absolute; opacity: 0;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🌙</div>
+          <div style="font-weight: 700; color: #94a3b8; font-size: 15px;" id="lblNightTitle">Night Shift</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 500;">09:00 PM – 06:00 AM</div>
+        </label>
+
+      </div>
+
+      <div id="shiftAlertMessage" style="display:none; padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; text-align: center;"></div>
+
+      <button type="submit" id="btnSaveShiftSubmit" class="btn btn-primary" style="width: 100%; padding: 12px 18px; font-weight: 700; font-size: 15px; border-radius: 12px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; color: #ffffff; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4); transition: transform 0.15s ease;">
+        Confirm & Save Shift
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<script>
+function selectShiftOption(val) {
+  const dayOpt = document.getElementById('shiftOptDay');
+  const nightOpt = document.getElementById('shiftOptNight');
+  const nightTitle = document.getElementById('lblNightTitle');
+  const radios = document.getElementsByName('shiftChoice');
+
+  for (let r of radios) {
+    if (r.value === val) r.checked = true;
+  }
+
+  if (val === 'Day Shift') {
+    dayOpt.style.borderColor = '#8b5cf6';
+    dayOpt.style.background = 'rgba(139, 92, 246, 0.15)';
+    
+    nightOpt.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+    nightOpt.style.background = 'rgba(255, 255, 255, 0.03)';
+    if (nightTitle) nightTitle.style.color = '#94a3b8';
+  } else {
+    nightOpt.style.borderColor = '#38bdf8';
+    nightOpt.style.background = 'rgba(56, 189, 248, 0.15)';
+    if (nightTitle) nightTitle.style.color = '#ffffff';
+
+    dayOpt.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+    dayOpt.style.background = 'rgba(255, 255, 255, 0.03)';
+  }
+}
+
+async function checkShiftOnLogin() {
+  const session = typeof getStoredSession === 'function' ? getStoredSession() : null;
+  const user = session ? session.user : null;
+  if (!user || (user.role !== 'employee' && user.role !== 'admin' && !user.emp_db_id)) return;
+
+  try {
+    const data = await apiCall('/attendance/shift', 'GET');
+    if (!data) return;
+
+    if (data.needs_popup) {
+      if (data.shift) selectShiftOption(data.shift);
+      const modal = document.getElementById('shiftSelectionModal');
+      if (modal) modal.style.display = 'flex';
+    } else {
+      const modal = document.getElementById('shiftSelectionModal');
+      if (modal) modal.style.display = 'none';
+      updateShiftBadge(data.shift);
+    }
+  } catch (e) {
+    console.error("Shift check error:", e);
+  }
+}
+
+async function handleShiftSave(e) {
+  e.preventDefault();
+  const radios = document.getElementsByName('shiftChoice');
+  let selectedShift = 'Day Shift';
+  for (let r of radios) {
+    if (r.checked) selectedShift = r.value;
+  }
+
+  const alertBox = document.getElementById('shiftAlertMessage');
+  const btn = document.getElementById('btnSaveShiftSubmit');
+  if (btn) btn.disabled = true;
+
+  try {
+    const data = await apiCall('/attendance/shift', 'POST', { shift: selectedShift });
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const session = typeof getStoredSession === 'function' ? getStoredSession() : null;
+    if (session && session.user) {
+      localStorage.setItem(`shift_confirmed_${session.user.id}`, todayStr);
+      session.user.shift = selectedShift;
+      localStorage.setItem("user", JSON.stringify(session.user));
+    }
+
+    if (alertBox) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = 'rgba(16, 185, 129, 0.15)';
+      alertBox.style.color = '#10b981';
+      alertBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+      alertBox.textContent = `Shift saved successfully (${selectedShift})!`;
+    }
+
+    setTimeout(() => {
+      const modal = document.getElementById('shiftSelectionModal');
+      if (modal) modal.style.display = 'none';
+      updateShiftBadge(selectedShift);
+    }, 700);
+
+  } catch (err) {
+    if (alertBox) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = 'rgba(239, 68, 68, 0.15)';
+      alertBox.style.color = '#ef4444';
+      alertBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+      alertBox.textContent = err.message || "Failed to save shift";
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateShiftBadge(shiftName) {
+  const badgeElems = document.querySelectorAll('.user-shift-badge');
+  badgeElems.forEach(el => {
+    el.textContent = shiftName === 'Night Shift' ? '🌙 Night Shift' : '☀️ Day Shift';
+    el.style.background = shiftName === 'Night Shift' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(124, 58, 237, 0.15)';
+    el.style.color = shiftName === 'Night Shift' ? '#38bdf8' : '#a78bfa';
+    el.style.border = shiftName === 'Night Shift' ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(124, 58, 237, 0.3)';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(checkShiftOnLogin, 600);
+});
 </script>
 
 </body>

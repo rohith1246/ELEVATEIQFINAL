@@ -32,7 +32,7 @@ const isProtectedPage = currentPath.includes("dashboard") ||
                         currentPath.includes("vault") || 
                         currentPath.includes("reports");
 
-if ((!token || !user) && isProtectedPage && !currentPath.includes("login")) {
+if (!token && isProtectedPage && !currentPath.includes("login")) {
     window.location.href = "login.html";
 }
 

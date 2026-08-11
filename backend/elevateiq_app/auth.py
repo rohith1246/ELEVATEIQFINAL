@@ -24,7 +24,7 @@ def _bcrypt_hash(password_bytes):
 
 import bcrypt
 
-ACCESS_TOKEN_MAX_AGE = 900
+ACCESS_TOKEN_MAX_AGE = 604800  # 7 days session lifetime
 REFRESH_TOKEN_MAX_AGE = 604800
 
 serializer = URLSafeTimedSerializer(Config.SECRET_KEY, salt="access")
@@ -475,7 +475,7 @@ def validate_and_rotate_refresh_token(token):
     c = conn.cursor()
     try:
         c.execute("""SELECT user_id FROM refresh_tokens
-            WHERE token_hash = %s AND revoked = FALSE AND expires_at > NOW()""", (token_hash,))
+            WHERE token_hash = %s AND (revoked = FALSE OR created_at > NOW() - INTERVAL '60 seconds') AND expires_at > NOW()""", (token_hash,))
         row = c.fetchone()
         if not row:
             return None, None

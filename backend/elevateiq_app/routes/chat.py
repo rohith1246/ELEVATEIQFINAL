@@ -79,7 +79,7 @@ def chat_stream():
     except Exception:
         return "Unauthorized", 401
         
-    user_id = user["id"]
+    user_id = user.get("user_id") or user.get("id")
     # Initialize a queue to buffer messages with a safe maximum limit of 100 entries
     q = queue.Queue(maxsize=100)
     register_queue(user_id, q)
@@ -129,9 +129,10 @@ def chat_user_details():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        uid = user.get("user_id") or user.get("id")
         designation = ""
-        if user["role"] != "admin":
-            cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (user["id"],))
+        if user.get("role") != "admin":
+            cursor.execute("SELECT designation FROM employees WHERE user_id = %s", (uid,))
             res = cursor.fetchone()
             if res:
                 designation = ((res.get("designation") or "") if isinstance(res, dict) else (res[0] or "")).lower()
@@ -141,10 +142,10 @@ def chat_user_details():
         is_hr = user.get("role") == "admin" or "hr" in designation or "human resource" in designation
 
         return jsonify({
-            "id": user["id"],
-            "name": user["name"],
-            "email": user["email"],
-            "role": user["role"],
+            "id": uid,
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "role": user.get("role"),
             "employee_id": user.get("employee_id"),
             "is_team_leader": is_tl,
             "can_approve_leaves": can_approve,
@@ -167,7 +168,8 @@ def chat_heartbeat():
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (user["id"],))
+        uid = user.get("user_id") or user.get("id")
+        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (uid,))
         conn.commit()
         return jsonify({"status": "ok"}), 200
     except Exception as e:
@@ -192,7 +194,8 @@ def chat_list_users():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Touch last_seen timestamp
-        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (user["id"],))
+        uid = user.get("user_id") or user.get("id")
+        cursor.execute("UPDATE users SET last_seen = NOW() WHERE id = %s", (uid,))
         conn.commit()
 
         # Select active employees/admins with real-time online status (timezone safe)

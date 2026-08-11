@@ -382,31 +382,22 @@ def review_leave(leave_id):
 def get_attendance():
     """
     Lists attendance log entries.
-
-    - Admins: Retrieve all logs across the company.
-    - Employees: Retrieve only their own logged attendance dates.
-
-    Returns:
-        tuple: (JSON response, HTTP status code)
-            - 200: Array of attendance objects.
-            - 401: Unauthorized access.
-            - 500: Database select query exceptions.
+    - Admins & HR: Retrieve all logs across the company.
+    - Employees, Team Leaders, Managers: Retrieve their own attendance logs.
     """
     user = get_current_user()
     if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    # Attendance data is strictly for employees and admins only.
-    if user["role"] not in ("admin", "employee"):
-        return jsonify({"error": "Forbidden: Attendance data is only accessible to employees and admins"}), 403
+        return jsonify({"error": "Unauthorized: Please log in first"}), 401
 
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        if user["role"] == "admin":
+        user_role = user.get("role", "").lower()
+        user_db_id = user.get("user_id") or user.get("id")
+        if user_role in ("admin", "hr"):
             cursor.execute(
                 """
-                SELECT a.*, e.employee_id, u.name, e.department, e.designation 
+                SELECT a.*, e.employee_id, u.name, e.department, e.designation, COALESCE(a.shift, e.shift, 'Day Shift') as shift 
                 FROM attendance a 
                 JOIN employees e ON a.employee_id = e.id 
                 JOIN users u ON e.user_id = u.id 
@@ -417,120 +408,41 @@ def get_attendance():
         else:
             cursor.execute(
                 """
-                SELECT a.* 
+                SELECT a.*, e.employee_id, u.name, e.department, e.designation, COALESCE(a.shift, e.shift, 'Day Shift') as shift 
                 FROM attendance a 
                 JOIN employees e ON a.employee_id = e.id 
+                JOIN users u ON e.user_id = u.id 
                 WHERE e.user_id = %s 
-                ORDER BY a.date DESC
+                ORDER BY a.date DESC, a.check_in DESC
                 """,
-                (user["id"],)
+                (user_db_id,)
             )
             records = cursor.fetchall()
 
-        # Format dates, check-in, check-out times, and working hours for clean JSON responses
         for rec in records:
             if rec.get("date"):
                 rec["date"] = rec["date"].isoformat()
             if rec.get("check_in"):
-                rec["check_in"] = rec["check_in"].strftime("%H:%M:%S")
+                rec["check_in"] = str(rec["check_in"])
             if rec.get("check_out"):
-                rec["check_out"] = rec["check_out"].strftime("%H:%M:%S")
-            if rec.get("working_hours"):
+                rec["check_out"] = str(rec["check_out"])
+            if rec.get("working_hours") is not None:
                 rec["working_hours"] = float(rec["working_hours"])
 
         return jsonify(records), 200
     except Exception as e:
-        logger.error(f"Leaves API error: {e}")
+        logger.error(f"Leaves API get_attendance error: {e}")
         return jsonify(safe_error()), 500
     finally:
         cursor.close()
         conn.close()
-
 
 
 @leaves_bp.route("/attendance/checkin", methods=["POST"])
+@leaves_bp.route("/api/attendance/checkin", methods=["POST"])
 def check_in():
     """
-    Registers the start clock-in time for the current date.
-    Restricted to employees.
-
-    Returns:
-        tuple: (JSON response, HTTP status code)
-            - 201: Checked in successfully.
-            - 400: If already checked in today.
-            - 403: Forbidden access.
-            - 500: Database insertion exceptions.
-    """
-    user = get_current_user()
-    if not user:
-        return jsonify({"error": "Unauthorized: Please log in first"}), 401
-
-    conn = get_connection()
-    cursor = conn.cursor()
-    ist_now = datetime.now(IST)
-    today_date = ist_now.date()
-    current_time = ist_now.strftime("%H:%M:%S")
-    
-    try:
-        emp_db_id = user.get("emp_db_id")
-        if not emp_db_id:
-            cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
-            emp_row = cursor.fetchone()
-            if emp_row:
-                emp_db_id = emp_row[0]
-            elif user.get("role") in ["employee", "admin", "team_leader"]:
-                cursor.execute(
-                    "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
-                    (user["id"], f"EMP_{user['id']}")
-                )
-                emp_db_id = cursor.fetchone()[0]
-                conn.commit()
-            else:
-                return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
-            
-        if not emp_db_id:
-            return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
-
-        # Enforce unique check-ins per day per employee
-        cursor.execute(
-            "SELECT id FROM attendance WHERE employee_id = %s AND date = %s",
-            (emp_db_id, today_date)
-        )
-        if cursor.fetchone():
-            return jsonify({"error": "Already checked in today"}), 400
-
-        cursor.execute(
-            "INSERT INTO attendance (employee_id, date, check_in, status) VALUES (%s, %s, %s, 'Present')",
-            (emp_db_id, today_date, current_time)
-        )
-        conn.commit()
-        return jsonify({"message": f"Checked in successfully at {current_time}"}), 201
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Leaves API error: {e}")
-        return jsonify(safe_error()), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@leaves_bp.route("/attendance/checkout", methods=["POST"])
-def check_out():
-    """
-    Registers the clock-out time for the current date.
-    Restricted to employees.
-
-    Computes working hours using duration delta and updates status classification:
-    - >= 8.0 hours: 'Present'
-    - >= 4.0 hours: 'Half Day'
-    - < 4.0 hours: 'Absent'
-
-    Returns:
-        tuple: (JSON response, HTTP status code)
-            - 200: Checked out successfully along with hours and status.
-            - 400: If check-in is missing or checkout was already recorded today.
-            - 403: Forbidden access.
-            - 500: Database update exceptions.
+    Registers clock-in time for current employee/user.
     """
     user = get_current_user()
     if not user:
@@ -541,54 +453,110 @@ def check_out():
     ist_now = datetime.now(IST)
     today_date = ist_now.date()
     current_time_str = ist_now.strftime("%H:%M:%S")
-    current_time = ist_now.time()
+    user_db_id = user.get("user_id") or user.get("id")
 
     try:
-        emp_db_id = user.get("emp_db_id")
-        if not emp_db_id:
-            cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user["id"],))
-            emp_row = cursor.fetchone()
-            if emp_row:
-                emp_db_id = emp_row["id"]
-            elif user.get("role") in ["employee", "admin", "team_leader"]:
-                cursor.execute(
-                    "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active') RETURNING id",
-                    (user["id"], f"EMP_{user['id']}")
-                )
-                emp_db_id = cursor.fetchone()["id"]
-                conn.commit()
-            else:
-                return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
+        emp_db_id = None
+        cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user_db_id,))
+        emp_row = cursor.fetchone()
+        if emp_row:
+            emp_db_id = emp_row["id"]
+        else:
+            # Auto-create employee profile for any logged in user
+            cursor.execute(
+                "INSERT INTO employees (user_id, employee_id, department, designation, status) VALUES (%s, %s, 'General', 'Staff Member', 'Active') RETURNING id",
+                (user_db_id, f"EMP_{user_db_id}")
+            )
+            emp_db_id = cursor.fetchone()["id"]
+            conn.commit()
 
-        if not emp_db_id:
-            return jsonify({"error": "Forbidden: Only employees can mark attendance"}), 403
-
+        # Check if already checked in today or has open check-in
         cursor.execute(
-            "SELECT * FROM attendance WHERE employee_id = %s AND date = %s",
+            "SELECT id, check_in, check_out FROM attendance WHERE employee_id = %s AND (date = %s OR check_out IS NULL) ORDER BY id DESC LIMIT 1",
             (emp_db_id, today_date)
         )
+        existing = cursor.fetchone()
+        if existing and existing.get("check_out") is None:
+            return jsonify({"error": "Already checked in. Please check out first before checking in again."}), 400
+        if existing and existing.get("check_in") and existing.get("check_out") and str(existing.get("date")) == str(today_date):
+            return jsonify({"error": "Already completed attendance for today."}), 400
+
+        cursor.execute(
+            """
+            INSERT INTO attendance (employee_id, date, check_in, status, shift) 
+            VALUES (%s, %s, %s, 'Present', COALESCE((SELECT shift FROM employees WHERE id = %s), 'Day Shift'))
+            """,
+            (emp_db_id, today_date, current_time_str, emp_db_id)
+        )
+        conn.commit()
+        return jsonify({"message": f"Checked in successfully at {current_time_str}"}), 201
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Leaves API check_in error: {e}")
+        return jsonify(safe_error()), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@leaves_bp.route("/attendance/checkout", methods=["POST"])
+@leaves_bp.route("/api/attendance/checkout", methods=["POST"])
+def check_out():
+    """
+    Registers clock-out time, calculates accurate hours (including overnight shifts).
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized: Please log in first"}), 401
+
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    ist_now = datetime.now(IST)
+    current_time_str = ist_now.strftime("%H:%M:%S")
+    user_db_id = user.get("user_id") or user.get("id")
+
+    try:
+        cursor.execute("SELECT id FROM employees WHERE user_id = %s", (user_db_id,))
+        emp_row = cursor.fetchone()
+        if not emp_row:
+            return jsonify({"error": "Employee profile not found. Please check in first."}), 400
+
+        emp_db_id = emp_row["id"]
+
+        # Find latest open check-in record without check_out
+        cursor.execute(
+            "SELECT * FROM attendance WHERE employee_id = %s AND check_out IS NULL ORDER BY date DESC, id DESC LIMIT 1",
+            (emp_db_id,)
+        )
         record = cursor.fetchone()
+
         if not record:
-            return jsonify({"error": "You must check in first before checking out"}), 400
-        if record.get("check_out"):
-            return jsonify({"error": "Already checked out today"}), 400
+            return jsonify({"error": "No active check-in record found. Please check in first."}), 400
 
-        check_in_time = record["check_in"]
-        
-        # Calculate delta difference between check-in and check-out
-        dt_in = datetime.combine(date.min, check_in_time)
-        dt_out = datetime.combine(date.min, current_time)
+        # Calculate working hours accurately across dates
+        check_in_date = record["date"]
+        check_in_val = record["check_in"]
+
+        if isinstance(check_in_val, str):
+            dt_in_time = datetime.strptime(check_in_val, "%H:%M:%S").time()
+        else:
+            dt_in_time = check_in_val
+
+        dt_in = datetime.combine(check_in_date, dt_in_time)
+        dt_out = ist_now.replace(tzinfo=None)
+
         delta = dt_out - dt_in
-        working_hours = max(0.0, delta.total_seconds() / 3600.0)
+        total_seconds = delta.total_seconds()
+        working_hours = round(max(0.1, total_seconds / 3600.0), 2)
 
-        # Status rules based on hours worked
+        # Status rules
         status = 'Present'
-        if working_hours >= 8.0:
+        if working_hours >= 7.5:
             status = 'Present'
         elif working_hours >= 4.0:
             status = 'Half Day'
         else:
-            status = 'Absent'
+            status = 'Present'
 
         cursor.execute(
             """
@@ -599,12 +567,77 @@ def check_out():
             (current_time_str, working_hours, status, record["id"])
         )
         conn.commit()
-        return jsonify({"message": f"Checked out successfully at {current_time_str}. Total hours: {working_hours:.2f} ({status})"}), 200
+        return jsonify({"message": f"Checked out successfully at {current_time_str}. Total hours: {working_hours:.2f} hrs"}), 200
     except Exception as e:
         conn.rollback()
-        logger.error(f"Leaves API error: {e}")
-        return jsonify(safe_error()), 500
+        conn.close()
+
+
+
+
+
+@leaves_bp.route("/attendance/shift", methods=["GET", "POST"])
+@leaves_bp.route("/employees/shift", methods=["GET", "POST"])
+def update_employee_shift():
+    """One-time registration & retrieval of employee's shift (Day Shift / Night Shift)."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        uid = user.get("user_id") or user.get("id")
+        emp_db_id = user.get("emp_db_id")
+
+        if request.method == "GET":
+            cursor.execute("SELECT shift, shift_updated_at FROM employees WHERE user_id = %s", (uid,))
+            row = cursor.fetchone()
+            current_shift = None
+            needs_popup = True
+            if row and row[0]:
+                current_shift = row[0]
+                needs_popup = False  # Shift already registered! Never pop up again.
+
+            return jsonify({
+                "shift": current_shift,
+                "needs_popup": needs_popup
+            }), 200
+
+        data = request.json or {}
+        shift = (data.get("shift") or "").strip()
+        if shift not in ("Day Shift", "Night Shift"):
+            return jsonify({"error": "Invalid shift. Must be 'Day Shift' or 'Night Shift'"}), 400
+
+        if not emp_db_id:
+            cursor.execute("SELECT id FROM employees WHERE user_id = %s", (uid,))
+            emp_row = cursor.fetchone()
+            if emp_row:
+                emp_db_id = emp_row[0]
+            else:
+                cursor.execute(
+                    "INSERT INTO employees (user_id, employee_id, department, designation, status, shift, shift_updated_at) VALUES (%s, %s, 'Engineering', 'Staff Member', 'Active', %s, NOW()) RETURNING id",
+                    (uid, f"EMP_{uid}", shift)
+                )
+                emp_db_id = cursor.fetchone()[0]
+                conn.commit()
+
+        cursor.execute(
+            "UPDATE employees SET shift = %s, shift_updated_at = NOW() WHERE user_id = %s",
+            (shift, uid)
+        )
+        
+        today_date = datetime.now(IST).date()
+        cursor.execute(
+            "UPDATE attendance SET shift = %s WHERE employee_id = %s AND date = %s",
+            (shift, emp_db_id, today_date)
+        )
+        conn.commit()
+        return jsonify({"message": f"Shift registered successfully as {shift}", "shift": shift}), 200
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Update shift error: {e}")
+        return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
-
