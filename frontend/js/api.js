@@ -21,12 +21,26 @@ function getActiveRefreshToken() {
 
 let csrfToken = null;
 let refreshPromise = null;
-let failed401Count = 0;
+let isRedirectingToLogin = false;
 
 function handleUnauthorizedSession() {
-    failed401Count++;
-    // Background API failures should log errors but NEVER force redirect the user away from their active session
-    console.warn("Unauthorized API call encountered. Count:", failed401Count);
+    if (isRedirectingToLogin) return;
+    isRedirectingToLogin = true;
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("user");
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+    const path = window.location.pathname.toLowerCase();
+    const isPublicPage = path.includes("login") || path.includes("register") || path.includes("index") || path.includes("about") || path.includes("contact") || path.includes("services");
+    if (!isPublicPage) {
+        window.location.href = "/login.html?expired=1";
+    }
 }
 
 async function fetchCsrfToken() {
@@ -48,6 +62,7 @@ async function refreshAccessToken() {
 
     const refreshToken = getActiveRefreshToken();
     if (!refreshToken) {
+        handleUnauthorizedSession();
         return false;
     }
 
@@ -67,7 +82,6 @@ async function refreshAccessToken() {
                     sessionStorage.setItem("refresh_token", data.refresh_token);
                 }
                 if (data.csrf_token) csrfToken = data.csrf_token;
-                failed401Count = 0;
                 return true;
             } else if (res.status === 401 || res.status === 403) {
                 handleUnauthorizedSession();
