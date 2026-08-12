@@ -1130,22 +1130,37 @@ def get_dashboard_stats():
                 """
                 SELECT 
                     (SELECT COUNT(*) FROM employees WHERE status = 'Active') AS active_employees,
+                    (SELECT COUNT(*) FROM employees WHERE status = 'Active' AND COALESCE(shift, 'Day Shift') = 'Day Shift') AS day_total,
+                    (SELECT COUNT(*) FROM employees WHERE status = 'Active' AND shift = 'Night Shift') AS night_total,
+                    (SELECT COUNT(DISTINCT a.employee_id) FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.date = %s AND a.status IN ('Present', 'Half Day') AND COALESCE(a.shift, e.shift, 'Day Shift') = 'Day Shift') AS day_present,
+                    (SELECT COUNT(DISTINCT a.employee_id) FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.date = %s AND a.status IN ('Present', 'Half Day') AND COALESCE(a.shift, e.shift) = 'Night Shift') AS night_present,
                     (SELECT COUNT(*) FROM attendance WHERE date = %s AND status IN ('Present', 'Half Day')) AS present_today,
                     (SELECT COUNT(*) FROM leaves WHERE status LIKE 'Pending%%') AS pending_leaves,
                     (SELECT COUNT(*) FROM jobs WHERE status = 'Open') AS active_jobs,
                     (SELECT COUNT(*) FROM applications) AS total_applications
                 """,
-                (today_date,)
+                (today_date, today_date, today_date)
             )
             row = cursor.fetchone()
             active_employees = row["active_employees"]
-            present_today = row["present_today"]
-            absent_today = max(0, active_employees - present_today)
+            day_total = row["day_total"]
+            day_present = row["day_present"]
+            day_absent = max(0, day_total - day_present)
+            
+            night_total = row["night_total"]
+            night_present = row["night_present"]
+            night_absent = max(0, night_total - night_present)
             
             stats = {
                 "active_employees": active_employees,
-                "present_today": present_today,
-                "absent_today": absent_today,
+                "present_today": row["present_today"],
+                "absent_today": max(0, active_employees - row["present_today"]),
+                "day_total": day_total,
+                "day_present": day_present,
+                "day_absent": day_absent,
+                "night_total": night_total,
+                "night_present": night_present,
+                "night_absent": night_absent,
                 "pending_leaves": row["pending_leaves"],
                 "active_jobs": row["active_jobs"],
                 "total_applications": row["total_applications"]

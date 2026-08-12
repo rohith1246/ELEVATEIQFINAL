@@ -378,10 +378,22 @@
 const layouts = {
     // === ADMIN PANELS ===
     overview: `
-        <div class="stats-grid" id="adminStatsGrid">
-            <div class="stat-card"><h3>Total Employees</h3><div class="val" id="stat_total_emp">-</div></div>
-            <div class="stat-card"><h3>Present Today</h3><div class="val" id="stat_present">-</div></div>
-            <div class="stat-card"><h3>Absent Today</h3><div class="val" id="stat_absent">-</div></div>
+        <div class="stats-grid" id="adminStatsGrid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <div class="stat-card">
+                <h3>Total Employees</h3>
+                <div class="val" id="stat_total_emp">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;" id="stat_emp_shift_sub">Day / Night Breakdown</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid #3b82f6; background: linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(15,23,42,0.6) 100%);">
+                <h3 style="color:#60a5fa;">☀️ Day Shift Present</h3>
+                <div class="val" id="stat_day_present" style="color:#60a5fa;">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Absent: <span id="stat_day_absent" style="color:#f87171; font-weight:600;">-</span> &nbsp;|&nbsp; Total: <span id="stat_day_total" style="color:white; font-weight:600;">-</span></div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid #8b5cf6; background: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(15,23,42,0.6) 100%);">
+                <h3 style="color:#c084fc;">🌙 Night Shift Present</h3>
+                <div class="val" id="stat_night_present" style="color:#c084fc;">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Absent: <span id="stat_night_absent" style="color:#f87171; font-weight:600;">-</span> &nbsp;|&nbsp; Total: <span id="stat_night_total" style="color:white; font-weight:600;">-</span></div>
+            </div>
             <div class="stat-card"><h3>Pending Leaves</h3><div class="val" id="stat_pending_leaves">-</div></div>
             <div class="stat-card"><h3>Open Careers</h3><div class="val" id="stat_open_jobs">-</div></div>
             <div class="stat-card"><h3>Total Applications</h3><div class="val" id="stat_total_apps">-</div></div>
@@ -741,13 +753,21 @@ const layouts = {
         </div>
     `,
     attendance: `
-        <h2 style="font-size:18px;">Daily Attendance Registry</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+            <h2 style="font-size:18px; margin:0;">Daily Attendance Registry</h2>
+            <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                <button type="button" class="btn-shift-filter active" id="btnShiftFilterAll" onclick="filterAttendanceByShift('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Shifts</button>
+                <button type="button" class="btn-shift-filter" id="btnShiftFilterDay" onclick="filterAttendanceByShift('Day Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">☀️ Day Shift</button>
+                <button type="button" class="btn-shift-filter" id="btnShiftFilterNight" onclick="filterAttendanceByShift('Night Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">🌙 Night Shift</button>
+            </div>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th>Employee ID</th>
                         <th>Name</th>
+                        <th>Shift</th>
                         <th>Department</th>
                         <th>Date</th>
                         <th>Check In</th>

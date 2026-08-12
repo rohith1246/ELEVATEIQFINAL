@@ -18,12 +18,26 @@ async function loadAdminOverview() {
         apiCall("/dashboard/stats"),
         apiCall("/announcements")
     ]);
-    document.getElementById("stat_total_emp").textContent = stats.active_employees;
-    document.getElementById("stat_present").textContent = stats.present_today;
-    document.getElementById("stat_absent").textContent = stats.absent_today;
-    document.getElementById("stat_pending_leaves").textContent = stats.pending_leaves;
-    document.getElementById("stat_open_jobs").textContent = stats.active_jobs;
-    document.getElementById("stat_total_apps").textContent = stats.total_applications;
+    if (document.getElementById("stat_total_emp")) document.getElementById("stat_total_emp").textContent = stats.active_employees;
+    if (document.getElementById("stat_emp_shift_sub")) document.getElementById("stat_emp_shift_sub").textContent = `${stats.day_total || 0} Day | ${stats.night_total || 0} Night`;
+
+    // Day Shift Present / Absent / Total
+    if (document.getElementById("stat_day_present")) document.getElementById("stat_day_present").textContent = stats.day_present ?? 0;
+    if (document.getElementById("stat_day_absent")) document.getElementById("stat_day_absent").textContent = stats.day_absent ?? 0;
+    if (document.getElementById("stat_day_total")) document.getElementById("stat_day_total").textContent = stats.day_total ?? 0;
+
+    // Night Shift Present / Absent / Total
+    if (document.getElementById("stat_night_present")) document.getElementById("stat_night_present").textContent = stats.night_present ?? 0;
+    if (document.getElementById("stat_night_absent")) document.getElementById("stat_night_absent").textContent = stats.night_absent ?? 0;
+    if (document.getElementById("stat_night_total")) document.getElementById("stat_night_total").textContent = stats.night_total ?? 0;
+
+    // General fallback
+    if (document.getElementById("stat_present")) document.getElementById("stat_present").textContent = stats.present_today;
+    if (document.getElementById("stat_absent")) document.getElementById("stat_absent").textContent = stats.absent_today;
+
+    if (document.getElementById("stat_pending_leaves")) document.getElementById("stat_pending_leaves").textContent = stats.pending_leaves;
+    if (document.getElementById("stat_open_jobs")) document.getElementById("stat_open_jobs").textContent = stats.active_jobs;
+    if (document.getElementById("stat_total_apps")) document.getElementById("stat_total_apps").textContent = stats.total_applications;
 
     const noticeList = document.getElementById("adminNoticeList");
     noticeList.innerHTML = "";
@@ -308,22 +322,59 @@ async function deleteEmployee(id) {
    3. ADMIN ATTENDANCE REGISTER
    ========================================================================== */
 
+let allAttendanceRecords = [];
+let currentShiftFilter = "All";
+
 /**
  * Loads daily attendance logs and updates registry table.
  * 
  * @async
  */
 async function loadAdminAttendance() {
-    const records = await apiCall("/attendance");
+    allAttendanceRecords = await apiCall("/attendance");
+    renderAttendanceTable();
+}
+
+function filterAttendanceByShift(shift, btn) {
+    currentShiftFilter = shift;
+    document.querySelectorAll(".btn-shift-filter").forEach(b => {
+        b.style.background = "transparent";
+        b.style.color = "var(--ink-soft)";
+    });
+    if (btn) {
+        btn.style.background = "var(--blue)";
+        btn.style.color = "white";
+    }
+    renderAttendanceTable();
+}
+
+function renderAttendanceTable() {
     const tbody = document.getElementById("attendanceTableBody");
+    if (!tbody) return;
     tbody.innerHTML = "";
-    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No attendance logs found.</td></tr>`;
-    records.forEach(r => {
+
+    let filtered = allAttendanceRecords;
+    if (currentShiftFilter !== "All") {
+        filtered = allAttendanceRecords.filter(r => (r.shift || "Day Shift").toLowerCase() === currentShiftFilter.toLowerCase());
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No attendance logs found for ${currentShiftFilter}.</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(r => {
+        const isNight = (r.shift || "Day Shift").toLowerCase() === "night shift";
+        const shiftBadge = isNight 
+            ? `<span style="background:rgba(139,92,246,0.15); color:#c084fc; border:1px solid rgba(139,92,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600;">🌙 Night</span>`
+            : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600;">☀️ Day</span>`;
+
         tbody.innerHTML += `
             <tr>
                 <td>${r.employee_id}</td>
                 <td>${r.name}</td>
-                <td>${r.department}</td>
+                <td>${shiftBadge}</td>
+                <td>${r.department || 'General'}</td>
                 <td>${r.date}</td>
                 <td>${r.check_in || '-'}</td>
                 <td>${r.check_out || '-'}</td>
