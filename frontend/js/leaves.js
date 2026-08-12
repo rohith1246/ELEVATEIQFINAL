@@ -151,10 +151,63 @@ async function submitCustomDesignation(mode) {
  * 
  * @async
  */
+let currentEmpShiftFilter = "All";
+
+/**
+ * Loads employee database roster list and updates table.
+ * 
+ * @async
+ */
 async function loadAdminEmployees() {
     await loadDesignations();
     allEmployees = await apiCall("/employees?portal=elevateiq");
-    renderEmployeesTable(allEmployees);
+    updateEmployeeShiftCounts();
+    filterEmployeesBySearchAndShift();
+}
+
+function updateEmployeeShiftCounts() {
+    const total = allEmployees.length;
+    const day = allEmployees.filter(e => (e.shift || "Day Shift") === "Day Shift").length;
+    const night = allEmployees.filter(e => (e.shift || "Day Shift") === "Night Shift").length;
+
+    if (document.getElementById("cntEmpAll")) document.getElementById("cntEmpAll").textContent = total;
+    if (document.getElementById("cntEmpDay")) document.getElementById("cntEmpDay").textContent = day;
+    if (document.getElementById("cntEmpNight")) document.getElementById("cntEmpNight").textContent = night;
+}
+
+function filterEmployeesByShift(shift, btn) {
+    currentEmpShiftFilter = shift;
+    document.querySelectorAll(".btn-emp-shift-filter").forEach(b => {
+        b.style.background = "transparent";
+        b.style.color = "var(--ink-soft)";
+    });
+    if (btn) {
+        btn.style.background = "var(--blue)";
+        btn.style.color = "white";
+    }
+    filterEmployeesBySearchAndShift();
+}
+
+function filterEmployeesBySearchAndShift() {
+    const qElem = document.getElementById("empSearchInput");
+    const q = qElem ? qElem.value.toLowerCase() : "";
+    let filtered = allEmployees;
+
+    if (currentEmpShiftFilter !== "All") {
+        filtered = filtered.filter(emp => (emp.shift || "Day Shift").toLowerCase() === currentEmpShiftFilter.toLowerCase());
+    }
+
+    if (q) {
+        filtered = filtered.filter(emp => 
+            (emp.name || "").toLowerCase().includes(q) || 
+            (emp.employee_id || "").toLowerCase().includes(q) || 
+            (emp.department || "").toLowerCase().includes(q) || 
+            (emp.designation || "").toLowerCase().includes(q) ||
+            (emp.email || "").toLowerCase().includes(q)
+        );
+    }
+
+    renderEmployeesTable(filtered);
 }
 
 /**
@@ -164,16 +217,30 @@ async function loadAdminEmployees() {
  */
 function renderEmployeesTable(list) {
     const tbody = document.getElementById("employeesTableBody");
+    if (!tbody) return;
     tbody.innerHTML = "";
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No employee records found.</td></tr>`;
+        return;
+    }
+
     list.forEach(emp => {
+        const empShift = emp.shift || "Day Shift";
+        const isNight = empShift === "Night Shift";
+        const shiftBadge = isNight 
+            ? `<span style="background:rgba(139,92,246,0.15); color:#c084fc; border:1px solid rgba(139,92,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">🌙 Night</span>`
+            : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">☀️ Day</span>`;
+
         tbody.innerHTML += `
             <tr>
-                <td>${emp.employee_id}</td>
+                <td style="font-weight:600;">${emp.employee_id}</td>
                 <td>${emp.name}</td>
+                <td>${shiftBadge}</td>
                 <td>${emp.email}</td>
-                <td>${emp.department}</td>
-                <td>${emp.designation}</td>
-                <td><span class="badge ${emp.status.toLowerCase()}">${emp.status}</span></td>
+                <td>${emp.department || 'General'}</td>
+                <td>${emp.designation || '-'}</td>
+                <td><span class="badge ${emp.status ? emp.status.toLowerCase() : 'active'}">${emp.status || 'Active'}</span></td>
                 <td style="white-space: nowrap;">
                     <div style="display: flex; gap: 6px; align-items: center;">
                         <button onclick="viewEmployeeDetails(${JSON.stringify(emp).replace(/"/g, '&quot;')})" class="btn-action btn-approve" style="background: rgba(75, 255, 120, 0.15); color: #99ffaa; border: 1px solid rgba(75, 255, 120, 0.3); margin: 0;">View</button>
@@ -199,6 +266,11 @@ function viewEmployeeDetails(emp) {
     document.getElementById("viewEmpJoinDate").textContent = emp.date_of_joining || "Not provided";
     document.getElementById("viewEmpDept").textContent = emp.department || "-";
     document.getElementById("viewEmpDesg").textContent = emp.designation || "-";
+    if (document.getElementById("viewEmpShift")) {
+        const empShift = emp.shift || "Day Shift";
+        document.getElementById("viewEmpShift").textContent = empShift === "Night Shift" ? "🌙 Night Shift" : "☀️ Day Shift";
+        document.getElementById("viewEmpShift").style.color = empShift === "Night Shift" ? "#c084fc" : "#60a5fa";
+    }
     
     // Status badge formatting
     const statusSpan = document.getElementById("viewEmpStatus");
@@ -247,6 +319,7 @@ if (addEmployeeForm) {
                 phone_number: document.getElementById("addPhone").value,
                 department: document.getElementById("addDept").value,
                 designation: document.getElementById("addDesg").value,
+                shift: document.getElementById("addShift") ? document.getElementById("addShift").value : "Day Shift",
                 date_of_joining: document.getElementById("addJoinDate").value
             };
             const res = await apiCall("/employees", "POST", payload);
@@ -272,6 +345,9 @@ async function editEmployeePopup(emp) {
     document.getElementById("editEmail").value = emp.email;
     document.getElementById("editPhone").value = emp.phone_number || '';
     document.getElementById("editDept").value = emp.department;
+    if (document.getElementById("editShift")) {
+        document.getElementById("editShift").value = emp.shift || "Day Shift";
+    }
     document.getElementById("editStatus").value = emp.status;
     
     await loadDesignations(emp.designation);
@@ -291,6 +367,7 @@ if (editEmployeeForm) {
                 phone_number: document.getElementById("editPhone").value,
                 department: document.getElementById("editDept").value,
                 designation: document.getElementById("editDesg").value,
+                shift: document.getElementById("editShift") ? document.getElementById("editShift").value : "Day Shift",
                 status: document.getElementById("editStatus").value
             };
             const res = await apiCall(`/employees/${empId}`, "PUT", payload);

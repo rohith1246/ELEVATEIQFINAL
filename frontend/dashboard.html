@@ -114,6 +114,13 @@
                     </div>
                 </div>
                 <div class="field">
+                    <label>Work Shift</label>
+                    <select id="editShift" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;">
+                        <option value="Day Shift">☀️ Day Shift (9:00 AM - 5:15 PM)</option>
+                        <option value="Night Shift">🌙 Night Shift (8:00 PM - 5:00 AM)</option>
+                    </select>
+                </div>
+                <div class="field">
                     <label>Status</label>
                     <select id="editStatus" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;">
                         <option value="Active">Active</option>
@@ -620,8 +627,15 @@ const layouts = {
         </div>
     `,
     employees: `
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-            <input type="text" id="empSearchInput" placeholder="Search employee name or ID..." onkeyup="filterEmployees()" style="padding:10px 16px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; width:300px; outline:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="empSearchInput" placeholder="Search employee name or ID..." onkeyup="filterEmployeesBySearchAndShift()" style="padding:10px 16px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; width:280px; outline:none;">
+                <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                    <button type="button" class="btn-emp-shift-filter active" id="btnEmpShiftAll" onclick="filterEmployeesByShift('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Staff (<span id="cntEmpAll">67</span>)</button>
+                    <button type="button" class="btn-emp-shift-filter" id="btnEmpShiftDay" onclick="filterEmployeesByShift('Day Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">☀️ Day Shift (<span id="cntEmpDay">36</span>)</button>
+                    <button type="button" class="btn-emp-shift-filter" id="btnEmpShiftNight" onclick="filterEmployeesByShift('Night Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">🌙 Night Shift (<span id="cntEmpNight">31</span>)</button>
+                </div>
+            </div>
             <button onclick="openModal('addEmployeeModal')" class="btn-primary">+ Add New Employee</button>
         </div>
         <div class="table-wrap">
@@ -630,6 +644,7 @@ const layouts = {
                     <tr>
                         <th>Employee ID</th>
                         <th>Name</th>
+                        <th>Shift</th>
                         <th>Email</th>
                         <th>Department</th>
                         <th>Designation</th>
@@ -669,6 +684,13 @@ const layouts = {
                             </div>
                         </div>
                         <div class="field"><label>Date of Joining</label><input type="date" id="addJoinDate"></div>
+                        <div class="field">
+                            <label>Work Shift</label>
+                            <select id="addShift" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
+                                <option value="Day Shift">☀️ Day Shift (9:00 AM - 5:15 PM)</option>
+                                <option value="Night Shift">🌙 Night Shift (8:00 PM - 5:00 AM)</option>
+                            </select>
+                        </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:20px;">
                         <button type="button" onclick="closeModal('addEmployeeModal')" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Back</button>
@@ -720,6 +742,10 @@ const layouts = {
                         <div>
                             <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Designation</label>
                             <span id="viewEmpDesg" style="font-size: 15px; color: #fff;"></span>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Assigned Shift</label>
+                            <span id="viewEmpShift" style="font-size: 15px; font-weight:600; color: #60a5fa;">-</span>
                         </div>
                     </div>
                 </div>
