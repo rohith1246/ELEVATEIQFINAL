@@ -966,7 +966,9 @@ async function loadEmpOverview() {
 }
 
 /**
- * Triggers a Check In attendance registration request.
+ * Helper to retrieve user's live GPS coordinates via HTML5 Geolocation API.
+ * @returns {Promise<{latitude: number, longitude: number}>}
+ */
 function getGPSCoordinates() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
