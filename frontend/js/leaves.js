@@ -975,20 +975,28 @@ function getGPSCoordinates() {
             reject(new Error("Geolocation is not supported by your browser."));
             return;
         }
+        // Attempt 1: High accuracy GPS lookup (8s timeout)
         navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
             (err) => {
                 if (err.code === err.PERMISSION_DENIED) {
                     reject(new Error("Location permission denied. Please allow location access on your browser/phone to check in."));
-                } else if (err.code === err.POSITION_UNAVAILABLE) {
-                    reject(new Error("Location unavailable. Please make sure GPS / Location Services are enabled on your device."));
-                } else if (err.code === err.TIMEOUT) {
-                    reject(new Error("Location request timed out. Please try again."));
-                } else {
-                    reject(new Error(err.message || "Failed to retrieve GPS location."));
+                    return;
                 }
+                // Attempt 2: Fallback to standard accuracy (Wi-Fi/Network location) if GPS times out or is unavailable
+                navigator.geolocation.getCurrentPosition(
+                    (pos2) => resolve({ latitude: pos2.coords.latitude, longitude: pos2.coords.longitude }),
+                    (err2) => {
+                        if (err2.code === err2.PERMISSION_DENIED) {
+                            reject(new Error("Location permission denied. Please allow location access on your browser/phone to check in."));
+                        } else {
+                            reject(new Error("Location request timed out. Please ensure GPS / Location Services are turned ON on your device and try again."));
+                        }
+                    },
+                    { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+                );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
         );
     });
 }
