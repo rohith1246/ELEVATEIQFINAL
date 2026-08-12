@@ -732,7 +732,7 @@ def list_employees():
                 SELECT u.name, u.email, e.* 
                 FROM employees e 
                 JOIN users u ON e.user_id = u.id 
-                WHERE u.portal = %s
+                WHERE (u.portal = %s OR u.portal IS NULL OR u.portal = 'both')
                 ORDER BY e.employee_id
                 """,
                 (portal,)
