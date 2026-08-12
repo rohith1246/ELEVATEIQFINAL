@@ -116,7 +116,7 @@
                 <div class="field">
                     <label>Work Shift</label>
                     <select id="editShift" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0b1928; color:white; outline:none;">
-                        <option value="Day Shift">☀️ Day Shift (9:00 AM - 5:15 PM)</option>
+                        <option value="Day Shift">☀️ Day Shift (9:00 AM - 6:00 PM)</option>
                         <option value="Night Shift">🌙 Night Shift (8:00 PM - 5:00 AM)</option>
                     </select>
                 </div>
@@ -687,7 +687,7 @@ const layouts = {
                         <div class="field">
                             <label>Work Shift</label>
                             <select id="addShift" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;" required>
-                                <option value="Day Shift">☀️ Day Shift (9:00 AM - 5:15 PM)</option>
+                                <option value="Day Shift">☀️ Day Shift (9:00 AM - 6:00 PM)</option>
                                 <option value="Night Shift">🌙 Night Shift (8:00 PM - 5:00 AM)</option>
                             </select>
                         </div>
@@ -871,6 +871,207 @@ const layouts = {
                 </thead>
                 <tbody id="leavesTableBody"></tbody>
             </table>
+        </div>
+    `,
+    tasks_roster: `
+        <div>
+            <!-- Top Header & Filter Toolbar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+                <h2 style="font-size:18px; margin:0; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:22px;">📊</span> Employee Daily Tasks Roster
+                </h2>
+                
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <!-- Date Presets -->
+                    <div style="display:flex; gap:4px; background:rgba(255,255,255,0.04); padding:3px; border-radius:8px; border:1px solid var(--glass-border);">
+                        <button type="button" onclick="setAdminTaskDatePreset('today')" style="padding:4px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">Today</button>
+                        <button type="button" onclick="setAdminTaskDatePreset('yesterday')" style="padding:4px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">Yesterday</button>
+                        <button type="button" onclick="setAdminTaskDatePreset('week')" style="padding:4px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">This Week</button>
+                        <button type="button" onclick="setAdminTaskDatePreset('all')" style="padding:4px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">All Time</button>
+                    </div>
+
+                    <!-- Date Range Inputs -->
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label style="font-size:12px; color:var(--ink-soft);">From:</label>
+                        <input type="date" id="adminTaskStartDate" onchange="loadAdminTasksRosterPanel()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                        <label style="font-size:12px; color:var(--ink-soft);">To:</label>
+                        <input type="date" id="adminTaskEndDate" onchange="loadAdminTasksRosterPanel()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                    </div>
+                    
+                    <!-- Employee Filter Dropdown -->
+                    <select id="adminTaskEmpFilter" onchange="loadAdminTasksRosterPanel()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border); background:#0c1928; color:white; max-width:180px;">
+                        <option value="All">All Staff Members</option>
+                    </select>
+                    
+                    <!-- Export Excel Button -->
+                    <button onclick="downloadAdminTasksExcel()" class="btn-primary" style="margin-top:0; padding:9px 18px; font-weight:600; background:linear-gradient(135deg, #10b981, #059669); border:none; display:flex; align-items:center; gap:6px;">
+                        📊 Download Excel (.xlsx)
+                    </button>
+                </div>
+            </div>
+
+            <!-- View Mode Switcher (Detailed Logs vs Day-Wise Summary) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; gap:6px; background:rgba(255,255,255,0.06); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                    <button type="button" class="btn-task-view-mode active" id="btnTaskViewDetailed" onclick="switchAdminTaskViewMode('detailed', this)" style="padding:7px 16px; font-size:13px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">📄 Detailed Task Logs</button>
+                    <button type="button" class="btn-task-view-mode" id="btnTaskViewSummary" onclick="switchAdminTaskViewMode('summary', this)" style="padding:7px 16px; font-size:13px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">📅 Day-Wise Summary Reports</button>
+                </div>
+
+                <div id="taskSubFiltersRow" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                        <button type="button" class="btn-task-shift-filter active" id="btnTaskShiftAll" onclick="filterAdminTasksByShift('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Shifts</button>
+                        <button type="button" class="btn-task-shift-filter" id="btnTaskShiftDay" onclick="filterAdminTasksByShift('Day Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">☀️ Day Shift</button>
+                        <button type="button" class="btn-task-shift-filter" id="btnTaskShiftNight" onclick="filterAdminTasksByShift('Night Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">🌙 Night Shift</button>
+                    </div>
+
+                    <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                        <button type="button" class="btn-task-status-filter active" id="btnTaskStatusAll" onclick="filterAdminTasksByStatus('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Statuses</button>
+                        <button type="button" class="btn-task-status-filter" id="btnTaskStatusComp" onclick="filterAdminTasksByStatus('Completed', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">Completed</button>
+                        <button type="button" class="btn-task-status-filter" id="btnTaskStatusProg" onclick="filterAdminTasksByStatus('In Progress', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">In Progress</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Metrics Grid -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:22px;">
+                <div class="stat-card">
+                    <h3>Total Tasks Logged</h3>
+                    <div class="val" id="stat_task_total_count">-</div>
+                    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Task Submissions</div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #3b82f6;">
+                    <h3 style="color:#60a5fa;">Total Work Hours</h3>
+                    <div class="val" id="stat_task_total_hours" style="color:#60a5fa;">-</div>
+                    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Hours Logged</div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.6) 100%);">
+                    <h3 style="color:#34d399;">✅ Completed Tasks</h3>
+                    <div class="val" id="stat_task_completed_count" style="color:#34d399;">-</div>
+                    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Finished Work Items</div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #f59e0b;">
+                    <h3 style="color:#fbbf24;">⏳ In Progress / Pending</h3>
+                    <div class="val" id="stat_task_pending_count" style="color:#fbbf24;">-</div>
+                    <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Active Work Items</div>
+                </div>
+            </div>
+
+            <!-- Detailed Admin Tasks Roster Table -->
+            <div id="adminTaskDetailedWrap" class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Shift</th>
+                            <th>Department</th>
+                            <th>Project</th>
+                            <th>Task Description</th>
+                            <th>Hours</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTasksTableBody">
+                        <tr><td colspan="10" style="text-align:center;">Loading employee task logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Day-Wise Summary Reports Table -->
+            <div id="adminTaskSummaryWrap" class="table-wrap" style="display:none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Logged Staff</th>
+                            <th>Total Tasks</th>
+                            <th>Total Hours</th>
+                            <th>Shift Breakdown</th>
+                            <th>Completed vs Pending</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTaskSummaryTableBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading day-wise summary reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `,
+    my_tasks: `
+        <div style="display:grid; grid-template-columns: 340px 1fr; gap:24px; align-items:start;">
+            <!-- Left Column: Log Daily Task Form -->
+            <div class="glass-card" style="padding:24px; background:rgba(15,23,42,0.6); border:1px solid var(--glass-border); border-radius:16px;">
+                <h2 style="font-size:18px; margin-bottom:18px; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:22px;">📝</span> Log Daily Task
+                </h2>
+                <form id="dailyTaskForm" onsubmit="submitMyDailyTask(event)">
+                    <input type="hidden" id="editTaskId" value="">
+                    <div class="field" style="margin-bottom:14px;">
+                        <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Task Date</label>
+                        <input type="date" id="taskDateInput" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;" required>
+                    </div>
+                    <div class="field" style="margin-bottom:14px;">
+                        <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Project / Track Name</label>
+                        <input type="text" id="taskProjectInput" placeholder="e.g. ElevateIQ Portal / Client Work" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;" required>
+                    </div>
+                    <div class="field" style="margin-bottom:14px;">
+                        <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Task Description & Deliverables</label>
+                        <textarea id="taskDescInput" rows="4" placeholder="Describe work completed today, milestones, or key outputs..." style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; font-family:inherit; resize:vertical;" required></textarea>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="field">
+                            <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Hours Spent</label>
+                            <input type="number" id="taskHoursInput" step="0.5" min="0.5" max="24" value="8.0" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;" required>
+                        </div>
+                        <div class="field">
+                            <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Status</label>
+                            <select id="taskStatusInput" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:#0c1928; color:white;">
+                                <option value="Completed">✅ Completed</option>
+                                <option value="In Progress">⏳ In Progress</option>
+                                <option value="Pending">📌 Pending</option>
+                                <option value="Blocked">⚠️ Blocked</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:18px;">
+                        <label style="font-size:12px; color:var(--ink-soft); margin-bottom:4px; display:block;">Remarks / PR / Ticket Links (Optional)</label>
+                        <input type="text" id="taskRemarksInput" placeholder="e.g. PR #142 submitted, tested on staging" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" id="btnCancelTaskEdit" onclick="cancelTaskEdit()" class="btn-ghost" style="display:none; padding:10px 16px;">Cancel</button>
+                        <button type="submit" id="btnSaveTaskSubmit" class="btn-primary" style="flex:1; margin-top:0; padding:12px 18px;">💾 Save Task Entry</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column: My Logged Task History -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h2 style="font-size:18px; margin:0;">My Task History Logs</h2>
+                    <div style="font-size:13px; color:var(--ink-soft);">Total Logged: <strong id="myTaskTotalHours" style="color:#60a5fa;">0.0 hrs</strong></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Project</th>
+                                <th>Task Description</th>
+                                <th>Hours</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myTasksTableBody">
+                            <tr><td colspan="7" style="text-align:center;">Loading task logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     `,
     recruitment: `
@@ -1647,6 +1848,7 @@ Object.keys(layouts).forEach(panelId => {
 <script src="js/leaves.js?v=8.0.0"></script>
 <script src="js/payroll.js?v=7.0.0"></script>
 <script src="js/notifications.js?v=7.0.0"></script>
+<script src="js/tasks.js?v=1.0.0"></script>
 
 
 <!-- ==================== CORE DASHBOARD LOGIC ==================== -->
@@ -1661,6 +1863,8 @@ function loadPanelData(panelId) {
     else if (panelId === "payroll") loadAdminPayroll();
     else if (panelId === "attendance") loadAdminAttendance();
     else if (panelId === "leaves") loadAdminLeaves();
+    else if (panelId === "tasks_roster") loadAdminTasksRosterPanel();
+    else if (panelId === "my_tasks") loadMyTasksPanel();
     else if (panelId === "crm") loadCRM();
     else if (panelId === "recruitment") loadAdminRecruitment();
     else if (panelId === "announcements") loadAdminAnnouncements();
@@ -1709,6 +1913,7 @@ function renderSidebar() {
             { id: "employees", label: "Employees", icon: "users" },
             { id: "attendance", label: "Attendance Register", icon: "calendar-check" },
             { id: "leaves", label: "Leave Requests", icon: "clipboard-list" },
+            { id: "tasks_roster", label: "Daily Tasks Roster", icon: "file-spreadsheet" },
             { id: "payroll", label: "Payroll Suite", icon: "wallet" },
             { id: "crm", label: "Client CRM", icon: "briefcase" },
             { id: "recruitment", label: "Recruitment Board", icon: "user-plus" },
@@ -1724,6 +1929,7 @@ function renderSidebar() {
     } else if (currentUser.role === 'employee' || currentUser.role === 'team_leader') {
         list = [
             { id: "emp_overview", label: "Overview", icon: "layout-dashboard" },
+            { id: "my_tasks", label: "My Daily Tasks", icon: "check-square" },
             { id: "emp_attendance", label: "My Attendance", icon: "calendar-check" },
             { id: "emp_leaves", label: "Apply Leave", icon: "mail" },
             { id: "emp_announcements", label: "Announcements", icon: "megaphone" },

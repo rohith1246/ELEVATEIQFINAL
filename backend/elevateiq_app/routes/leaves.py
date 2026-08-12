@@ -703,10 +703,10 @@ def check_out():
             if current_time < window_start and current_time >= time(20, 0, 0):
                 return jsonify({"error": "Check-out option is only enabled between 4:45 AM and 5:00 AM for Night Shift."}), 400
         else:
-            # Day / Morning Shift: Enabled ONLY between 17:00 (5:00 PM) and 17:15 (5:15 PM)
-            window_start = time(17, 0, 0)
+            # Day / Morning Shift: Enabled ONLY between 17:45 (5:45 PM) and 18:00 (6:00 PM)
+            window_start = time(17, 45, 0)
             if current_time < window_start:
-                return jsonify({"error": "Check-out option is only enabled between 17:00 and 17:15 (5:00 PM - 5:15 PM)."}), 400
+                return jsonify({"error": "Check-out option is only enabled between 17:45 and 18:00 (5:45 PM - 6:00 PM)."}), 400
 
         # Calculate working hours accurately
         check_in_val = record["check_in"]
@@ -728,8 +728,8 @@ def check_out():
                 if not (time(4, 45, 0) <= current_time <= time(5, 15, 0)):
                     status = "Half Day"
             else:
-                # If checking out after 17:15 (5:15 PM) -> Half Day
-                if not (time(17, 0, 0) <= current_time <= time(17, 15, 0)):
+                # If checking out outside 17:45 (5:45 PM) to 18:00 (6:00 PM) -> Half Day
+                if not (time(17, 45, 0) <= current_time <= time(18, 0, 0)):
                     status = "Half Day"
 
         cursor.execute(

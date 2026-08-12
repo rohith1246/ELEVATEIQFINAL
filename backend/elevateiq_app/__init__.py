@@ -98,6 +98,7 @@ def create_app():
     from .routes.tickets import tickets_bp
     from .routes.assessment import assessment_bp
     from .routes.confidential_videos import confidential_bp
+    from .routes.daily_tasks import daily_tasks_bp
 
     # Register each modular blueprint with the central Flask application
     app.register_blueprint(auth_bp)
@@ -110,6 +111,7 @@ def create_app():
     app.register_blueprint(tickets_bp)
     app.register_blueprint(assessment_bp)
     app.register_blueprint(confidential_bp)
+    app.register_blueprint(daily_tasks_bp)
 
     @app.errorhandler(500)
     def handle_500(error):
