@@ -967,6 +967,32 @@ async function loadEmpOverview() {
 
 /**
  * Triggers a Check In attendance registration request.
+function getGPSCoordinates() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error("Geolocation is not supported by your browser."));
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+            (err) => {
+                if (err.code === err.PERMISSION_DENIED) {
+                    reject(new Error("Location permission denied. Please allow location access on your browser/phone to check in."));
+                } else if (err.code === err.POSITION_UNAVAILABLE) {
+                    reject(new Error("Location unavailable. Please make sure GPS / Location Services are enabled on your device."));
+                } else if (err.code === err.TIMEOUT) {
+                    reject(new Error("Location request timed out. Please try again."));
+                } else {
+                    reject(new Error(err.message || "Failed to retrieve GPS location."));
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    });
+}
+
+/**
+ * Triggers a Check In attendance registration request with Geofenced GPS verification.
  * 
  * @async
  */
@@ -975,10 +1001,20 @@ async function markCheckIn(btn) {
     if (btn) {
         btn.disabled = true;
         originalText = btn.innerHTML;
-        btn.innerHTML = `<span class="spinner"></span> Loading...`;
+        btn.innerHTML = `<span class="spinner"></span> Locating...`;
     }
     try {
-        const res = await apiCall("/attendance/checkin", "POST");
+        let payload = {};
+        try {
+            const coords = await getGPSCoordinates();
+            payload = coords;
+        } catch (locErr) {
+            alert("📍 GPS Location Access Required:\n\n" + locErr.message);
+            return;
+        }
+
+        if (btn) btn.innerHTML = `<span class="spinner"></span> Verifying Location...`;
+        const res = await apiCall("/attendance/checkin", "POST", payload);
         document.getElementById("attendanceTimerStatus").textContent = res.message;
         alert(res.message);
     } catch (err) {

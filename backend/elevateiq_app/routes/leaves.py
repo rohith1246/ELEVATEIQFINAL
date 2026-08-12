@@ -6,8 +6,9 @@ and daily attendance logs (clocking check-ins, clocking check-outs, computing ho
 classifying presence status as Present, Half Day, or Absent).
 """
 
+import math
 import logging
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, time, timezone, timedelta
 from flask import Blueprint, request, jsonify
 from psycopg2.extras import RealDictCursor
 from ..database import get_connection
@@ -15,6 +16,24 @@ from ..auth import get_current_user
 from ..config import safe_error
 
 logger = logging.getLogger(__name__)
+
+# ElevateIQ Soft Tech Exact Office GPS Coordinates (Arundelpet, Narasaraopet, AP 522601)
+OFFICE_LATITUDE = 16.2342968
+OFFICE_LONGITUDE = 80.0443192
+MAX_ALLOWED_RADIUS_METERS = 500  # 500 meters radius around the office building
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculates the great-circle distance between two points on the Earth in meters using the Haversine formula.
+    """
+    R = 6371000.0  # Earth's radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
 
 ALLOWED_LEAVE_COLUMNS = {"casual_leave", "sick_leave", "earned_leave", "emergency_leave"}
 
@@ -461,6 +480,24 @@ def check_in():
     user_db_id = user.get("user_id") or user.get("id")
 
     try:
+        # Location Verification (Geofenced GPS Check)
+        data = request.json or {}
+        user_lat = data.get("latitude")
+        user_lng = data.get("longitude")
+
+        if user.get("role") != "admin":
+            if user_lat is None or user_lng is None:
+                return jsonify({"error": "GPS Location access is required to check in. Please allow location permissions on your browser/phone."}), 400
+            
+            try:
+                distance_meters = haversine_distance(float(user_lat), float(user_lng), OFFICE_LATITUDE, OFFICE_LONGITUDE)
+                if distance_meters > MAX_ALLOWED_RADIUS_METERS:
+                    return jsonify({
+                        "error": f"Location Check Failed: You are {round(distance_meters)} meters away from the office (Arundelpet, Narasaraopet). Maximum allowed distance is {MAX_ALLOWED_RADIUS_METERS} meters."
+                    }), 400
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid GPS coordinates provided."}), 400
+
         emp_db_id = None
         cursor.execute("SELECT id, shift FROM employees WHERE user_id = %s", (user_db_id,))
         emp_row = cursor.fetchone()
@@ -503,17 +540,17 @@ def check_in():
         if cursor.fetchone():
             return jsonify({"error": "Already completed attendance for today."}), 400
 
-        # 2. Determine initial status based on 15-minute grace period cutoff (9:15 AM for Day/Morning shift, 8:15 PM for Night shift)
+        # 2. Determine initial status based on grace period cutoff (9:20 AM for Day/Morning shift, 8:20 PM for Night shift)
         status = "Present"
         if emp_shift == "Night Shift":
-            # Night Shift starts at 8:00 PM (20:00). Cutoff is 8:15 PM (20:15:00)
-            cutoff = time(20, 15, 0)
+            # Night Shift starts at 8:00 PM (20:00). Cutoff is 8:20 PM (20:20:00)
+            cutoff = time(20, 20, 0)
             if current_time > cutoff or current_time < time(5, 0, 0):
                 if current_time > cutoff or current_time < time(4, 0, 0):
                     status = "Half Day"
         else:
-            # Day / Morning Shift starts at 9:00 AM (09:00). Cutoff is 9:15 AM (09:15:00)
-            cutoff = time(9, 15, 0)
+            # Day / Morning Shift starts at 9:00 AM (09:00). Cutoff is 9:20 AM (09:20:00)
+            cutoff = time(9, 20, 0)
             if current_time > cutoff:
                 status = "Half Day"
 
@@ -526,7 +563,7 @@ def check_in():
         )
         conn.commit()
 
-        msg_status = "Full Day (Present)" if status == "Present" else "Half Day (Late Check-in past 9:15)"
+        msg_status = "Full Day (Present)" if status == "Present" else "Half Day (Late Check-in past grace period cutoff)"
         return jsonify({"message": f"Checked in successfully at {current_time_str}. Status: {msg_status}"}), 201
     except Exception as e:
         conn.rollback()
