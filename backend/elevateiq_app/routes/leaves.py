@@ -683,8 +683,20 @@ def check_out():
         emp_shift = record.get("shift") or emp_row.get("shift") or "Day Shift"
         check_in_date = record["date"]
 
-        # If checking out on a subsequent date (forgot checkout on shift date) -> mark Half Day
-        if check_in_date < today_date:
+        # Determine if this is an overdue checkout from a past shift
+        is_overdue = False
+        if emp_shift == "Night Shift":
+            # For Night Shift, normal checkout happens on check_in_date + 1 day (early morning between 4:45 AM - 5:15 AM)
+            if today_date > check_in_date + timedelta(days=1):
+                is_overdue = True
+            elif today_date == check_in_date + timedelta(days=1) and current_time > time(5, 15, 0):
+                is_overdue = True
+        else:
+            # Day Shift: normal checkout happens on the same date (check_in_date == today_date)
+            if check_in_date < today_date:
+                is_overdue = True
+
+        if is_overdue:
             cursor.execute(
                 """
                 UPDATE attendance 
@@ -694,7 +706,7 @@ def check_out():
                 (current_time_str, record["id"])
             )
             conn.commit()
-            return jsonify({"message": f"Checked out (Forgot checkout on shift date). Status marked as Half Day."}), 200
+            return jsonify({"message": f"Checked out (Overdue checkout from previous shift date). Status marked as Half Day."}), 200
 
         # Enforce window bounds for early checkout attempts
         if emp_shift == "Night Shift":
