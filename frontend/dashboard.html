@@ -779,14 +779,62 @@ const layouts = {
         </div>
     `,
     attendance: `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
-            <h2 style="font-size:18px; margin:0;">Daily Attendance Registry</h2>
+        <!-- Top Bar: Title + Date Selector + Quick Date Presets -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+            <div>
+                <h2 style="font-size:20px; font-weight:700; margin:0 0 4px 0;">Daily Attendance Registry</h2>
+                <div style="font-size:12.5px; color:var(--ink-soft);">Daily Log Breakdown for <span id="lblAttReportDate" style="color:var(--orange); font-weight:600;">Today</span></div>
+            </div>
+            
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <div style="display:flex; gap:8px; align-items:center; background:rgba(255,255,255,0.04); padding:6px 14px; border-radius:10px; border:1px solid var(--glass-border);">
+                    <label style="font-size:12px; color:var(--ink-soft); font-weight:600;">📅 Date:</label>
+                    <input type="date" id="attReportDate" onchange="changeAttendanceReportDate(this.value)" style="background:transparent; border:none; color:white; font-size:13px; font-weight:600; outline:none; cursor:pointer;">
+                </div>
+                <button type="button" class="btn-ghost" onclick="setAttendancePresetDate('today')" style="padding:7px 14px; font-size:12.5px; border-radius:8px;">Today</button>
+                <button type="button" class="btn-ghost" onclick="setAttendancePresetDate('yesterday')" style="padding:7px 14px; font-size:12.5px; border-radius:8px;">Yesterday</button>
+            </div>
+        </div>
+
+        <!-- Daily Summary Cards Grid for Selected Date -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px;">
+            <div class="stat-card">
+                <h3>Total Scheduled</h3>
+                <div class="val" id="stat_att_total">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Active Roster</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.6) 100%);">
+                <h3 style="color:#34d399;">✅ Presenties</h3>
+                <div class="val" id="stat_att_present" style="color:#34d399;">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Present + Half Day</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid #ef4444; background: linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(15,23,42,0.6) 100%);">
+                <h3 style="color:#f87171;">❌ Absenties</h3>
+                <div class="val" id="stat_att_absent" style="color:#f87171;">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">No Check-In Logged</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid #3b82f6;">
+                <h3>Attendance Rate</h3>
+                <div class="val" id="stat_att_rate" style="color:#60a5fa;">-</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;" id="stat_att_shift_breakdown">☀️ 0 Day | 🌙 0 Night</div>
+            </div>
+        </div>
+
+        <!-- Filter Control Tabs (Presenties / Absenties & Shift Filter) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
+                <button type="button" class="btn-att-status-filter active" id="btnAttStatusAll" onclick="filterAttendanceByStatus('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Logs (<span id="cntAttAll">0</span>)</button>
+                <button type="button" class="btn-att-status-filter" id="btnAttStatusPresent" onclick="filterAttendanceByStatus('Present', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">✅ Presenties (<span id="cntAttPresent">0</span>)</button>
+                <button type="button" class="btn-att-status-filter" id="btnAttStatusAbsent" onclick="filterAttendanceByStatus('Absent', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">❌ Absenties (<span id="cntAttAbsent">0</span>)</button>
+            </div>
+
             <div style="display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; border:1px solid var(--glass-border);">
                 <button type="button" class="btn-shift-filter active" id="btnShiftFilterAll" onclick="filterAttendanceByShift('All', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:var(--blue); color:white; cursor:pointer;">All Shifts</button>
                 <button type="button" class="btn-shift-filter" id="btnShiftFilterDay" onclick="filterAttendanceByShift('Day Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">☀️ Day Shift</button>
                 <button type="button" class="btn-shift-filter" id="btnShiftFilterNight" onclick="filterAttendanceByShift('Night Shift', this)" style="padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer;">🌙 Night Shift</button>
             </div>
         </div>
+
         <div class="table-wrap">
             <table>
                 <thead>

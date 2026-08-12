@@ -388,6 +388,19 @@ def review_leave(leave_id):
             "new_status": new_status,
             "leave_id": leave_id
         }), 200
+        month_leaves_count = cursor.fetchone()["count"]
+        if month_leaves_count >= 1:
+            return jsonify({"error": "You can only take 1 day of leave per calendar month. You already have a pending or approved leave in this calendar month."}), 400
+
+        cursor.execute(
+            """
+            INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason, status) 
+            VALUES (%s, %s, %s, %s, %s, 'Pending TL Approval')
+            """,
+            (user["emp_db_id"], leave_type, start_date, end_date, reason)
+        )
+        conn.commit()
+        return jsonify({"message": "Leave application submitted successfully."}), 201
     except Exception as e:
         conn.rollback()
         logger.error(f"Leaves API error: {e}")
@@ -396,34 +409,88 @@ def review_leave(leave_id):
         cursor.close()
         conn.close()
 
-
 @leaves_bp.route("/attendance", methods=["GET"])
+@leaves_bp.route("/api/attendance", methods=["GET"])
 def get_attendance():
     """
-    Lists attendance log entries.
-    - Admins & HR: Retrieve all logs across the company.
-    - Employees, Team Leaders, Managers: Retrieve their own attendance logs.
+    Lists attendance log entries and daily reports.
+    - Admins & HR: Retrieve full company daily report (including presenties & absenties for selected date).
+    - Employees: Retrieve personal attendance logs.
     """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Unauthorized: Please log in first"}), 401
 
+    target_date_str = request.args.get("date")
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         user_role = user.get("role", "").lower()
         user_db_id = user.get("user_id") or user.get("id")
+
         if user_role in ("admin", "hr"):
-            cursor.execute(
-                """
-                SELECT a.*, e.employee_id, u.name, e.department, e.designation, COALESCE(a.shift, e.shift, 'Day Shift') as shift 
-                FROM attendance a 
-                JOIN employees e ON a.employee_id = e.id 
-                JOIN users u ON e.user_id = u.id 
-                ORDER BY a.date DESC, a.check_in DESC
-                """
-            )
-            records = cursor.fetchall()
+            if target_date_str:
+                try:
+                    report_date = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+                except ValueError:
+                    report_date = datetime.now(IST).date()
+
+                cursor.execute(
+                    """
+                    SELECT e.id as emp_id, e.employee_id, u.name, e.department, e.designation, COALESCE(e.shift, 'Day Shift') as shift
+                    FROM employees e
+                    JOIN users u ON e.user_id = u.id
+                    WHERE e.status = 'Active' AND (u.portal = 'elevateiq' OR u.portal = 'both' OR u.portal IS NULL)
+                    ORDER BY e.employee_id
+                    """
+                )
+                all_emps = cursor.fetchall()
+
+                cursor.execute(
+                    """
+                    SELECT a.*, e.employee_id as employee_code, u.name, e.department, e.designation, COALESCE(a.shift, e.shift, 'Day Shift') as shift
+                    FROM attendance a
+                    JOIN employees e ON a.employee_id = e.id
+                    JOIN users u ON e.user_id = u.id
+                    WHERE a.date = %s
+                    """,
+                    (report_date,)
+                )
+                existing_logs = cursor.fetchall()
+                logs_by_emp = {log["employee_id"]: log for log in existing_logs}
+
+                records = []
+                for emp in all_emps:
+                    emp_db_id = emp["emp_id"]
+                    if emp_db_id in logs_by_emp:
+                        rec = dict(logs_by_emp[emp_db_id])
+                        rec["employee_id"] = emp["employee_id"]
+                        records.append(rec)
+                    else:
+                        records.append({
+                            "id": None,
+                            "employee_id": emp["employee_id"],
+                            "name": emp["name"],
+                            "department": emp["department"] or "General",
+                            "designation": emp["designation"] or "-",
+                            "shift": emp["shift"],
+                            "date": report_date.isoformat(),
+                            "check_in": None,
+                            "check_out": None,
+                            "working_hours": 0.0,
+                            "status": "Absent"
+                        })
+            else:
+                cursor.execute(
+                    """
+                    SELECT a.*, e.employee_id, u.name, e.department, e.designation, COALESCE(a.shift, e.shift, 'Day Shift') as shift 
+                    FROM attendance a 
+                    JOIN employees e ON a.employee_id = e.id 
+                    JOIN users u ON e.user_id = u.id 
+                    ORDER BY a.date DESC, a.check_in DESC
+                    """
+                )
+                records = cursor.fetchall()
         else:
             cursor.execute(
                 """
@@ -439,11 +506,11 @@ def get_attendance():
             records = cursor.fetchall()
 
         for rec in records:
-            if rec.get("date"):
+            if rec.get("date") and not isinstance(rec["date"], str):
                 rec["date"] = rec["date"].isoformat()
-            if rec.get("check_in"):
+            if rec.get("check_in") and not isinstance(rec["check_in"], str):
                 rec["check_in"] = str(rec["check_in"])
-            if rec.get("check_out"):
+            if rec.get("check_out") and not isinstance(rec["check_out"], str):
                 rec["check_out"] = str(rec["check_out"])
             if rec.get("working_hours") is not None:
                 rec["working_hours"] = float(rec["working_hours"])
@@ -455,7 +522,6 @@ def get_attendance():
     finally:
         cursor.close()
         conn.close()
-
 
 
 @leaves_bp.route("/attendance/checkin", methods=["POST"])

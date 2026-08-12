@@ -401,15 +401,81 @@ async function deleteEmployee(id) {
 
 let allAttendanceRecords = [];
 let currentShiftFilter = "All";
+let currentAttStatusFilter = "All";
+let currentAttSelectedDate = new Date().toISOString().split("T")[0];
 
 /**
  * Loads daily attendance logs and updates registry table.
  * 
  * @async
  */
-async function loadAdminAttendance() {
-    allAttendanceRecords = await apiCall("/attendance");
-    renderAttendanceTable();
+async function loadAdminAttendance(targetDate = null) {
+    if (targetDate) {
+        currentAttSelectedDate = targetDate;
+    } else if (!currentAttSelectedDate) {
+        currentAttSelectedDate = new Date().toISOString().split("T")[0];
+    }
+
+    const dateInput = document.getElementById("attReportDate");
+    if (dateInput) dateInput.value = currentAttSelectedDate;
+
+    const lblDate = document.getElementById("lblAttReportDate");
+    if (lblDate) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        lblDate.textContent = currentAttSelectedDate === todayStr ? `Today (${currentAttSelectedDate})` : currentAttSelectedDate;
+    }
+
+    allAttendanceRecords = await apiCall(`/attendance?date=${currentAttSelectedDate}`);
+    updateAttendanceSummaryCards();
+    renderAttendanceReportTable();
+}
+
+function changeAttendanceReportDate(dateVal) {
+    if (!dateVal) return;
+    loadAdminAttendance(dateVal);
+}
+
+function setAttendancePresetDate(preset) {
+    const d = new Date();
+    if (preset === 'yesterday') {
+        d.setDate(d.getDate() - 1);
+    }
+    const dateStr = d.toISOString().split("T")[0];
+    loadAdminAttendance(dateStr);
+}
+
+function updateAttendanceSummaryCards() {
+    const total = allAttendanceRecords.length;
+    const presenties = allAttendanceRecords.filter(r => r.status === "Present" || r.status === "Half Day").length;
+    const absenties = allAttendanceRecords.filter(r => r.status === "Absent" || r.status === "Leave").length;
+
+    const dayPresent = allAttendanceRecords.filter(r => (r.shift || "Day Shift") === "Day Shift" && (r.status === "Present" || r.status === "Half Day")).length;
+    const nightPresent = allAttendanceRecords.filter(r => (r.shift || "Day Shift") === "Night Shift" && (r.status === "Present" || r.status === "Half Day")).length;
+
+    const rate = total > 0 ? ((presenties / total) * 100).toFixed(1) + "%" : "0%";
+
+    if (document.getElementById("stat_att_total")) document.getElementById("stat_att_total").textContent = total;
+    if (document.getElementById("stat_att_present")) document.getElementById("stat_att_present").textContent = presenties;
+    if (document.getElementById("stat_att_absent")) document.getElementById("stat_att_absent").textContent = absenties;
+    if (document.getElementById("stat_att_rate")) document.getElementById("stat_att_rate").textContent = rate;
+    if (document.getElementById("stat_att_shift_breakdown")) document.getElementById("stat_att_shift_breakdown").textContent = `☀️ ${dayPresent} Day | 🌙 ${nightPresent} Night`;
+
+    if (document.getElementById("cntAttAll")) document.getElementById("cntAttAll").textContent = total;
+    if (document.getElementById("cntAttPresent")) document.getElementById("cntAttPresent").textContent = presenties;
+    if (document.getElementById("cntAttAbsent")) document.getElementById("cntAttAbsent").textContent = absenties;
+}
+
+function filterAttendanceByStatus(status, btn) {
+    currentAttStatusFilter = status;
+    document.querySelectorAll(".btn-att-status-filter").forEach(b => {
+        b.style.background = "transparent";
+        b.style.color = "var(--ink-soft)";
+    });
+    if (btn) {
+        btn.style.background = "var(--blue)";
+        btn.style.color = "white";
+    }
+    renderAttendanceReportTable();
 }
 
 function filterAttendanceByShift(shift, btn) {
@@ -422,33 +488,47 @@ function filterAttendanceByShift(shift, btn) {
         btn.style.background = "var(--blue)";
         btn.style.color = "white";
     }
-    renderAttendanceTable();
+    renderAttendanceReportTable();
 }
 
-function renderAttendanceTable() {
+function renderAttendanceReportTable() {
     const tbody = document.getElementById("attendanceTableBody");
     if (!tbody) return;
     tbody.innerHTML = "";
 
     let filtered = allAttendanceRecords;
+
+    if (currentAttStatusFilter === "Present") {
+        filtered = filtered.filter(r => r.status === "Present" || r.status === "Half Day");
+    } else if (currentAttStatusFilter === "Absent") {
+        filtered = filtered.filter(r => r.status === "Absent" || r.status === "Leave");
+    }
+
     if (currentShiftFilter !== "All") {
-        filtered = allAttendanceRecords.filter(r => (r.shift || "Day Shift").toLowerCase() === currentShiftFilter.toLowerCase());
+        filtered = filtered.filter(r => (r.shift || "Day Shift").toLowerCase() === currentShiftFilter.toLowerCase());
     }
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No attendance logs found for ${currentShiftFilter}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No ${currentAttStatusFilter !== 'All' ? currentAttStatusFilter : ''} attendance records found for selected filters.</td></tr>`;
         return;
     }
 
     filtered.forEach(r => {
         const isNight = (r.shift || "Day Shift").toLowerCase() === "night shift";
         const shiftBadge = isNight 
-            ? `<span style="background:rgba(139,92,246,0.15); color:#c084fc; border:1px solid rgba(139,92,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600;">🌙 Night</span>`
-            : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600;">☀️ Day</span>`;
+            ? `<span style="background:rgba(139,92,246,0.15); color:#c084fc; border:1px solid rgba(139,92,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">🌙 Night</span>`
+            : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">☀️ Day</span>`;
+
+        let statusBadge = `<span class="badge ${r.status.toLowerCase()}">${r.status}</span>`;
+        if (r.status === "Absent") {
+            statusBadge = `<span style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">ABSENT</span>`;
+        } else if (r.status === "Present") {
+            statusBadge = `<span style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">PRESENT</span>`;
+        }
 
         tbody.innerHTML += `
             <tr>
-                <td>${r.employee_id}</td>
+                <td style="font-weight:600;">${r.employee_id || r.employee_code || '-'}</td>
                 <td>${r.name}</td>
                 <td>${shiftBadge}</td>
                 <td>${r.department || 'General'}</td>
@@ -456,7 +536,7 @@ function renderAttendanceTable() {
                 <td>${r.check_in || '-'}</td>
                 <td>${r.check_out || '-'}</td>
                 <td>${r.working_hours ? parseFloat(r.working_hours).toFixed(2) : '0.00'}</td>
-                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td>${statusBadge}</td>
             </tr>
         `;
     });
