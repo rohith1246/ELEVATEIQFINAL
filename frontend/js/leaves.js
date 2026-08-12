@@ -445,9 +445,14 @@ function setAttendancePresetDate(preset) {
 }
 
 function updateAttendanceSummaryCards() {
-    const total = allAttendanceRecords.length;
-    const presenties = allAttendanceRecords.filter(r => r.status === "Present" || r.status === "Half Day").length;
-    const absenties = allAttendanceRecords.filter(r => r.status === "Absent" || r.status === "Leave").length;
+    let recordsForShift = allAttendanceRecords;
+    if (currentShiftFilter !== "All") {
+        recordsForShift = allAttendanceRecords.filter(r => (r.shift || "Day Shift").toLowerCase() === currentShiftFilter.toLowerCase());
+    }
+
+    const total = recordsForShift.length;
+    const presenties = recordsForShift.filter(r => r.status === "Present" || r.status === "Half Day").length;
+    const absenties = recordsForShift.filter(r => r.status === "Absent" || r.status === "Leave").length;
 
     const dayPresent = allAttendanceRecords.filter(r => (r.shift || "Day Shift") === "Day Shift" && (r.status === "Present" || r.status === "Half Day")).length;
     const nightPresent = allAttendanceRecords.filter(r => (r.shift || "Day Shift") === "Night Shift" && (r.status === "Present" || r.status === "Half Day")).length;
@@ -488,6 +493,7 @@ function filterAttendanceByShift(shift, btn) {
         btn.style.background = "var(--blue)";
         btn.style.color = "white";
     }
+    updateAttendanceSummaryCards();
     renderAttendanceReportTable();
 }
 
