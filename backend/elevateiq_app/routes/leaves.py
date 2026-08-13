@@ -697,10 +697,10 @@ def check_out():
         # Determine if this is an overdue checkout from a past shift
         is_overdue = False
         if emp_shift == "Night Shift":
-            # For Night Shift, normal checkout happens on check_in_date + 1 day (early morning between 4:45 AM - 5:15 AM)
+            # For Night Shift, normal checkout happens on check_in_date + 1 day (early morning between 4:30 AM - 5:30 AM)
             if today_date > check_in_date + timedelta(days=1):
                 is_overdue = True
-            elif today_date == check_in_date + timedelta(days=1) and current_time > time(5, 15, 0):
+            elif today_date == check_in_date + timedelta(days=1) and current_time > time(5, 30, 0):
                 is_overdue = True
         else:
             # Day Shift: normal checkout happens on the same date (check_in_date == today_date)
@@ -721,10 +721,10 @@ def check_out():
 
         # Enforce window bounds for early checkout attempts
         if emp_shift == "Night Shift":
-            # Window: 4:45 AM (04:45:00) to 5:15 AM (05:15:00)
-            window_start = time(4, 45, 0)
-            if current_time < window_start and current_time >= time(20, 0, 0):
-                return jsonify({"error": "Check-out option is only enabled between 4:45 AM and 5:00 AM for Night Shift."}), 400
+            # Window: 4:30 AM (04:30:00) to 5:30 AM (05:30:00)
+            window_start = time(4, 30, 0)
+            if current_time < window_start and current_time >= time(19, 0, 0):
+                return jsonify({"error": "Check-out option is only enabled between 04:30 AM and 05:30 AM for Night Shift."}), 400
         else:
             # Day / Morning Shift: Enabled ONLY between 17:45 (5:45 PM) and 18:00 (6:00 PM)
             window_start = time(17, 45, 0)
@@ -748,7 +748,7 @@ def check_out():
         status = record.get("status") or "Present"
         if status == "Present":
             if emp_shift == "Night Shift":
-                if not (time(4, 45, 0) <= current_time <= time(5, 15, 0)):
+                if not (time(4, 30, 0) <= current_time <= time(5, 30, 0)):
                     status = "Half Day"
             else:
                 # If checking out outside 17:45 (5:45 PM) to 18:00 (6:00 PM) -> Half Day
