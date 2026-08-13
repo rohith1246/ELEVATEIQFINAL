@@ -440,12 +440,13 @@ tr:hover td {
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 1000;
     background: rgba(4, 11, 23, 0.85);
     backdrop-filter: blur(10px);
     justify-content: center;
     align-items: center;
     padding: 20px;
+    overflow-y: auto;
 }
 
 .modal.open {
@@ -458,9 +459,26 @@ tr:hover td {
     border-radius: 20px !important;
     max-width: 600px;
     width: 100%;
-    padding: 32px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 28px 32px !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
     position: relative;
+    box-sizing: border-box;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--orange, #ff8a3d);
+    border-radius: 4px;
 }
 
 .close-modal {
@@ -487,7 +505,7 @@ tr:hover td {
     font-size: 22px !important;
     font-weight: 700 !important;
     color: #fff !important;
-    margin-bottom: 24px !important;
+    margin-bottom: 20px !important;
 }
 
 .modal-content input[type="text"],
@@ -499,11 +517,24 @@ tr:hover td {
     background: #182739 !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 10px !important;
-    padding: 14px 18px !important;
+    padding: 11px 15px !important;
     color: #fff !important;
-    font-size: 14px !important;
+    font-size: 13.5px !important;
     outline: none !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 6px !important;
+    box-sizing: border-box !important;
+}
+
+.modal-content .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modal-content .field label {
+    font-size: 12px !important;
+    color: var(--ink-soft, #94a3b8) !important;
+    font-weight: 600 !important;
 }
 
 .modal-content input:focus,
@@ -518,7 +549,7 @@ tr:hover td {
     font-weight: 700 !important;
     font-size: 15px !important;
     border-radius: 10px !important;
-    padding: 14px 20px !important;
+    padding: 12px 20px !important;
     width: 100% !important;
     transition: all 0.2s ease !important;
 }
