@@ -580,7 +580,29 @@ def check_in():
             emp_shift = "Day Shift"
             conn.commit()
 
-        # 1. Clean up any forgot-to-checkout open sessions from previous days
+        # 1. Enforce strict shift check-in time window bounds
+        if emp_shift == "Night Shift":
+            # Night Shift (8:00 PM - 5:00 AM): Check-in is ONLY allowed in the evening between 19:00 (7:00 PM) and 23:59 (11:59 PM)
+            if current_time < time(19, 0, 0) or current_time > time(23, 59, 59):
+                return jsonify({"error": "Check-in option is only enabled between 19:00 (7:00 PM) and 23:59 (11:59 PM) for Night Shift."}), 400
+        else:
+            # Day / Morning Shift (9:00 AM - 6:00 PM): Check-in is ONLY allowed between 08:00 (8:00 AM) and 12:00 (12:00 PM)
+            if current_time < time(8, 0, 0) or current_time > time(12, 0, 0):
+                return jsonify({"error": "Check-in option is only enabled between 08:00 AM and 12:00 PM for Day Shift."}), 400
+
+        # 2. Check if an attendance record ALREADY EXISTS for today's shift date (open or completed)
+        cursor.execute(
+            "SELECT id, check_in, check_out, status FROM attendance WHERE employee_id = %s AND date = %s",
+            (emp_db_id, today_date)
+        )
+        existing_today = cursor.fetchone()
+        if existing_today:
+            if existing_today["check_out"] is not None:
+                return jsonify({"error": f"You have already completed your attendance for today's shift ({existing_today['check_in']} - {existing_today['check_out']}). Multiple check-ins on the same shift date are not allowed."}), 400
+            else:
+                return jsonify({"error": f"You are already checked in at {existing_today['check_in']}. Please check out first before checking in again."}), 400
+
+        # 3. Clean up any forgot-to-checkout open sessions from previous days
         cursor.execute(
             "SELECT id, date, check_in FROM attendance WHERE employee_id = %s AND check_out IS NULL ORDER BY date DESC, id DESC LIMIT 1",
             (emp_db_id,)
@@ -596,28 +618,17 @@ def check_in():
                 )
                 conn.commit()
             else:
-                return jsonify({"error": "Already checked in today. Please check out first before checking in again."}), 400
+                return jsonify({"error": f"You are already checked in at {open_prev['check_in']}. Please check out first before checking in again."}), 400
 
-        # Check if already completed attendance for today
-        cursor.execute(
-            "SELECT id FROM attendance WHERE employee_id = %s AND date = %s AND check_out IS NOT NULL",
-            (emp_db_id, today_date)
-        )
-        if cursor.fetchone():
-            return jsonify({"error": "Already completed attendance for today."}), 400
-
-        # 2. Determine initial status based on grace period cutoff (9:20 AM for Day/Morning shift, 8:20 PM for Night shift)
+        # 4. Determine initial status based on grace period cutoff (9:20 AM for Day Shift, 8:20 PM for Night Shift)
         status = "Present"
         if emp_shift == "Night Shift":
             # Night Shift starts at 8:00 PM (20:00). Cutoff is 8:20 PM (20:20:00)
-            cutoff = time(20, 20, 0)
-            if current_time > cutoff or current_time < time(5, 0, 0):
-                if current_time > cutoff or current_time < time(4, 0, 0):
-                    status = "Half Day"
+            if current_time > time(20, 20, 0):
+                status = "Half Day"
         else:
             # Day / Morning Shift starts at 9:00 AM (09:00). Cutoff is 9:20 AM (09:20:00)
-            cutoff = time(9, 20, 0)
-            if current_time > cutoff:
+            if current_time > time(9, 20, 0):
                 status = "Half Day"
 
         cursor.execute(
