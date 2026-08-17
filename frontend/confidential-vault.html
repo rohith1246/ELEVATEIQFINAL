@@ -462,6 +462,50 @@
     <div class="videos-grid" id="videosGrid">
       <!-- 7 Video Cards will be populated dynamically -->
     </div>
+
+    <!-- Confidential Project Repositories & Toolkits (Downloadable Assets) -->
+    <div style="margin-top: 52px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2 style="font-size: 20px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px;">
+          <i data-lucide="folder-git-2" style="color: #10b981; width: 22px; height: 22px;"></i>
+          Project Repositories & Downloadable Toolkits
+        </h2>
+        <p style="color: #94a3b8; font-size: 13px; margin: 6px 0 0 0;">Authorized employees may download verified project source code packages, benchmark tools, and repository extensions.</p>
+      </div>
+    </div>
+
+    <div class="videos-grid" id="vaultFilesGrid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); margin-bottom: 40px;">
+      <div class="video-card" style="border-color: rgba(16, 185, 129, 0.35); background: rgba(15, 23, 42, 0.75);">
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 78, 59, 0.3)); padding: 22px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+              <i data-lucide="github" style="width: 26px; height: 26px;"></i>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.8px;">PROJECT TOOLKIT • ZIP</div>
+              <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 2px 0 0 0;">github project</h3>
+            </div>
+          </div>
+          <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.4);">278 KB</span>
+        </div>
+        <div class="card-content" style="padding: 24px;">
+          <h4 style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin: 0 0 8px 0;">Repo Quality Measure Extension</h4>
+          <p class="card-desc" style="margin-bottom: 16px; font-size: 13px; color: #94a3b8; line-height: 1.55;">
+            Official repository quality evaluation tool, collector runtime, git history inspector, and benchmarking extension for Project Terminus (<code>repo-quality-measure-ext-2026-08-11.zip</code>).
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px;">
+            <span style="font-size: 11px; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">📦 26 Files</span>
+            <span style="font-size: 11px; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">⚡ Python Runtime</span>
+            <span style="font-size: 11px; color: #10b981; background: rgba(16,185,129,0.12); padding: 4px 10px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">✓ Verified Clean</span>
+          </div>
+          <div class="card-footer" style="padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <button id="downloadGithubBtn" class="btn-watch" onclick="downloadVaultFile('github-project')" style="background: linear-gradient(135deg, #10b981, #059669); width: 100%; justify-content: center; gap: 8px; display: inline-flex; align-items: center; font-size: 14px; padding: 12px 20px; font-weight: 700;">
+              <i data-lucide="download" style="width: 16px; height: 16px;"></i> Download GitHub Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Video Player Modal -->
@@ -657,6 +701,52 @@
       });
       lucide.createIcons();
     }
+
+    async function downloadVaultFile(fileId) {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Authentication required. Please log in first.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const btn = document.getElementById('downloadGithubBtn');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;"></span> Preparing Download...`;
+      }
+
+      try {
+        const res = await fetch(`/api/confidential-projects/files/${fileId}/download`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Download failed with HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'repo-quality-measure-ext-2026-08-11.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        alert('Download Error: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          lucide.createIcons();
+        }
+      }
+    }
+
 
     // Track listeners so we attach them only ONCE, not every open call
     let playerListenersBound = false;

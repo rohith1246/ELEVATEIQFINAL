@@ -17,6 +17,23 @@ confidential_bp = Blueprint("confidential", __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads", "confidential_videos")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+FILES_FOLDER = os.path.join(BASE_DIR, "uploads", "confidential_files")
+os.makedirs(FILES_FOLDER, exist_ok=True)
+
+# Master Confidential Project Files (Downloadable Toolkit / Repositories)
+CONFIDENTIAL_FILES = {
+    "github-project": {
+        "id": "github-project",
+        "name": "GitHub Project",
+        "title": "GitHub Project (Repo Quality Measure Extension)",
+        "project": "Project Terminus",
+        "description": "Official repository quality evaluation tool, collector runtime, git history inspector, and benchmarking extension for Project Terminus.",
+        "filename": "repo-quality-measure-ext-2026-08-11.zip",
+        "file_type": "ZIP Archive",
+        "date_added": "2026-08-17",
+        "security_level": "Restricted (Employee Only)"
+    }
+}
 
 # Master 7 Project Terminus Confidential Benchmark Video Modules
 CONFIDENTIAL_VIDEOS = {
@@ -245,3 +262,69 @@ def upload_video(video_id):
         "filename": filename,
         "size_mb": size_mb
     })
+
+
+@confidential_bp.route("/api/confidential-projects/files", methods=["GET"])
+def get_vault_files():
+    """
+    Returns list of downloadable tools/repositories in the Confidential Vault.
+    Restricted to authenticated employees and admins.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized. Please log in as an employee to access confidential vault assets."}), 401
+    
+    user_role = user.get("role", "").lower()
+    allowed_roles = ["employee", "admin", "team_leader", "hr_manager", "hr", "tl"]
+    if user_role not in allowed_roles:
+        return jsonify({"error": "Forbidden: Confidential media vault is restricted to internal employees."}), 403
+
+    files_list = []
+    for fid, item in CONFIDENTIAL_FILES.items():
+        f_copy = dict(item)
+        f_path = os.path.join(FILES_FOLDER, f_copy["filename"])
+        if os.path.exists(f_path):
+            f_copy["is_available"] = True
+            f_size_bytes = os.path.getsize(f_path)
+            f_copy["file_size_bytes"] = f_size_bytes
+            f_copy["file_size_formatted"] = f"{round(f_size_bytes / 1024, 1)} KB" if f_size_bytes < 1024*1024 else f"{round(f_size_bytes / (1024*1024), 2)} MB"
+        else:
+            f_copy["is_available"] = False
+            f_copy["file_size_formatted"] = "Unavailable"
+        files_list.append(f_copy)
+
+    return jsonify({
+        "status": "success",
+        "files": files_list
+    })
+
+
+@confidential_bp.route("/api/confidential-projects/files/<file_id>/download", methods=["GET"])
+def download_vault_file(file_id):
+    """
+    Securely serves authenticated project package download for employees.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized access to confidential project download"}), 401
+
+    user_role = user.get("role", "").lower()
+    allowed_roles = ["employee", "admin", "team_leader", "hr_manager", "hr", "tl"]
+    if user_role not in allowed_roles:
+        return jsonify({"error": "Forbidden"}), 403
+
+    if file_id not in CONFIDENTIAL_FILES:
+        return jsonify({"error": "Confidential file asset not found"}), 404
+
+    file_info = CONFIDENTIAL_FILES[file_id]
+    file_path = os.path.join(FILES_FOLDER, file_info["filename"])
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File asset currently unavailable on server"}), 404
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=file_info["filename"],
+        mimetype="application/zip"
+    )
+
