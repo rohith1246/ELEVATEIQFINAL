@@ -728,6 +728,7 @@ def save_elevate_contact():
 
 @crm_bp.route("/admin/contacts/edutech", methods=["GET"])
 @crm_bp.route("/api/admin/contacts/edutech", methods=["GET"])
+@crm_bp.route("/api/contacts/edutech", methods=["GET"])
 @require_role(["admin"])
 def get_edutech_contacts():
     """
@@ -757,6 +758,9 @@ def get_edutech_contacts():
 
 
 @crm_bp.route("/admin/contacts/elevate", methods=["GET"])
+@crm_bp.route("/api/admin/contacts/elevate", methods=["GET"])
+@crm_bp.route("/api/admin/contacts/elevateiq", methods=["GET"])
+@crm_bp.route("/api/contacts/elevate", methods=["GET"])
 @require_role(["admin"])
 def get_elevate_contacts():
     """

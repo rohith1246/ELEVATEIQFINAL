@@ -1627,47 +1627,51 @@ async function loadAdminContacts() {
         const edutechBody = document.getElementById("edutechContactsTableBody");
         const elevateBody = document.getElementById("elevateContactsTableBody");
 
-        edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">Loading submissions...</td></tr>`;
-        const edutechData = await apiCall("/admin/contacts/edutech");
-        edutechBody.innerHTML = "";
-        if (edutechData.length === 0) {
-            edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">No EduTech inquiries found.</td></tr>`;
-        } else {
-            edutechData.forEach(c => {
-                const dateStr = new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                edutechBody.innerHTML += `
-                    <tr>
-                        <td style="white-space: nowrap;">${dateStr}</td>
-                        <td style="font-weight: 600;">${escapeHTML(c.name)}</td>
-                        <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email)}</a></td>
-                        <td><a href="tel:${c.phone}" style="color: var(--blue);">${escapeHTML(c.phone)}</a></td>
-                        <td style="color: var(--pink-light); font-weight: 500;">${escapeHTML(c.track)}</td>
-                        <td style="max-width: 300px; word-break: break-word;">${escapeHTML(c.message)}</td>
-                    </tr>
-                `;
-            });
+        if (edutechBody) edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">Loading submissions...</td></tr>`;
+        const edutechData = await apiCall("/api/admin/contacts/edutech");
+        if (edutechBody) {
+            edutechBody.innerHTML = "";
+            if (!edutechData || edutechData.length === 0) {
+                edutechBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">No EduTech inquiries found.</td></tr>`;
+            } else {
+                edutechData.forEach(c => {
+                    const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "-";
+                    edutechBody.innerHTML += `
+                        <tr>
+                            <td style="white-space: nowrap;">${dateStr}</td>
+                            <td style="font-weight: 600;">${escapeHTML(c.name || '-')}</td>
+                            <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email || '-')}</a></td>
+                            <td><a href="tel:${c.phone}" style="color: var(--blue);">${escapeHTML(c.phone || '-')}</a></td>
+                            <td style="color: var(--pink-light); font-weight: 500;">${escapeHTML(c.track || '-')}</td>
+                            <td style="max-width: 300px; word-break: break-word;">${escapeHTML(c.message || '-')}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
-        elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">Loading messages...</td></tr>`;
-        const elevateData = await apiCall("/admin/contacts/elevate");
-        elevateBody.innerHTML = "";
-        if (elevateData.length === 0) {
-            elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint);">No messages from main site.</td></tr>`;
-        } else {
-            elevateData.forEach(c => {
-                const dateStr = new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                elevateBody.innerHTML += `
-                    <tr>
-                        <td style="white-space: nowrap;">${dateStr}</td>
-                        <td style="font-weight: 600;">${escapeHTML(c.name)}</td>
-                        <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email)}</a></td>
-                        <td style="max-width: 400px; word-break: break-word;">${escapeHTML(c.message)}</td>
-                    </tr>
-                `;
-            });
+        if (elevateBody) elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">Loading messages...</td></tr>`;
+        const elevateData = await apiCall("/api/admin/contacts/elevate");
+        if (elevateBody) {
+            elevateBody.innerHTML = "";
+            if (!elevateData || elevateData.length === 0) {
+                elevateBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint);">No messages from main site.</td></tr>`;
+            } else {
+                elevateData.forEach(c => {
+                    const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "-";
+                    elevateBody.innerHTML += `
+                        <tr>
+                            <td style="white-space: nowrap;">${dateStr}</td>
+                            <td style="font-weight: 600;">${escapeHTML(c.name || '-')}</td>
+                            <td><a href="mailto:${c.email}" style="color: var(--orange);">${escapeHTML(c.email || '-')}</a></td>
+                            <td style="max-width: 400px; word-break: break-word;">${escapeHTML(c.message || '-')}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
     } catch (e) {
-        console.error(e);
+        console.error("Error loading contacts:", e);
     }
 }
 
