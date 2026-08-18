@@ -580,15 +580,15 @@ def check_in():
             emp_shift = "Day Shift"
             conn.commit()
 
-        # 1. Enforce strict shift check-in time window bounds
+        # 1. Enforce shift check-in time window
         if emp_shift == "Night Shift":
-            # Night Shift (8:00 PM - 5:00 AM): Check-in is ONLY allowed in the evening between 19:00 (7:00 PM) and 23:59 (11:59 PM)
-            if current_time < time(19, 0, 0) or current_time > time(23, 59, 59):
-                return jsonify({"error": "Check-in option is only enabled between 19:00 (7:00 PM) and 23:59 (11:59 PM) for Night Shift."}), 400
+            # Night Shift (8:00 PM - 5:00 AM): Check-in is allowed from 18:00 (6:00 PM) onwards
+            if current_time < time(18, 0, 0) and current_time >= time(6, 0, 0):
+                return jsonify({"error": "Check-in option for Night Shift is available starting from 06:00 PM."}), 400
         else:
-            # Day / Morning Shift (9:00 AM - 6:00 PM): Check-in is ONLY allowed between 08:00 (8:00 AM) and 12:00 (12:00 PM)
-            if current_time < time(8, 0, 0) or current_time > time(12, 0, 0):
-                return jsonify({"error": "Check-in option is only enabled between 08:00 AM and 12:00 PM for Day Shift."}), 400
+            # Day / Morning Shift (9:00 AM - 6:00 PM): Check-in is allowed from 08:00 AM onwards
+            if current_time < time(8, 0, 0):
+                return jsonify({"error": "Check-in option for Day Shift is available starting from 08:00 AM."}), 400
 
         # 2. Check if an attendance record ALREADY EXISTS for today's shift date (open or completed)
         cursor.execute(
@@ -611,25 +611,17 @@ def check_in():
         if open_prev:
             prev_date = open_prev["date"]
             if prev_date < today_date:
-                # Forgot checkout -> auto mark previous session as Half Day
+                # Auto-close previous unclosed session cleanly
                 cursor.execute(
-                    "UPDATE attendance SET status = 'Half Day', working_hours = 4.0 WHERE id = %s",
+                    "UPDATE attendance SET status = 'Present', working_hours = 8.0 WHERE id = %s",
                     (open_prev["id"],)
                 )
                 conn.commit()
             else:
                 return jsonify({"error": f"You are already checked in at {open_prev['check_in']}. Please check out first before checking in again."}), 400
 
-        # 4. Determine initial status based on grace period cutoff (9:20 AM for Day Shift, 8:20 PM for Night Shift)
+        # 4. Status defaults to Present (No strict half-day penalization)
         status = "Present"
-        if emp_shift == "Night Shift":
-            # Night Shift starts at 8:00 PM (20:00). Cutoff is 8:20 PM (20:20:00)
-            if current_time > time(20, 20, 0):
-                status = "Half Day"
-        else:
-            # Day / Morning Shift starts at 9:00 AM (09:00). Cutoff is 9:20 AM (09:20:00)
-            if current_time > time(9, 20, 0):
-                status = "Half Day"
 
         cursor.execute(
             """
@@ -640,8 +632,7 @@ def check_in():
         )
         conn.commit()
 
-        msg_status = "Full Day (Present)" if status == "Present" else "Half Day (Late Check-in past grace period cutoff)"
-        return jsonify({"message": f"Checked in successfully at {current_time_str}. Status: {msg_status}"}), 201
+        return jsonify({"message": f"Checked in successfully at {current_time_str}. Status: Present ✅"}), 201
     except Exception as e:
         conn.rollback()
         logger.error(f"Leaves API check_in error: {e}")
@@ -656,10 +647,10 @@ def check_in():
 def check_out():
     """
     Registers clock-out time.
-    Enforces check-out window:
-    - Day / Morning Shift: Enabled ONLY between 17:00 and 17:15 (5:00 PM - 5:15 PM).
-    - Night Shift: Enabled ONLY between 4:45 AM and 5:00 AM.
-    - Check-out after window or forgot checkout -> Half Day.
+    Checkout is enabled smoothly:
+    - Day Shift: Active till 6:00 PM (18:00) and throughout evening.
+    - Night Shift: Active till 6:00 AM (06:00) and throughout morning.
+    - Accurately calculates working hours and retains full Present status.
     """
     user = get_current_user()
     if not user:
@@ -668,9 +659,7 @@ def check_out():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     ist_now = datetime.now(IST)
-    current_time = ist_now.time()
     current_time_str = ist_now.strftime("%H:%M:%S")
-    today_date = ist_now.date()
     user_db_id = user.get("user_id") or user.get("id")
 
     try:
@@ -691,69 +680,28 @@ def check_out():
         if not record:
             return jsonify({"error": "No active check-in record found. Please check in first."}), 400
 
-        emp_shift = record.get("shift") or emp_row.get("shift") or "Day Shift"
         check_in_date = record["date"]
-
-        # Determine if this is an overdue checkout from a past shift
-        is_overdue = False
-        if emp_shift == "Night Shift":
-            # For Night Shift, normal checkout happens on check_in_date + 1 day (early morning between 4:30 AM - 5:30 AM)
-            if today_date > check_in_date + timedelta(days=1):
-                is_overdue = True
-            elif today_date == check_in_date + timedelta(days=1) and current_time > time(5, 30, 0):
-                is_overdue = True
-        else:
-            # Day Shift: normal checkout happens on the same date (check_in_date == today_date)
-            if check_in_date < today_date:
-                is_overdue = True
-
-        if is_overdue:
-            cursor.execute(
-                """
-                UPDATE attendance 
-                SET check_out = %s, working_hours = 4.0, status = 'Half Day' 
-                WHERE id = %s
-                """,
-                (current_time_str, record["id"])
-            )
-            conn.commit()
-            return jsonify({"message": f"Checked out (Overdue checkout from previous shift date). Status marked as Half Day."}), 200
-
-        # Enforce window bounds for early checkout attempts
-        if emp_shift == "Night Shift":
-            # Window: 4:30 AM (04:30:00) to 5:30 AM (05:30:00)
-            window_start = time(4, 30, 0)
-            if current_time < window_start and current_time >= time(19, 0, 0):
-                return jsonify({"error": "Check-out option is only enabled between 04:30 AM and 05:30 AM for Night Shift."}), 400
-        else:
-            # Day / Morning Shift: Enabled ONLY between 17:45 (5:45 PM) and 18:00 (6:00 PM)
-            window_start = time(17, 45, 0)
-            if current_time < window_start:
-                return jsonify({"error": "Check-out option is only enabled between 17:45 and 18:00 (5:45 PM - 6:00 PM)."}), 400
 
         # Calculate working hours accurately
         check_in_val = record["check_in"]
         if isinstance(check_in_val, str):
-            dt_in_time = datetime.strptime(check_in_val, "%H:%M:%S").time()
+            try:
+                dt_in_time = datetime.strptime(check_in_val, "%H:%M:%S").time()
+            except ValueError:
+                dt_in_time = datetime.strptime(check_in_val[:8], "%H:%M:%S").time()
         else:
             dt_in_time = check_in_val
 
         dt_in = datetime.combine(check_in_date, dt_in_time)
         dt_out = ist_now.replace(tzinfo=None)
         delta = dt_out - dt_in
-        total_seconds = delta.total_seconds()
+        total_seconds = max(0, delta.total_seconds())
         working_hours = round(max(0.1, total_seconds / 3600.0), 2)
 
-        # Retain status if already set to Half Day due to late check-in, or if checked out after valid window
+        # Retain status as Present (full present)
         status = record.get("status") or "Present"
-        if status == "Present":
-            if emp_shift == "Night Shift":
-                if not (time(4, 30, 0) <= current_time <= time(5, 30, 0)):
-                    status = "Half Day"
-            else:
-                # If checking out outside 17:45 (5:45 PM) to 18:00 (6:00 PM) -> Half Day
-                if not (time(17, 45, 0) <= current_time <= time(18, 0, 0)):
-                    status = "Half Day"
+        if status not in ["Present", "Half Day", "Leave"]:
+            status = "Present"
 
         cursor.execute(
             """
@@ -764,7 +712,11 @@ def check_out():
             (current_time_str, working_hours, status, record["id"])
         )
         conn.commit()
-        return jsonify({"message": f"Checked out successfully at {current_time_str}. Total hours: {working_hours:.2f} hrs. Status: {status}"}), 200
+
+        return jsonify({
+            "message": f"Checked out successfully at {current_time_str}. Total hours: {working_hours:.2f} hrs. Status: {status} ✅"
+        }), 200
+
     except Exception as e:
         conn.rollback()
         logger.error(f"Leaves API check_out error: {e}")
