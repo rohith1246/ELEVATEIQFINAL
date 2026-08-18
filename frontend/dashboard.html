@@ -1440,28 +1440,96 @@ const layouts = {
         <div id="empAnnouncementBoard" style="display:flex; flex-direction:column; gap:16px;"></div>
     `,
     profile: `
-        <div class="glass-card" style="max-width:600px; margin:0 auto;">
-            <h2 style="font-size:18px; margin-bottom:20px;">Personal Profile Settings</h2>
-            <form id="profileForm">
-                <div class="field"><label>Full Name</label><input type="text" id="profName" required></div>
-                <div class="field"><label>Email Address</label><input type="email" id="profEmail" required></div>
-                <div class="field" id="profEmpIdField" style="display:none;"><label>Employee ID</label><input type="text" id="profEmpId" disabled></div>
-                <div class="field" id="profDeptField" style="display:none;"><label>Department</label><input type="text" id="profDept" disabled></div>
-                <div class="field" id="profDesgField" style="display:none;"><label>Designation</label><input type="text" id="profDesg" disabled></div>
-                <div class="field" id="profPhoneField" style="display:none;"><label>Phone Number</label><input type="text" id="profPhone"></div>
-                <div class="field" id="profShiftField" style="display:none;">
-                    <label style="display:flex; align-items:center; gap:8px;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Work Shift
-                    </label>
-                    <select id="profShift" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--ink); font-size:14px; cursor:pointer;">
-                        <option value="Day Shift">&#9728; Day Shift &nbsp;(9:00 AM – 6:00 PM)</option>
-                        <option value="Night Shift">&#9790; Night Shift (8:00 PM &ndash; 5:00 AM)</option>
-                    </select>
-                    <small style="color:var(--ink-soft); font-size:12px; margin-top:4px; display:block;">You can change your shift anytime from your profile.</small>
+        <div class="glass-card" style="max-width:680px; margin:0 auto; padding:28px;">
+            <!-- Profile Banner -->
+            <div style="display:flex; align-items:center; gap:18px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--glass-border);">
+                <div id="profAvatarCircle" style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--orange), #dc2626); color:#fff; font-size:22px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(255, 122, 0, 0.4); flex-shrink:0;">
+                    U
                 </div>
-                <div class="field"><label>New Password (Leave blank to keep current)</label><input type="password" id="profPassword"></div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top:10px;">Save Profile Information</button>
+                <div style="flex-grow:1;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <h2 id="profHeaderName" style="font-size:20px; font-weight:800; margin:0; color:var(--ink);">My Profile Settings</h2>
+                        <span id="profRoleBadge" style="background:rgba(255,122,0,0.15); border:1px solid rgba(255,122,0,0.4); color:var(--orange); font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;">ADMINISTRATOR</span>
+                    </div>
+                    <p id="profHeaderEmail" style="font-size:13px; color:var(--ink-soft); margin:4px 0 0 0;">View your profile details and securely manage your login credentials.</p>
+                </div>
+            </div>
+
+            <form id="profileForm">
+                <!-- Account Info Section -->
+                <div style="margin-bottom:24px;">
+                    <h3 style="font-size:15px; font-weight:700; color:var(--ink); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Personal & Account Details
+                    </h3>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div class="field" style="margin-bottom:0;"><label>Full Name</label><input type="text" id="profName" required></div>
+                        <div class="field" style="margin-bottom:0;"><label>Email Address</label><input type="email" id="profEmail" required></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;">
+                        <div class="field" id="profEmpIdField" style="margin-bottom:0;"><label>Employee / Executive ID</label><input type="text" id="profEmpId" disabled style="background:rgba(255,255,255,0.04); cursor:not-allowed; opacity:0.85;"></div>
+                        <div class="field" id="profPhoneField" style="margin-bottom:0;"><label>Phone Number</label><input type="text" id="profPhone" placeholder="+91 XXXXX XXXXX"></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;">
+                        <div class="field" id="profDeptField" style="margin-bottom:0;"><label>Department</label><input type="text" id="profDept" disabled style="background:rgba(255,255,255,0.04); cursor:not-allowed; opacity:0.85;"></div>
+                        <div class="field" id="profDesgField" style="margin-bottom:0;"><label>Designation</label><input type="text" id="profDesg" disabled style="background:rgba(255,255,255,0.04); cursor:not-allowed; opacity:0.85;"></div>
+                    </div>
+
+                    <div class="field" id="profShiftField" style="display:none; margin-top:14px;">
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Work Shift
+                        </label>
+                        <select id="profShift" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--ink); font-size:14px; cursor:pointer;">
+                            <option value="Day Shift">&#9728; Day Shift &nbsp;(9:00 AM – 6:00 PM)</option>
+                            <option value="Night Shift">&#9790; Night Shift (8:00 PM &ndash; 5:00 AM)</option>
+                        </select>
+                        <small style="color:var(--ink-soft); font-size:12px; margin-top:4px; display:block;">You can change your shift anytime from your profile.</small>
+                    </div>
+                </div>
+
+                <!-- Password & Security Section -->
+                <div style="background:rgba(15, 23, 42, 0.45); border:1px solid var(--glass-border); border-radius:16px; padding:20px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <h3 style="font-size:15px; font-weight:700; color:var(--ink); margin:0; display:flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Change Password
+                        </h3>
+                        <span style="font-size:11px; color:var(--ink-soft); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:6px;">Optional</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 16px 0;">Leave password fields blank if you do not wish to update your password.</p>
+
+                    <div class="field" style="position:relative;">
+                        <label>Current Password</label>
+                        <input type="password" id="profCurrentPassword" placeholder="Enter your current password">
+                        <button type="button" onclick="togglePasswordVisibility('profCurrentPassword', this)" style="position:absolute; right:12px; top:34px; background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;" title="Show/Hide">👁️</button>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div class="field" style="margin-bottom:0; position:relative;">
+                            <label>New Password</label>
+                            <input type="password" id="profPassword" placeholder="Enter new strong password">
+                            <button type="button" onclick="togglePasswordVisibility('profPassword', this)" style="position:absolute; right:12px; top:34px; background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;" title="Show/Hide">👁️</button>
+                        </div>
+                        <div class="field" style="margin-bottom:0; position:relative;">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="profConfirmPassword" placeholder="Re-enter new password">
+                            <button type="button" onclick="togglePasswordVisibility('profConfirmPassword', this)" style="position:absolute; right:12px; top:34px; background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;" title="Show/Hide">👁️</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px; font-size:11px; color:var(--ink-soft); line-height:1.5;">
+                        <span style="color:var(--orange); font-weight:700;">Password Rule:</span> At least 8 characters with uppercase, lowercase, numbers, and special characters.
+                    </div>
+                </div>
+
+                <button type="submit" id="profSubmitBtn" class="btn-primary" style="width: 100%; padding:12px; font-size:14px; font-weight:700; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Profile & Security Changes
+                </button>
             </form>
         </div>
     `,
@@ -1924,7 +1992,8 @@ function renderSidebar() {
             { id: "messages", label: "Workspace", icon: "message-square" },
             { id: "groups", label: "Groups", icon: "users-2" },
             { id: "oversight", label: "Oversight", icon: "eye" },
-            { id: "tickets", label: "Support Tickets", icon: "help-circle" }
+            { id: "tickets", label: "Support Tickets", icon: "help-circle" },
+            { id: "profile", label: "My Profile", icon: "user" }
         ];
     } else if (currentUser.role === 'employee' || currentUser.role === 'team_leader') {
         list = [
@@ -2544,6 +2613,20 @@ function updateShiftBadge(shiftName) {
     el.style.color = shiftName === 'Night Shift' ? '#38bdf8' : '#a78bfa';
     el.style.border = shiftName === 'Night Shift' ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(124, 58, 237, 0.3)';
   });
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🔒';
+    btn.title = 'Hide password';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+    btn.title = 'Show password';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

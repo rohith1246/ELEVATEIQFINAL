@@ -618,18 +618,17 @@ def profile():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         if request.method == "GET":
-            if user["role"] == "employee":
+            if user["role"] in ["employee", "team_leader", "tl", "hr_manager", "hr"]:
                 cursor.execute(
                     """
-                    SELECT u.name, u.email, e.* 
+                    SELECT u.id, u.name, u.email, u.role, e.* 
                     FROM users u 
-                    JOIN employees e ON e.user_id = u.id 
+                    LEFT JOIN employees e ON e.user_id = u.id 
                     WHERE u.id = %s
                     """,
                     (user["id"],)
                 )
                 profile_data = cursor.fetchone()
-                # Serialize Python date objects to ISO string representation
                 if profile_data:
                     if profile_data.get("date_of_joining"):
                         profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
@@ -637,10 +636,28 @@ def profile():
                         profile_data["salary"] = float(profile_data["salary"])
                     else:
                         profile_data["salary"] = 35000.00
+            elif user["role"] == "admin":
+                cursor.execute(
+                    """
+                    SELECT u.id, u.name, u.email, u.role, e.employee_id, e.department, e.designation, e.phone_number, e.date_of_joining
+                    FROM users u 
+                    LEFT JOIN employees e ON e.user_id = u.id 
+                    WHERE u.id = %s
+                    """,
+                    (user["id"],)
+                )
+                profile_data = cursor.fetchone()
+                if profile_data:
+                    if profile_data.get("date_of_joining"):
+                        profile_data["date_of_joining"] = profile_data["date_of_joining"].isoformat()
+                    if not profile_data.get("designation"):
+                        profile_data["designation"] = "Executive Administrator"
+                    if not profile_data.get("department"):
+                        profile_data["department"] = "Executive Management"
             elif user["role"] == "client":
                 cursor.execute(
                     """
-                    SELECT u.name, u.email, c.* 
+                    SELECT u.name, u.email, u.role, c.* 
                     FROM users u 
                     JOIN clients c ON c.user_id = u.id 
                     WHERE u.id = %s
@@ -655,7 +672,7 @@ def profile():
             return jsonify(profile_data), 200
 
         elif request.method == "PUT":
-            data = request.json
+            data = request.json or {}
             name = data.get("name")
             email = data.get("email")
             phone = data.get("phone_number")
@@ -685,7 +702,7 @@ def profile():
                 cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed, user["id"]))
                 revoke_all_refresh_tokens(user["id"])
 
-            if user["role"] == "employee" and phone:
+            if phone and user["role"] in ["admin", "employee", "team_leader", "tl", "hr_manager", "hr"]:
                 cursor.execute(
                     "UPDATE employees SET phone_number = %s WHERE user_id = %s",
                     (phone, user["id"])

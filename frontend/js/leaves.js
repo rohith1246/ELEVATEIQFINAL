@@ -1397,42 +1397,97 @@ async function loadEmpAnnouncements() {
  * @async
  */
 async function loadProfile() {
-    const prof = await apiCall("/profile");
-    document.getElementById("profName").value = prof.name;
-    document.getElementById("profEmail").value = prof.email;
-    document.getElementById("profPassword").value = "";
+    try {
+        const prof = await apiCall("/profile");
+        if (!prof) return;
 
-    document.getElementById("profEmpIdField").style.display = "none";
-    document.getElementById("profDeptField").style.display = "none";
-    document.getElementById("profDesgField").style.display = "none";
-    document.getElementById("profPhoneField").style.display = "none";
-    const shiftField = document.getElementById("profShiftField");
-    if (shiftField) shiftField.style.display = "none";
+        // Populate basic values
+        const nameInput = document.getElementById("profName");
+        const emailInput = document.getElementById("profEmail");
+        const phoneInput = document.getElementById("profPhone");
+        const currentPwdInput = document.getElementById("profCurrentPassword");
+        const pwdInput = document.getElementById("profPassword");
+        const confirmPwdInput = document.getElementById("profConfirmPassword");
 
-    if (user.role === "employee") {
-        document.getElementById("profEmpIdField").style.display = "block";
-        document.getElementById("profDeptField").style.display = "block";
-        document.getElementById("profDesgField").style.display = "block";
-        document.getElementById("profPhoneField").style.display = "block";
-        if (shiftField) shiftField.style.display = "block";
+        if (nameInput) nameInput.value = prof.name || "";
+        if (emailInput) emailInput.value = prof.email || "";
+        if (phoneInput) phoneInput.value = prof.phone_number || "";
+        if (currentPwdInput) currentPwdInput.value = "";
+        if (pwdInput) pwdInput.value = "";
+        if (confirmPwdInput) confirmPwdInput.value = "";
 
-        document.getElementById("profEmpId").value = prof.employee_id;
-        document.getElementById("profDept").value = prof.department;
-        document.getElementById("profDesg").value = prof.designation;
-        document.getElementById("profPhone").value = prof.phone_number || "";
+        // Header and avatar
+        const headerName = document.getElementById("profHeaderName");
+        const headerEmail = document.getElementById("profHeaderEmail");
+        const avatarCircle = document.getElementById("profAvatarCircle");
+        const roleBadge = document.getElementById("profRoleBadge");
 
-        // Load current shift
-        try {
-            const shiftData = await apiCall("/attendance/shift");
-            const shiftSelect = document.getElementById("profShift");
-            if (shiftSelect && shiftData.shift) {
-                shiftSelect.value = shiftData.shift;
+        if (headerName) headerName.textContent = prof.name || "My Profile";
+        if (headerEmail) headerEmail.textContent = prof.email || "";
+        
+        if (avatarCircle && prof.name) {
+            const initials = prof.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+            avatarCircle.textContent = initials || "U";
+        }
+
+        const userRole = (prof.role || user.role || "").toLowerCase();
+
+        // Role badge styling
+        if (roleBadge) {
+            if (userRole === "admin") {
+                roleBadge.textContent = "👑 EXECUTIVE ADMINISTRATOR";
+                roleBadge.style.background = "rgba(255, 122, 0, 0.15)";
+                roleBadge.style.borderColor = "rgba(255, 122, 0, 0.4)";
+                roleBadge.style.color = "var(--orange)";
+            } else if (userRole === "client") {
+                roleBadge.textContent = "🤝 CLIENT PORTAL";
+                roleBadge.style.background = "rgba(56, 189, 248, 0.15)";
+                roleBadge.style.borderColor = "rgba(56, 189, 248, 0.4)";
+                roleBadge.style.color = "#38bdf8";
+            } else {
+                roleBadge.textContent = "👔 INTERNAL EMPLOYEE";
+                roleBadge.style.background = "rgba(124, 58, 237, 0.15)";
+                roleBadge.style.borderColor = "rgba(124, 58, 237, 0.4)";
+                roleBadge.style.color = "#a78bfa";
             }
-        } catch(e) { /* silent fail */ }
+        }
 
-    } else if (user.role === "client") {
-        document.getElementById("profPhoneField").style.display = "block";
-        document.getElementById("profPhone").value = prof.phone_number || "";
+        // Employee / Executive details
+        const empIdField = document.getElementById("profEmpIdField");
+        const deptField = document.getElementById("profDeptField");
+        const desgField = document.getElementById("profDesgField");
+        const shiftField = document.getElementById("profShiftField");
+
+        if (empIdField) empIdField.style.display = "block";
+        if (deptField) deptField.style.display = "block";
+        if (desgField) desgField.style.display = "block";
+
+        const empIdInput = document.getElementById("profEmpId");
+        const deptInput = document.getElementById("profDept");
+        const desgInput = document.getElementById("profDesg");
+
+        if (empIdInput) empIdInput.value = prof.employee_id || (userRole === "admin" ? "ADMIN-HQ" : "ETQP-SYS");
+        if (deptInput) deptInput.value = prof.department || (userRole === "admin" ? "Executive Management" : "General");
+        if (desgInput) desgInput.value = prof.designation || (userRole === "admin" ? "Executive Administrator" : "Staff");
+
+        // Shift selector (only applicable for employees)
+        if (shiftField) {
+            if (userRole === "employee") {
+                shiftField.style.display = "block";
+                try {
+                    const shiftData = await apiCall("/attendance/shift");
+                    const shiftSelect = document.getElementById("profShift");
+                    if (shiftSelect && shiftData.shift) {
+                        shiftSelect.value = shiftData.shift;
+                    }
+                } catch(e) { /* silent fail */ }
+            } else {
+                shiftField.style.display = "none";
+            }
+        }
+
+    } catch (err) {
+        console.error("Failed to load profile:", err);
     }
 }
 
@@ -1441,37 +1496,92 @@ const profileForm = document.getElementById("profileForm");
 if (profileForm) {
     profileForm.addEventListener("submit", async function(e) {
         e.preventDefault();
-        const payload = {
-            name: document.getElementById("profName").value,
-            email: document.getElementById("profEmail").value
-        };
-        const phone = document.getElementById("profPhone").value;
-        const pwd = document.getElementById("profPassword").value;
-        
-        if (phone) payload.phone_number = phone;
-        if (pwd) payload.password = pwd;
 
-        await apiCall("/profile", "PUT", payload);
+        const nameVal = document.getElementById("profName").value.trim();
+        const emailVal = document.getElementById("profEmail").value.trim();
+        const phoneVal = document.getElementById("profPhone") ? document.getElementById("profPhone").value.trim() : "";
+        const currentPwd = document.getElementById("profCurrentPassword") ? document.getElementById("profCurrentPassword").value : "";
+        const newPwd = document.getElementById("profPassword") ? document.getElementById("profPassword").value : "";
+        const confirmPwd = document.getElementById("profConfirmPassword") ? document.getElementById("profConfirmPassword").value : "";
 
-        // Save shift if employee
-        const shiftSelect = document.getElementById("profShift");
-        if (shiftSelect && user.role === "employee") {
-            const selectedShift = shiftSelect.value;
-            try {
-                await apiCall("/attendance/shift", "POST", { shift: selectedShift });
-                // Update local user object with new shift
-                user.shift = selectedShift;
-                localStorage.setItem("user", JSON.stringify(user));
-            } catch(e) { /* silent fail */ }
+        if (!nameVal || !emailVal) {
+            alert("Name and Email Address are required.");
+            return;
         }
 
-        alert("Profile settings saved successfully!");
-        
-        user.name = payload.name;
-        user.email = payload.email;
-        localStorage.setItem("user", JSON.stringify(user));
-        document.getElementById("userGreeting").textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
-        loadProfile();
+        const payload = {
+            name: nameVal,
+            email: emailVal,
+            phone_number: phoneVal
+        };
+
+        // Password change validations
+        if (newPwd || confirmPwd || currentPwd) {
+            if (!currentPwd) {
+                alert("Please enter your Current Password to update your password.");
+                if (document.getElementById("profCurrentPassword")) document.getElementById("profCurrentPassword").focus();
+                return;
+            }
+            if (!newPwd) {
+                alert("Please enter a New Password.");
+                if (document.getElementById("profPassword")) document.getElementById("profPassword").focus();
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                alert("New Password and Confirm New Password do not match. Please verify.");
+                if (document.getElementById("profConfirmPassword")) document.getElementById("profConfirmPassword").focus();
+                return;
+            }
+            if (newPwd.length < 8) {
+                alert("New password must be at least 8 characters long.");
+                if (document.getElementById("profPassword")) document.getElementById("profPassword").focus();
+                return;
+            }
+            payload.current_password = currentPwd;
+            payload.password = newPwd;
+        }
+
+        const submitBtn = document.getElementById("profSubmitBtn");
+        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span>Saving changes...</span>`;
+        }
+
+        try {
+            const res = await apiCall("/profile", "PUT", payload);
+
+            // Save shift if employee
+            const shiftSelect = document.getElementById("profShift");
+            if (shiftSelect && user.role === "employee") {
+                const selectedShift = shiftSelect.value;
+                try {
+                    await apiCall("/attendance/shift", "POST", { shift: selectedShift });
+                    user.shift = selectedShift;
+                    localStorage.setItem("user", JSON.stringify(user));
+                } catch(e) { /* silent */ }
+            }
+
+            alert(newPwd ? "Profile and password updated successfully!" : "Profile settings saved successfully!");
+
+            user.name = payload.name;
+            user.email = payload.email;
+            localStorage.setItem("user", JSON.stringify(user));
+            
+            const greeting = document.getElementById("userGreeting");
+            if (greeting) {
+                greeting.textContent = `Hello, ${user.name} (${user.role.toUpperCase()})`;
+            }
+
+            loadProfile();
+        } catch (err) {
+            alert(err.message || "Failed to update profile settings.");
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
+        }
     });
 }
 
