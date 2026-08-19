@@ -20,7 +20,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 FILES_FOLDER = os.path.join(BASE_DIR, "uploads", "confidential_files")
 os.makedirs(FILES_FOLDER, exist_ok=True)
 
-# Master Confidential Project Files (Downloadable Toolkit / Repositories)
+# Master Confidential Project Files (Downloadable Toolkit / Repositories & Portals)
 CONFIDENTIAL_FILES = {
     "github-project": {
         "id": "github-project",
@@ -31,6 +31,17 @@ CONFIDENTIAL_FILES = {
         "filename": "repo-quality-measure-ext-2026-08-11.zip",
         "file_type": "ZIP Archive",
         "date_added": "2026-08-17",
+        "security_level": "Restricted (Employee Only)"
+    },
+    "snorkel-ai": {
+        "id": "snorkel-ai",
+        "name": "Snorkel AI",
+        "title": "Snorkel AI (Data-Centric AI & Weak Supervision Hub)",
+        "project": "Project Terminus / Snorkel AI",
+        "description": "Official Snorkel AI documentation, programmatic data labeling workflows, Foundation Model alignment pipelines, and dataset engineering framework.",
+        "url": "https://snorkel-ai.github.io/",
+        "file_type": "Web Portal / Documentation",
+        "date_added": "2026-08-19",
         "security_level": "Restricted (Employee Only)"
     }
 }
@@ -282,15 +293,22 @@ def get_vault_files():
     files_list = []
     for fid, item in CONFIDENTIAL_FILES.items():
         f_copy = dict(item)
-        f_path = os.path.join(FILES_FOLDER, f_copy["filename"])
-        if os.path.exists(f_path):
+        if f_copy.get("url"):
             f_copy["is_available"] = True
-            f_size_bytes = os.path.getsize(f_path)
-            f_copy["file_size_bytes"] = f_size_bytes
-            f_copy["file_size_formatted"] = f"{round(f_size_bytes / 1024, 1)} KB" if f_size_bytes < 1024*1024 else f"{round(f_size_bytes / (1024*1024), 2)} MB"
+            f_copy["file_size_formatted"] = "Live Portal"
+        elif f_copy.get("filename"):
+            f_path = os.path.join(FILES_FOLDER, f_copy["filename"])
+            if os.path.exists(f_path):
+                f_copy["is_available"] = True
+                f_size_bytes = os.path.getsize(f_path)
+                f_copy["file_size_bytes"] = f_size_bytes
+                f_copy["file_size_formatted"] = f"{round(f_size_bytes / 1024, 1)} KB" if f_size_bytes < 1024*1024 else f"{round(f_size_bytes / (1024*1024), 2)} MB"
+            else:
+                f_copy["is_available"] = False
+                f_copy["file_size_formatted"] = "Unavailable"
         else:
-            f_copy["is_available"] = False
-            f_copy["file_size_formatted"] = "Unavailable"
+            f_copy["is_available"] = True
+            f_copy["file_size_formatted"] = "Ready"
         files_list.append(f_copy)
 
     return jsonify({
