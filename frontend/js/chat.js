@@ -1,7 +1,8 @@
 /**
  * @file chat.js
  * @description Real-time chat workspace controller. Integrates SSE streams for message push notifications,
- * manages DMs/Group threads state, dynamic user query filters, group provisioning, and admin auditing/oversight portals.
+ * manages DMs/Group threads state, dynamic user query filters, group provisioning, file/image sharing,
+ * member management, and admin auditing/oversight portals.
  */
 
 let currentUser = user;
@@ -52,6 +53,59 @@ function formatMessageBody(text) {
     });
 }
 
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function renderMessageAttachment(m) {
+    if (!m.file_url) return '';
+    const url = m.file_url;
+    const name = escapeHTML(m.file_name || 'Attachment');
+    const type = (m.file_type || '').toLowerCase();
+    const sizeStr = formatFileSize(m.file_size);
+    
+    const isImg = type.startsWith('image/') || /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(url);
+    if (isImg) {
+        return `
+            <div class="chat-file-image" style="margin-top: 8px; margin-bottom: 4px;">
+                <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: block; max-width: 280px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+                    <img src="${url}" alt="${name}" style="width: 100%; max-height: 220px; object-fit: cover; display: block; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" />
+                </a>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">📷 ${name}</span>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.5);">${sizeStr}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    let icon = '📄';
+    if (type.includes('pdf') || /\.pdf$/i.test(name)) icon = '📕';
+    else if (type.includes('sheet') || type.includes('excel') || type.includes('csv') || /\.(xls|xlsx|csv)$/i.test(name)) icon = '📊';
+    else if (type.includes('word') || type.includes('document') || /\.(doc|docx)$/i.test(name)) icon = '📝';
+    else if (type.includes('zip') || type.includes('compressed') || /\.(zip|rar|7z|tar|gz)$/i.test(name)) icon = '📦';
+    else if (type.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(name)) icon = '🎬';
+
+    return `
+        <div class="chat-file-card" style="margin-top: 8px; margin-bottom: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 320px;">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <span style="font-size: 22px;">${icon}</span>
+                <div style="min-width: 0;">
+                    <div style="font-weight: 600; font-size: 12px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</div>
+                    <div style="font-size: 10.5px; color: rgba(255,255,255,0.6);">${sizeStr}</div>
+                </div>
+            </div>
+            <a href="${url}" download="${name}" target="_blank" rel="noopener noreferrer" class="btn-download-file" style="background: rgba(255, 122, 0, 0.2); border: 1px solid rgba(255, 122, 0, 0.4); color: var(--orange, #ff7a00); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                ⬇ Download
+            </a>
+        </div>
+    `;
+}
+
 let lastDMMessagesJson = "";
 let lastDMListJson = "";
 let lastGroupMessagesJson = "";
@@ -59,7 +113,6 @@ let lastGroupListJson = "";
 
 /**
  * Initializes Server-Sent Events (SSE) stream for real-time notification dispatching.
- * Listens for new messages or conversation updates and triggers thread/list refreshes.
  */
 function initChatSSE() {
     if (chatEventSource) {
@@ -99,7 +152,6 @@ function initChatSSE() {
         console.error("Could not initialize SSE:", err);
     }
 
-    // Start smart automatic poller as fallback when SSE is not connected
     if (!chatPollingInterval) {
         chatPollingInterval = setInterval(() => {
             const isSSEActive = (chatEventSource && chatEventSource.readyState === 1);
@@ -113,9 +165,6 @@ function initChatSSE() {
 
 /**
  * Initializes the Direct Messages (DMs) user interface workspace.
- * Resets selection state and fetches initial conversations list.
- * 
- * @async
  */
 async function loadMessagesPanel() {
     activeConversationId = null;
@@ -129,9 +178,6 @@ async function loadMessagesPanel() {
 
 /**
  * Fetches and renders active 1-on-1 DM conversations list from backend.
- * Uses caching checks to prevent redundant DOM re-rendering.
- * 
- * @async
  */
 async function refreshDMList() {
     try {
@@ -173,12 +219,6 @@ async function refreshDMList() {
     }
 }
 
-/**
- * Periodically polls new DM list updates and thread messages.
- * Used as a fallback check.
- * 
- * @async
- */
 async function pollMessages() {
     await refreshDMList();
     if (activeConversationId) {
@@ -187,11 +227,7 @@ async function pollMessages() {
 }
 
 /**
- * Selects and activates a DM thread, marks it as read, and fetches its message history.
- * 
- * @async
- * @param {number} id - Target conversation ID.
- * @param {string} partnerName - Name of the employee we are chatting with.
+ * Selects and activates a DM thread.
  */
 async function selectDMConversation(id, partnerName) {
     activeConversationId = id;
@@ -214,9 +250,6 @@ async function selectDMConversation(id, partnerName) {
 
 /**
  * Queries conversation message list from backend and populates the message thread view.
- * 
- * @async
- * @param {boolean} [forceScroll=false] - Whether to force scroll to the bottom of the container.
  */
 async function refreshDMThread(forceScroll = false) {
     if (!activeConversationId) return;
@@ -242,11 +275,14 @@ async function refreshDMThread(forceScroll = false) {
                 const bubbleClass = isMine ? 'outgoing' : 'incoming';
                 const senderHtml = isMine ? '' : `<div class="sender">${escapeHTML(m.sender_name)}</div>`;
                 const timeStr = formatToIST(m.sent_at);
+                const attachmentHtml = renderMessageAttachment(m);
+                const bodyHtml = m.content ? `<div>${formatMessageBody(m.content)}</div>` : '';
                 
                 messagesDiv.innerHTML += `
                     <div class="msg-bubble ${bubbleClass}">
                         ${senderHtml}
-                        <div>${formatMessageBody(m.content)}</div>
+                        ${bodyHtml}
+                        ${attachmentHtml}
                         <div class="time">${timeStr}</div>
                     </div>
                 `;
@@ -262,10 +298,7 @@ async function refreshDMThread(forceScroll = false) {
 }
 
 /**
- * Sends a message in the active thread (DM or Group) and renders a temporary "sending..." bubble.
- * 
- * @async
- * @param {string} type - Either 'dm' or 'group'.
+ * Sends a message in the active thread (DM or Group).
  */
 async function sendChatMessage(type) {
     if (type === 'dm') {
@@ -340,11 +373,77 @@ async function sendChatMessage(type) {
 }
 
 /**
- * Handles keyboard listener shortcuts (e.g. Enter to send).
- * 
- * @param {KeyboardEvent} e - Keyboard event context.
- * @param {string} type - 'dm' or 'group'.
+ * Handles uploading files and images in chat conversations.
  */
+async function handleChatFileUpload(type, input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    const convId = type === 'group' ? activeGroupConversationId : activeConversationId;
+    if (!convId) {
+        alert("Please select a conversation first.");
+        input.value = "";
+        return;
+    }
+    
+    if (file.size > 25 * 1024 * 1024) {
+        alert("File size exceeds the 25MB limit. Please select a smaller file.");
+        input.value = "";
+        return;
+    }
+    
+    const textInput = document.getElementById(type === 'group' ? "groupInput" : "dmInput");
+    const caption = textInput ? textInput.value.trim() : "";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    if (caption) formData.append("content", caption);
+    
+    const messagesDiv = document.getElementById(type === 'group' ? "groupMessages" : "dmMessages");
+    if (messagesDiv) {
+        messagesDiv.innerHTML += `
+            <div class="msg-bubble outgoing sending-bubble" style="opacity: 0.75;">
+                <div style="font-size:12px; font-style:italic; display:flex; align-items:center; gap:6px;">
+                    <span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Uploading ${escapeHTML(file.name)} (${formatFileSize(file.size)})...
+                </div>
+            </div>
+        `;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    try {
+        const token = localStorage.getItem("token") || (currentUser && currentUser.token);
+        const headers = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        
+        const response = await fetch(`/chat/conversations/${convId}/upload`, {
+            method: "POST",
+            headers: headers,
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || "File upload failed");
+        }
+        
+        if (textInput) textInput.value = "";
+        input.value = "";
+        
+        if (type === 'group') {
+            await refreshGroupThread(true);
+            await refreshGroupList();
+        } else {
+            await refreshDMThread(true);
+            await refreshDMList();
+        }
+    } catch (err) {
+        console.error("Upload error:", err);
+        alert(`Error uploading file: ${err.message}`);
+        if (type === 'group') await refreshGroupThread(true);
+        else await refreshDMThread(true);
+    }
+}
+
 function handleChatKey(e, type) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -353,100 +452,77 @@ function handleChatKey(e, type) {
 }
 
 /**
- * Opens modal wrapper for launching a new DM conversation.
- * 
- * @async
+ * Opens modal dialog for starting a new direct message conversation.
  */
 async function openNewDMModal() {
-    const searchInput = document.getElementById("dmUserSearch");
-    if (searchInput) {
-        if (currentUser && currentUser.role === 'client') {
-            searchInput.placeholder = "Search administrators...";
-        } else {
-            searchInput.placeholder = "Search employees...";
-        }
-    }
     document.getElementById("dmUserSearch").value = "";
     openModal("newDMModal");
-    await loadDMUsersList();
+    await loadUsersForDM();
 }
 
 /**
- * Retrieves eligible workspace users list for starting DMs.
- * 
- * @async
+ * Queries active directory users list for starting new direct messages.
  */
-async function loadDMUsersList() {
+async function loadUsersForDM() {
+    const listContainer = document.getElementById("dmUsersList");
+    listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-soft);">Loading directory...</div>';
     try {
-        const users = await apiCall("/chat/users");
-        allUsers = users;
-        renderDMUsersList(users);
-    } catch(e) {}
+        allUsers = await apiCall("/chat/users");
+        renderDMUsersList(allUsers);
+    } catch(e) {
+        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:red;">Failed to load user directory.</div>';
+    }
 }
 
-/**
- * Formulates rows of users inside the new DM search modal.
- * 
- * @param {Array<Object>} list - The user array items.
- */
-function renderDMUsersList(list) {
-    const container = document.getElementById("dmUsersList");
-    container.innerHTML = "";
-    if (list.length === 0) {
-        const msg = (currentUser && currentUser.role === 'client') ? "No administrators found." : "No employees found.";
-        container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); font-size:13px; padding:10px;">${msg}</div>`;
+function renderDMUsersList(users) {
+    const listContainer = document.getElementById("dmUsersList");
+    listContainer.innerHTML = "";
+    if (users.length === 0) {
+        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-soft);">No colleagues found.</div>';
         return;
     }
-    list.forEach(u => {
-        const initials = u.name ? u.name.charAt(0).toUpperCase() : "?";
+    users.forEach(u => {
         const isOnline = u.is_online === true || u.is_online === 'true' || u.is_online === 1;
-        const statusDot = isOnline 
-            ? '<span style="width:7px; height:7px; border-radius:50%; background:#00e676; display:inline-block; margin-left:6px;" title="Online"></span>' 
-            : '<span style="width:7px; height:7px; border-radius:50%; background:#707a8a; display:inline-block; margin-left:6px;" title="Offline"></span>';
-        container.innerHTML += `
-            <div class="user-row">
-                <div style="display:flex; align-items:center; min-width: 0;">
-                    <div class="user-avatar">${initials}</div>
-                    <div style="min-width: 0; text-align: left;">
-                        <div class="user-name" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; display:flex; align-items:center;">${escapeHTML(u.name)} ${statusDot}</div>
-                        <div class="user-email" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHTML(u.email)}</div>
-                    </div>
+        const statusBadge = isOnline 
+            ? '<span class="status-tag status-active" style="font-size:10px; padding:2px 6px;">Online</span>' 
+            : '<span class="status-tag status-offline" style="font-size:10px; padding:2px 6px;">Offline</span>';
+        
+        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="background:rgba(255, 122, 0, 0.15); border:1px solid rgba(255, 122, 0, 0.3); color:var(--orange); font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">${u.role.toUpperCase()}</span>` : '';
+
+        listContainer.innerHTML += `
+            <div class="user-select-row" onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--glass-border); cursor:pointer; transition: background 0.15s ease;">
+                <div>
+                    <div style="font-weight:600; font-size:13px; color:#fff;">${escapeHTML(u.name)} ${roleLabel}</div>
+                    <div style="font-size:11px; color:var(--ink-soft);">${escapeHTML(u.email)}</div>
                 </div>
-                <button onclick="startDMWithUser(${u.id}, '${escapeHTML(u.name.replace(/'/g, "\\'"))}')" class="btn-chat-action">Chat</button>
+                <div>${statusBadge}</div>
             </div>
         `;
     });
 }
 
-/**
- * Filters the list of workspace employees depending on search input value.
- */
-function filterDMUsersList() {
+function filterDMUsers() {
     const q = document.getElementById("dmUserSearch").value.toLowerCase();
     const filtered = allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
     renderDMUsersList(filtered);
 }
 
-/**
- * Sends a conversation initiation POST and opens the DM thread.
- * 
- * @async
- * @param {number} userId - The selected recipient user ID.
- * @param {string} userName - The name of the recipient.
- */
-async function startDMWithUser(userId, userName) {
+async function startDMWithUser(targetUserId, targetUserName) {
     try {
-        const res = await apiCall("/chat/conversations", "POST", { type: "dm", members: [userId] });
+        const res = await apiCall("/chat/conversations", "POST", {
+            type: "dm",
+            member_ids: [targetUserId]
+        });
         closeModal("newDMModal");
         await refreshDMList();
-        selectDMConversation(res.id, userName);
-    } catch(e) {}
+        await selectDMConversation(res.id, targetUserName);
+    } catch (e) {
+        alert(e.message || "Failed to create conversation");
+    }
 }
 
 /**
  * Initializes the Group Chats interface panel.
- * 
- * @async
  */
 async function loadGroupsPanel() {
     activeGroupConversationId = null;
@@ -456,16 +532,17 @@ async function loadGroupsPanel() {
     document.getElementById("groupPlaceholder").style.display = "flex";
     initChatSSE();
     
-    const isTLOrAdmin = currentUser.role === 'admin' || currentUser.is_team_leader;
-    document.getElementById("btnCreateGroupSidebar").style.display = isTLOrAdmin ? "block" : "none";
+    const isTLOrAdmin = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader;
+    const btnCreate = document.getElementById("btnCreateGroupSidebar");
+    if (btnCreate) {
+        btnCreate.style.display = isTLOrAdmin ? "block" : "none";
+    }
     
     await refreshGroupList();
 }
 
 /**
  * Pulls active group chats list and dynamically injects them into the sidebar.
- * 
- * @async
  */
 async function refreshGroupList() {
     try {
@@ -489,28 +566,23 @@ async function refreshGroupList() {
         list.forEach(c => {
             const isSelected = activeGroupConversationId === c.id;
             const badgeHtml = c.unread_count > 0 ? `<span class="badge">${c.unread_count}</span>` : '';
-            const lastMsg = c.last_message ? c.last_message : 'No activity';
+            const lastMsg = c.last_message ? c.last_message : 'No messages yet';
             
             container.innerHTML += `
                 <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectGroupConversation(${c.id}, '${c.group_name.replace(/'/g, "\\'")}')">
                     <div>
-                        <div class="title">👥 ${c.group_name}</div>
-                        <div class="subtitle">${lastMsg}</div>
+                        <div class="title">👥 ${escapeHTML(c.group_name)}</div>
+                        <div class="subtitle">${escapeHTML(lastMsg)}</div>
                     </div>
                     <div>${badgeHtml}</div>
                 </div>
             `;
         });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
     }
 }
 
-/**
- * Periodically polls new group messages and listings.
- * 
- * @async
- */
 async function pollGroups() {
     await refreshGroupList();
     if (activeGroupConversationId) {
@@ -520,26 +592,33 @@ async function pollGroups() {
 
 /**
  * Sets selected active group chat, marks it read, and renders control buttons.
- * 
- * @async
- * @param {number} id - Target group conversation ID.
- * @param {string} name - Group name.
  */
 async function selectGroupConversation(id, name) {
     activeGroupConversationId = id;
     lastGroupMessagesJson = "";
     document.getElementById("groupPlaceholder").style.display = "none";
     document.getElementById("groupMainArea").style.display = "flex";
-    document.getElementById("groupActiveTitle").textContent = name;
+    
+    document.querySelectorAll("#groupList .chat-list-item").forEach(item => {
+        item.classList.remove("active");
+    });
     
     try {
         await apiCall(`/chat/conversations/${id}/read`, "POST");
     } catch(e) {}
     
-    const actions = document.getElementById("groupActionsArea");
-    actions.innerHTML = "";
-    if (currentUser.role === 'admin' || currentUser.is_team_leader) {
-        actions.innerHTML = `<button onclick="openAddMemberModal(${id})" class="btn-primary" style="padding: 6px 12px; font-size:12px;">+ Add Employee</button>`;
+    const actionsArea = document.getElementById("groupActionsArea");
+    if (actionsArea) {
+        const isTLOrAdmin = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader;
+        if (isTLOrAdmin) {
+            actionsArea.innerHTML = `
+                <button type="button" onclick="openAddMemberModal(${id})" class="btn-primary" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Add Team Members">
+                    + Add Employee
+                </button>
+            `;
+        } else {
+            actionsArea.innerHTML = '';
+        }
     }
     
     await refreshGroupThread(true);
@@ -547,29 +626,24 @@ async function selectGroupConversation(id, name) {
 }
 
 /**
- * Fetches group chat history, dynamically lists members sidebar, and calculates simulated online counts.
- * 
- * @async
- * @param {boolean} [forceScroll=false] - Whether to force scroll to the bottom of the container.
+ * Queries group chat messages and renders messages with file attachments + member management.
  */
 async function refreshGroupThread(forceScroll = false) {
     if (!activeGroupConversationId) return;
     try {
         const res = await apiCall(`/chat/conversations/${activeGroupConversationId}/messages`);
         
-        const messagesJson = JSON.stringify(res.messages);
-        const membersJson = JSON.stringify(res.members);
-        const cacheKey = messagesJson + "||" + membersJson;
-        if (cacheKey === lastGroupMessagesJson && !forceScroll) {
+        const messagesJson = JSON.stringify(res.messages) + "||" + JSON.stringify(res.members);
+        if (messagesJson === lastGroupMessagesJson && !forceScroll) {
             return;
         }
-        lastGroupMessagesJson = cacheKey;
+        lastGroupMessagesJson = messagesJson;
 
         const membersToRender = (res.members && res.members.length > 0) ? res.members : (allUsers || []);
         const membersCount = membersToRender.length;
         const onlineCount = membersToRender.filter(m => m.is_online === true || m.is_online === 'true' || m.is_online === 1).length;
         const groupTitleElem = document.getElementById("groupActiveTitle") || document.getElementById("groupTitleHeader");
-        const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || (res.conversation && res.conversation.created_by === currentUser.id);
+        const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader || (res.conversation && res.conversation.created_by === currentUser.id);
         const deleteBtnHtml = isCanDelete ? `
             <button type="button" onclick="deleteCurrentGroup(${activeGroupConversationId})" class="btn-action btn-reject" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Delete Group">
                 🗑️ Delete Group
@@ -598,11 +672,14 @@ async function refreshGroupThread(forceScroll = false) {
             const bubbleClass = isMine ? 'outgoing' : 'incoming';
             const senderHtml = isMine ? '' : `<div class="sender">${escapeHTML(m.sender_name)}</div>`;
             const timeStr = formatToIST(m.sent_at);
+            const attachmentHtml = renderMessageAttachment(m);
+            const bodyHtml = m.content ? `<div>${formatMessageBody(m.content)}</div>` : '';
             
             messagesDiv.innerHTML += `
                 <div class="msg-bubble ${bubbleClass}">
                     ${senderHtml}
-                    <div>${formatMessageBody(m.content)}</div>
+                    ${bodyHtml}
+                    ${attachmentHtml}
                     <div class="time">${timeStr}</div>
                 </div>
             `;
@@ -615,7 +692,6 @@ async function refreshGroupThread(forceScroll = false) {
         const membersList = document.getElementById("groupMembersList");
         if (membersList) {
             membersList.innerHTML = "";
-            const membersToRender = (res.members && res.members.length > 0) ? res.members : (allUsers || []);
             if (membersToRender.length === 0) {
                 membersList.innerHTML = `<div style="padding:12px; color:var(--ink-soft); font-size:12px; text-align:center;">No members listed.</div>`;
             } else {
@@ -626,10 +702,20 @@ async function refreshGroupThread(forceScroll = false) {
                         ? '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#00e676; display:inline-block; margin-right:4px;"></span> Online' 
                         : '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#707a8a; display:inline-block; margin-right:4px;"></span> Offline';
 
+                    const canRemoveMember = isCanDelete && m.id !== currentUser.id;
+                    const removeBtnHtml = canRemoveMember ? `
+                        <button type="button" onclick="removeGroupMember(${activeGroupConversationId}, ${m.id}, '${escapeHTML(m.name).replace(/'/g, "\\'")}')" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer; padding:2px 4px; border-radius:4px;" title="Remove Member">
+                            ✕
+                        </button>
+                    ` : '';
+
                     membersList.innerHTML += `
-                        <div class="member-card">
-                            <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
-                            <div class="status" style="font-size:11px; display:flex; align-items:center; color:${isOnline ? '#00e676' : 'var(--ink-soft)'};">${statusDot}</div>
+                        <div class="member-card" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
+                                <div class="status" style="font-size:11px; display:flex; align-items:center; color:${isOnline ? '#00e676' : 'var(--ink-soft)'};">${statusDot}</div>
+                            </div>
+                            <div>${removeBtnHtml}</div>
                         </div>
                     `;
                 });
@@ -640,132 +726,106 @@ async function refreshGroupThread(forceScroll = false) {
     }
 }
 
+async function removeGroupMember(groupId, userId, name) {
+    if (!confirm(`Are you sure you want to remove ${name} from this group?`)) return;
+    try {
+        await apiCall(`/chat/groups/${groupId}/members/${userId}`, "DELETE");
+        await refreshGroupThread(false);
+    } catch(err) {
+        alert(err.message || "Failed to remove member.");
+    }
+}
+
 /**
- * Launches modal dialogue for constructing a new workspace group channel.
- * 
- * @async
+ * Launches modal dialog for creating a new workspace group channel.
  */
 async function openCreateGroupModal() {
     document.getElementById("newGroupName").value = "";
     openModal("createGroupModal");
-    
+    const container = document.getElementById("createGroupMembersList");
+    container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">Loading available colleagues...</div>';
     try {
-        const users = await apiCall("/chat/users");
-        const listDiv = document.getElementById("groupSelectMembersList");
-        listDiv.innerHTML = "";
-        users.forEach(u => {
-            listDiv.innerHTML += `
-                <label style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:8px 12px; border-radius:8px; cursor:pointer;">
-                    <input type="checkbox" name="group_select_user" value="${u.id}" style="cursor:pointer;">
-                    <div>
-                        <div style="font-size:12px; font-weight:600; color:#fff;">${u.name}</div>
-                        <div style="font-size:10px; color:var(--ink-soft);">${u.role.toUpperCase()}</div>
-                    </div>
+        allUsers = await apiCall("/chat/users");
+        container.innerHTML = "";
+        allUsers.forEach(u => {
+            container.innerHTML += `
+                <label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px; cursor:pointer; color:#fff;">
+                    <input type="checkbox" name="groupMember" value="${u.id}" />
+                    <span>${escapeHTML(u.name)} (${escapeHTML(u.email)})</span>
                 </label>
             `;
         });
-    } catch(e) {}
+    } catch(e) {
+        container.innerHTML = '<div style="padding:15px; text-align:center; color:red;">Failed to load user list.</div>';
+    }
 }
 
-/**
- * Handles group chat creation request POST and activates it.
- * 
- * @async
- * @param {Event} e - Submit event context.
- */
 async function submitCreateGroup(e) {
-    e.preventDefault();
-    const groupName = document.getElementById("newGroupName").value.trim();
-    if (!groupName) return;
-    
-    const checked = document.querySelectorAll('input[name="group_select_user"]:checked');
-    const selectedIds = [];
-    checked.forEach(chk => {
-        selectedIds.push(parseInt(chk.value));
-    });
+    if (e) e.preventDefault();
+    const name = document.getElementById("newGroupName").value.trim();
+    if (!name) {
+        alert("Please enter a group name");
+        return;
+    }
+    const checkboxes = document.querySelectorAll('#createGroupMembersList input[type="checkbox"]:checked');
+    const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
     
     try {
         const res = await apiCall("/chat/conversations", "POST", {
             type: "group",
-            name: groupName,
-            members: selectedIds
+            name: name,
+            member_ids: memberIds
         });
         closeModal("createGroupModal");
         await refreshGroupList();
-        selectGroupConversation(res.id, groupName);
-    } catch(e) {}
+        await selectGroupConversation(res.id, name);
+    } catch(err) {
+        alert(err.message || "Failed to create group.");
+    }
 }
 
-/**
- * Shows list of users eligible to join a specific group chat.
- * 
- * @async
- * @param {number} groupId - Target group channel ID
- */
-let currentAddGroupUsers = [];
-let currentAddGroupId = null;
+let activeAddGroupMembersList = [];
 
 async function openAddMemberModal(groupId) {
-    currentAddGroupId = groupId;
     openModal("addGroupMemberModal");
-    const container = document.getElementById("addGroupMembersList");
-    const searchInput = document.getElementById("addMemberSearchInput");
-    if (searchInput) searchInput.value = "";
-    
-    container.innerHTML = `<div style="text-align:center; color:var(--ink-soft); padding:20px; font-size:13px;"><span class="spinner"></span> Loading employees...</div>`;
+    const container = document.getElementById("addMemberSearchList");
+    container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">Loading directory...</div>';
+    document.getElementById("addMemberSearch").value = "";
     
     try {
-        const users = await apiCall("/chat/users");
         const res = await apiCall(`/chat/conversations/${groupId}/messages`);
-        const memberIds = (res.members || []).map(m => m.id);
+        const existingMemberIds = new Set((res.members || []).map(m => m.id));
         
-        currentAddGroupUsers = users.filter(u => !memberIds.includes(u.id));
-        renderAddGroupMembersList(currentAddGroupUsers);
+        allUsers = await apiCall("/chat/users");
+        activeAddGroupMembersList = allUsers.filter(u => !existingMemberIds.has(u.id));
+        
+        renderAddGroupMembersList(activeAddGroupMembersList);
     } catch(e) {
-        container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:15px;">Failed to load employee list.</div>`;
+        container.innerHTML = '<div style="padding:15px; text-align:center; color:red;">Failed to load employees.</div>';
     }
 }
 
 function filterAddGroupMembers() {
-    const q = (document.getElementById("addMemberSearchInput")?.value || "").toLowerCase().trim();
-    if (!q) {
-        renderAddGroupMembersList(currentAddGroupUsers);
-        return;
-    }
-    const filtered = currentAddGroupUsers.filter(u => 
-        (u.name && u.name.toLowerCase().includes(q)) || 
-        (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.designation && u.designation.toLowerCase().includes(q))
-    );
+    const q = document.getElementById("addMemberSearch").value.toLowerCase();
+    const filtered = activeAddGroupMembersList.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
     renderAddGroupMembersList(filtered);
 }
 
 function renderAddGroupMembersList(list) {
-    const container = document.getElementById("addGroupMembersList");
-    if (!container) return;
+    const container = document.getElementById("addMemberSearchList");
     container.innerHTML = "";
-    
     if (list.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:var(--ink-faint); font-size:13px; padding:20px; background:rgba(255,255,255,0.01); border-radius:12px; border:1px dashed var(--glass-border);">All employees are already members of this group.</div>`;
+        container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">All eligible colleagues are already members.</div>';
         return;
     }
-    
     list.forEach(u => {
-        const initials = u.name.split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase();
-        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="background:rgba(255, 122, 0, 0.15); border:1px solid rgba(255, 122, 0, 0.3); color:var(--orange); font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">${u.role.toUpperCase()}</span>` : '';
-
         container.innerHTML += `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:10px 14px; border-radius:14px; transition:all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, var(--blue), var(--orange)); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-                        ${initials}
-                    </div>
-                    <div>
-                        <div style="font-weight:600; font-size:13.5px; color:#fff; display:flex; align-items:center;">${escapeHTML(u.name)} ${roleLabel}</div>
-                        <div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${escapeHTML(u.email)}</div>
-                    </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--glass-border);">
+                <div>
+                    <div style="font-weight:600; font-size:13px; color:#fff;">${escapeHTML(u.name)}</div>
+                    <div style="font-size:11px; color:var(--ink-soft);">${escapeHTML(u.email)}</div>
                 </div>
-                <button onclick="addGroupMember(${currentAddGroupId}, ${u.id}, this)" class="btn-primary" style="padding:6px 14px; font-size:11.5px; border-radius:8px; display:inline-flex; align-items:center; gap:4px; font-weight:600; cursor:pointer;">
+                <button type="button" class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="addGroupMember(${activeGroupConversationId}, ${u.id}, this)">
                     + Add
                 </button>
             </div>
@@ -776,92 +836,70 @@ function renderAddGroupMembersList(list) {
 async function addGroupMember(groupId, userId, btn) {
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `✓ Added`;
-        btn.style.background = `rgba(0, 230, 118, 0.2)`;
-        btn.style.color = `#00e676`;
-        btn.style.borderColor = `#00e676`;
+        btn.textContent = "Adding...";
     }
     try {
         await apiCall(`/chat/groups/${groupId}/members`, "POST", { user_id: userId });
-        setTimeout(async () => {
-            closeModal("addGroupMemberModal");
-            await refreshGroupThread(true);
-        }, 400);
+        activeAddGroupMembersList = activeAddGroupMembersList.filter(u => u.id !== userId);
+        renderAddGroupMembersList(activeAddGroupMembersList);
+        await refreshGroupThread(false);
     } catch(e) {
+        alert(e.message || "Failed to add member.");
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `+ Add`;
+            btn.textContent = "+ Add";
         }
     }
 }
 
 /**
- * Initializes the Oversight Panel monitoring view for administrators or Team Leaders.
- * 
- * @async
+ * Initializes the Oversight (Team Leader & Admin Audit) interface panel.
  */
 async function loadOversightPanel() {
     activeOversightConversationId = null;
+    activeOversightType = null;
     document.getElementById("oversightMainArea").style.display = "none";
     document.getElementById("oversightPlaceholder").style.display = "flex";
+    
     await refreshOversightList();
-    chatPollingInterval = setInterval(pollOversight, 15000);
 }
 
 /**
- * Fetches auditing index log of active conversations from backend.
- * 
- * @async
+ * Pulls all workspace conversations for oversight review.
  */
 async function refreshOversightList() {
     try {
-        let list = [];
-        if (currentUser.role === 'admin') {
-            const rawList = await apiCall("/chat/admin/all");
-            list = rawList.filter(c => c.type === 'group');
-        } else {
-            list = await apiCall("/chat/team-leader/groups");
-        }
-        
+        const res = currentUser.role === 'admin' 
+            ? await apiCall("/chat/admin/all")
+            : await apiCall("/chat/team-leader/groups");
+            
         const container = document.getElementById("oversightList");
         container.innerHTML = "";
         
-        if (list.length === 0) {
-            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No conversations active in the system.</div>`;
+        if (!res || res.length === 0) {
+            container.innerHTML = `<div style="padding:20px; color:var(--ink-soft); font-size:12px; text-align:center;">No monitored conversations available.</div>`;
             return;
         }
         
-        list.forEach(c => {
+        res.forEach(c => {
             const isSelected = activeOversightConversationId === c.id;
-            let displayTitle = "";
-            let displaySub = c.last_message ? c.last_message : 'No activity';
-            
-            if (c.type === 'dm') {
-                const names = c.dm_members ? c.dm_members.map(m => m.name).join(' & ') : 'Direct Message';
-                displayTitle = `👤 DM: ${names}`;
-            } else {
-                displayTitle = `👥 Group: ${c.group_name}`;
-            }
+            const lastMsg = c.last_message ? c.last_message : 'No messages yet';
+            const icon = c.type === 'group' ? '👥' : '💬';
             
             container.innerHTML += `
-                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectOversightConversation(${c.id}, '${c.type}', '${displayTitle.replace(/'/g, "\\'")}')">
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectOversightConversation(${c.id}, '${c.type}', '${c.name.replace(/'/g, "\\'")}')">
                     <div>
-                        <div class="title">${displayTitle}</div>
-                        <div class="subtitle">${displaySub}</div>
+                        <div class="title">${icon} ${escapeHTML(c.name)}</div>
+                        <div class="subtitle">${escapeHTML(lastMsg)}</div>
                     </div>
                 </div>
             `;
         });
-    } catch(e) {
-        console.error(e);
+    } catch (e) {
+        console.error("Oversight list error", e);
     }
 }
 
-/**
- * Fallback poller handler for active Oversight connection.
- * 
- * @async
- */
 async function pollOversight() {
     await refreshOversightList();
     if (activeOversightConversationId) {
@@ -869,14 +907,6 @@ async function pollOversight() {
     }
 }
 
-/**
- * Sets selected oversight tracking connection and renders read-only audits.
- * 
- * @async
- * @param {number} id - Target conversation.
- * @param {string} type - 'dm' or 'group'.
- * @param {string} title - Label title text.
- */
 async function selectOversightConversation(id, type, title) {
     activeOversightConversationId = id;
     activeOversightType = type;
@@ -887,11 +917,6 @@ async function selectOversightConversation(id, type, title) {
     await refreshOversightThread();
 }
 
-/**
- * Queries history data for auditing and renders messages in read-only visual panels.
- * 
- * @async
- */
 async function refreshOversightThread() {
     if (!activeOversightConversationId) return;
     try {
@@ -901,10 +926,13 @@ async function refreshOversightThread() {
         
         res.messages.forEach(m => {
             const timeStr = formatToIST(m.sent_at);
+            const attachmentHtml = renderMessageAttachment(m);
+            const bodyHtml = m.content ? `<div>${formatMessageBody(m.content)}</div>` : '';
             messagesDiv.innerHTML += `
                 <div class="msg-bubble incoming" style="align-self: flex-start; max-width: 80%;">
                     <div class="sender" style="color: var(--orange);">${escapeHTML(m.sender_name)}</div>
-                    <div>${formatMessageBody(m.content)}</div>
+                    ${bodyHtml}
+                    ${attachmentHtml}
                     <div class="time">${timeStr}</div>
                 </div>
             `;
@@ -949,4 +977,3 @@ async function deleteCurrentGroup(convId) {
         alert(err.message || "Failed to delete group.");
     }
 }
-

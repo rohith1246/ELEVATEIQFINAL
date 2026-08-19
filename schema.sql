@@ -103,13 +103,31 @@ CREATE TABLE IF NOT EXISTS conversation_members (
     UNIQUE (conversation_id, user_id)
 );
 
--- 10. Messages
+-- 10. Messages (Supports text, files, and rich media attachments)
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     conversation_id INT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     sender_id INT REFERENCES users(id) ON DELETE SET NULL,
     content TEXT NOT NULL,
+    file_url TEXT,
+    file_name VARCHAR(255),
+    file_type VARCHAR(100),
+    file_size BIGINT,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 10b. Chat File Uploads
+CREATE TABLE IF NOT EXISTS chat_file_uploads (
+    id SERIAL PRIMARY KEY,
+    message_id INT REFERENCES messages(id) ON DELETE CASCADE,
+    conversation_id INT REFERENCES conversations(id) ON DELETE CASCADE,
+    uploader_id INT REFERENCES users(id) ON DELETE SET NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(100),
+    file_size BIGINT,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 11. Read receipts (for unread badge counts)
