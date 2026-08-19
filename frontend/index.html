@@ -138,7 +138,7 @@
 
 <!-- ==================== NAVIGATION BAR ==================== -->
 <nav>
-    <a href="/edutech/" target="_blank" rel="noopener noreferrer" class="logo">
+    <a href="index.html" class="logo">
       <img src="images/logo.png" alt="Elevate IQ Logo">
     </a>
       <div class="menu-toggle" id="mobile-menu-btn" onclick="this.classList.toggle('active'); document.getElementById('navLinks').classList.toggle('active')">
@@ -194,84 +194,34 @@
                 animation:pulse 1.8s infinite;
             "></span>
             We're hiring 
-        </div>
-
-        <!-- Animated Logo with Side-by-Side EduTech Link -->
+              <!-- ElevateIQ Brand Logo -->
         <div style="
             display:flex;
-            flex-direction:row;
-            flex-wrap:wrap;
             justify-content:center;
             align-items:center;
-            gap: 24px;
-            margin-bottom:30px;
+            margin-bottom:20px;
             opacity:0;
             animation:fadeUp .9s ease forwards .15s;
         ">
-            <a href="/edutech/" target="_blank" rel="noopener noreferrer" style="display:inline-block; text-decoration:none;">
+            <a href="index.html" style="display:inline-block; text-decoration:none;">
               <img src="images/logo.png" alt="ElevateIQ Soft Tech Private Limited"
                    style="
                    width:auto;
-                   height: clamp(90px, 14vw, 140px);
+                   height: clamp(100px, 16vw, 150px);
                    object-fit:contain;
-                   filter: drop-shadow(0 0 20px rgba(63,208,255,0.25));
+                   filter: drop-shadow(0 0 25px rgba(63,208,255,0.3));
                    transition:.3s;
                    cursor:pointer;
                    "
                    onmouseover="this.style.transform='scale(1.03)'"
                    onmouseout="this.style.transform='scale(1)'">
             </a>
-            
-            <div class="hero-separator" style="
-                width: 1px;
-                height: 80px;
-                background: var(--glass-border);
-            "></div>
-
-            <a href="edutech/index.html" target="_blank" rel="noopener noreferrer" class="hero-edutech-link" style="
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: center;
-                text-decoration: none;
-                transition: transform 0.3s ease;
-                text-align: left;
-            " onmouseover="this.style.transform='scale(1.03)'"
-               onmouseout="this.style.transform='scale(1)'">
-                <span style="
-                    font-size: 12px;
-                    font-weight: 700;
-                    letter-spacing: 2px;
-                    text-transform: uppercase;
-                    background: linear-gradient(135deg, var(--blue), var(--orange));
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                ">Access Our</span>
-                <span style="
-                    font-size: clamp(22px, 3.5vw, 32px);
-                    font-weight: 800;
-                    color: #fff;
-                    letter-spacing: 1px;
-                    text-transform: uppercase;
-                    margin-top: 4px;
-                ">EduTech Portal</span>
-                <span style="
-                    font-size: 13px;
-                    color: var(--ink-soft);
-                    margin-top: 6px;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                ">
-                    Explore courses, certs & path finder ➜
-                </span>
-            </a>
         </div>
 
         <!-- Tagline -->
         <h1 style="
             max-width:650px;
-            margin:26px auto 0;
+            margin:20px auto 0;
             color:var(--ink-soft);
             font-size:22px;
             font-weight: 500;
@@ -302,14 +252,7 @@
 <style>
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0); } }
 @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
-@media (max-width: 600px) {
-  .hero-separator {
-    display: none;
-  }
-  .hero-edutech-link {
-    align-items: center !important;
-    text-align: center !important;
-  }
+</style>}
 }
 </style>
 
@@ -402,7 +345,7 @@
           <span>⚡</span> IT Services & Data Solutions
         </h3>
       </div>
-      <span style="font-size:13px; color:var(--ink-soft); background:rgba(255,255,255,0.06); padding:8px 16px; border-radius:100px; border:1px solid rgba(255,255,255,0.1);">5 Specialized Services</span>
+      <span style="font-size:13px; color:var(--ink-soft); background:rgba(255,255,255,0.06); padding:8px 16px; border-radius:100px; border:1px solid rgba(255,255,255,0.1);">6 Specialized Services</span>
     </div>
 
     <!-- Subcategories Stack (One by One) -->
@@ -468,14 +411,14 @@
           <div>
             <h4 style="font-size:22px; font-weight:700; color:#fff; margin-bottom:8px;">PDF Data Collection & IDP</h4>
             <p style="color:var(--ink-soft); font-size:14.5px; line-height:1.6; margin:0;">
-              Intelligent Document Processing (IDP) leveraging Optical Character Recognition (OCR), deep layout parsing, and automated table extraction to convert complex PDFs, invoices, and legal contracts into structured data.
+              Intelligent Document Processing (IDP) utilizing OCR, vision transformers, layout LM architectures, and NLP for automated table extraction, financial statement parsing, invoice indexing, and schema normalization.
             </p>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">IDP Engines</span>
-            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">OCR Extraction</span>
-            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">PDF Table Parsing</span>
-            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Document Classifiers</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">OCR & LayoutLM</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Table Extraction</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Invoice Parsing</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Schema Normalization</span>
           </div>
           <div style="margin-top:4px;">
             <a href="services/pdf-data-extraction.html" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; font-size:13.5px; border-radius:10px; text-decoration:none; font-weight:600;">Explore PDF & IDP &rarr;</a>
@@ -529,6 +472,31 @@
           </div>
           <div style="margin-top:4px;">
             <a href="services/cloud-devops.html" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; font-size:13.5px; border-radius:10px; text-decoration:none; font-weight:600;">Explore Cloud & DevOps &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. EduTech & Technical Training Solutions -->
+      <div class="service-row-card glass-card alive-card" style="border:1px solid rgba(255,138,61,0.25);">
+        <div class="service-img-wrapper">
+          <img src="images/course_web_dev.png" alt="EduTech & Technical Training Solutions" onerror="this.onerror=null; this.src='images/service_software_eng.jpg';">
+          <div style="position:absolute; top:12px; left:12px; background:rgba(255,138,61,0.95); color:#fff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; text-transform:uppercase; letter-spacing:0.5px; backdrop-filter:blur(4px);">IT Service 06</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <h4 style="font-size:22px; font-weight:700; color:#fff; margin-bottom:8px;">EduTech & Technical Training Solutions</h4>
+            <p style="color:var(--ink-soft); font-size:14.5px; line-height:1.6; margin:0;">
+              Custom enterprise developer bootcamps, technical certifications, live cohort-based workshops, and industry-grade curriculum design. We bridge talent gaps by upskilling engineering teams and preparing candidates for modern cloud, AI, and software engineering roles.
+            </p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Corporate Bootcamps</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Developer Upskilling</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Technical Certifications</span>
+            <span style="font-size:12px; background:rgba(255,138,61,0.12); color:var(--orange); border:1px solid rgba(255,138,61,0.3); padding:4px 12px; border-radius:6px; font-weight:600;">Live Project Sandboxes</span>
+          </div>
+          <div style="margin-top:4px;">
+            <a href="services/edutech-solutions.html" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; font-size:13.5px; border-radius:10px; text-decoration:none; font-weight:600;">Explore EduTech Solutions &rarr;</a>
           </div>
         </div>
       </div>

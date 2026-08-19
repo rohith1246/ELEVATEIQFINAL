@@ -1388,31 +1388,14 @@ def get_report_details(report_type):
 
 
 @auth_bp.route("/edutech")
-def serve_edutech_redirect():
-    """
-    Redirects bare edutech routes to have trailing slash to ensure path integrity.
-
-    Returns:
-        Response: Redirection mapping client to /edutech/.
-    """
-    return redirect("/edutech/")
-
-
 @auth_bp.route("/edutech/")
 @auth_bp.route("/edutech/<path:path>")
-def serve_edutech(path="index.html"):
+def serve_edutech(path=None):
     """
-    Serves static portal assets for the EduTech sub-portal.
-
-    Args:
-        path (str): File path relative to edutech directory. Defaults to 'index.html'.
-
-    Returns:
-        Response: The file from directory.
+    EduTech is now fully integrated as an ElevateIQ Enterprise Service.
+    Redirects legacy sub-portal URLs to the EduTech Solutions service page.
     """
-    if not path or path == "":
-        path = "index.html"
-    return send_from_directory(EDUTECH_DIR, path)
+    return redirect("/services/edutech-solutions.html", code=301)
 
 
 @auth_bp.route("/designations", methods=["GET"])
