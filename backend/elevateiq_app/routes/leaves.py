@@ -529,9 +529,9 @@ def get_attendance():
 def check_in():
     """
     Registers clock-in time for current employee/user.
-    - Check-in before 8:15 / 9:15 -> Present
-    - Check-in after 8:15 / 9:15 -> Half Day
-    - Forgot checkout from previous shift -> Auto Half Day for previous shift
+    - Day Shift (9 AM - 6 PM): Check-in from 08:00 AM. On-time <= 09:30 AM (Present), Late > 09:30 AM (Half Day).
+    - Night Shift (8 PM - 5 AM): Check-in from 06:00 PM. On-time <= 08:30 PM (Present), Late > 08:30 PM (Half Day).
+    - Automatically resolves any forgot-to-checkout unclosed sessions from previous days cleanly.
     """
     user = get_current_user()
     if not user:
@@ -602,26 +602,30 @@ def check_in():
             else:
                 return jsonify({"error": f"You are already checked in at {existing_today['check_in']}. Please check out first before checking in again."}), 400
 
-        # 3. Clean up any forgot-to-checkout open sessions from previous days
+        # 3. Clean up any forgot-to-checkout open sessions from previous days cleanly
         cursor.execute(
-            "SELECT id, date, check_in FROM attendance WHERE employee_id = %s AND check_out IS NULL ORDER BY date DESC, id DESC LIMIT 1",
+            "SELECT id, date, check_in, shift FROM attendance WHERE employee_id = %s AND check_out IS NULL ORDER BY date DESC, id DESC",
             (emp_db_id,)
         )
-        open_prev = cursor.fetchone()
-        if open_prev:
+        open_prev_list = cursor.fetchall()
+        for open_prev in open_prev_list:
             prev_date = open_prev["date"]
             if prev_date < today_date:
-                # Auto-close previous unclosed session cleanly
+                prev_shift = open_prev.get("shift") or emp_shift
+                auto_out = "05:00:00" if prev_shift == "Night Shift" else "18:00:00"
                 cursor.execute(
-                    "UPDATE attendance SET status = 'Present', working_hours = 8.0 WHERE id = %s",
-                    (open_prev["id"],)
+                    "UPDATE attendance SET check_out = %s, status = 'Present', working_hours = 8.5 WHERE id = %s",
+                    (auto_out, open_prev["id"])
                 )
                 conn.commit()
-            else:
-                return jsonify({"error": f"You are already checked in at {open_prev['check_in']}. Please check out first before checking in again."}), 400
 
-        # 4. Status defaults to Present (No strict half-day penalization)
-        status = "Present"
+        # 4. Determine initial check-in status (Grace period: 30 mins)
+        if emp_shift == "Night Shift":
+            # On-time up to 20:30 (8:30 PM)
+            status = "Present" if current_time <= time(20, 30, 0) or current_time < time(6, 0, 0) else "Half Day"
+        else:
+            # On-time up to 09:30 AM
+            status = "Present" if current_time <= time(9, 30, 0) else "Half Day"
 
         cursor.execute(
             """
@@ -632,7 +636,7 @@ def check_in():
         )
         conn.commit()
 
-        return jsonify({"message": f"Checked in successfully at {current_time_str}. Status: Present ✅"}), 201
+        return jsonify({"message": f"Checked in successfully at {current_time_str}. Shift: {emp_shift} | Status: {status} ✅"}), 201
     except Exception as e:
         conn.rollback()
         logger.error(f"Leaves API check_in error: {e}")
@@ -646,11 +650,10 @@ def check_in():
 @leaves_bp.route("/api/attendance/checkout", methods=["POST"])
 def check_out():
     """
-    Registers clock-out time.
-    Checkout is enabled smoothly:
-    - Day Shift: Active till 6:00 PM (18:00) and throughout evening.
-    - Night Shift: Active till 6:00 AM (06:00) and throughout morning.
-    - Accurately calculates working hours and retains full Present status.
+    Registers clock-out time and accurately computes working hours.
+    - Day Shift: Calculates same-day duration. Capped between 0.1 and 10.0 hours.
+    - Night Shift: Calculates overnight duration. Capped between 0.1 and 10.0 hours.
+    - Stale / Orphan Sessions (>16 hrs or previous days): Auto-resolved to standard 8.5 hrs without bogus 40+ hr calculations.
     """
     user = get_current_user()
     if not user:
@@ -659,6 +662,7 @@ def check_out():
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     ist_now = datetime.now(IST)
+    today_date = ist_now.date()
     current_time_str = ist_now.strftime("%H:%M:%S")
     user_db_id = user.get("user_id") or user.get("id")
 
@@ -669,6 +673,7 @@ def check_out():
             return jsonify({"error": "Employee profile not found. Please check in first."}), 400
 
         emp_db_id = emp_row["id"]
+        emp_shift = emp_row.get("shift") or "Day Shift"
 
         # Find latest open check-in record without check_out
         cursor.execute(
@@ -678,11 +683,12 @@ def check_out():
         record = cursor.fetchone()
 
         if not record:
-            return jsonify({"error": "No active check-in record found. Please check in first."}), 400
+            return jsonify({"error": "No active check-in record found. Please check in first before checking out."}), 400
 
         check_in_date = record["date"]
+        rec_shift = record.get("shift") or emp_shift
 
-        # Calculate working hours accurately
+        # Parse check-in time
         check_in_val = record["check_in"]
         if isinstance(check_in_val, str):
             try:
@@ -694,14 +700,56 @@ def check_out():
 
         dt_in = datetime.combine(check_in_date, dt_in_time)
         dt_out = ist_now.replace(tzinfo=None)
-        delta = dt_out - dt_in
-        total_seconds = max(0, delta.total_seconds())
-        working_hours = round(max(0.1, total_seconds / 3600.0), 2)
+        delta_seconds = (dt_out - dt_in).total_seconds()
+        delta_hours = max(0.0, delta_seconds / 3600.0)
 
-        # Retain status as Present (full present)
-        status = record.get("status") or "Present"
-        if status not in ["Present", "Half Day", "Leave"]:
+        # Detect stale or orphan session (forgot to checkout from previous days)
+        is_stale = False
+        if rec_shift == "Night Shift":
+            # Night shift: Started on check_in_date evening. Valid checkout window is until next morning/afternoon (<= 14 hours).
+            if delta_hours > 14.0 or (today_date - check_in_date).days > 1:
+                is_stale = True
+        else:
+            # Day shift: Valid checkout must be same day. If checking out on a future date or > 14 hours, it's stale.
+            if check_in_date < today_date or delta_hours > 14.0:
+                is_stale = True
+
+        if is_stale:
+            # Auto-resolve stale session cleanly with standard shift values
+            auto_checkout_time = "05:00:00" if rec_shift == "Night Shift" else "18:00:00"
+            working_hours = 8.5
+            status = record.get("status") or "Present"
+            if status not in ["Present", "Half Day"]:
+                status = "Present"
+
+            cursor.execute(
+                """
+                UPDATE attendance 
+                SET check_out = %s, working_hours = %s, status = %s 
+                WHERE id = %s
+                """,
+                (auto_checkout_time, working_hours, status, record["id"])
+            )
+            conn.commit()
+
+            return jsonify({
+                "message": f"Notice: Your open session from {check_in_date} has been closed with standard shift hours ({working_hours} hrs, Checkout: {auto_checkout_time}). You are not currently checked in for today."
+            }), 200
+
+        # Normal active session checkout:
+        raw_hours = max(0.1, delta_hours)
+        working_hours = round(min(10.0, raw_hours), 2)  # Hard cap at 10.0 hrs
+
+        # Determine attendance status:
+        initial_status = record.get("status") or "Present"
+        if initial_status == "Half Day" and working_hours < 8.0:
+            status = "Half Day"
+        elif working_hours >= 7.5:
             status = "Present"
+        elif working_hours >= 4.0:
+            status = "Half Day"
+        else:
+            status = "Half Day"
 
         cursor.execute(
             """

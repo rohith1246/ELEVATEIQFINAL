@@ -1286,15 +1286,29 @@ async function loadEmpAttendance() {
     const records = await apiCall("/attendance");
     const tbody = document.getElementById("empAttendanceTableBody");
     tbody.innerHTML = "";
-    if (records.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No attendance records registered.</td></tr>`;
+    if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--ink-faint); padding:15px;">No attendance records registered.</td></tr>`;
+        return;
+    }
     records.forEach(r => {
+        let statusBadge = `<span style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700;">HALF DAY</span>`;
+        if (r.status === "Absent") {
+            statusBadge = `<span style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700;">ABSENT</span>`;
+        } else if (r.status === "Present") {
+            statusBadge = `<span style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700;">PRESENT</span>`;
+        } else if (r.status === "Leave") {
+            statusBadge = `<span style="background:rgba(147,51,234,0.15); color:#c084fc; border:1px solid rgba(147,51,234,0.3); padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700;">LEAVE</span>`;
+        }
+
+        const hoursDisplay = r.working_hours ? `${parseFloat(r.working_hours).toFixed(2)} hours` : '-';
+
         tbody.innerHTML += `
             <tr>
-                <td>${r.date}</td>
+                <td style="font-weight:600;">${r.date}</td>
                 <td>${r.check_in || '-'}</td>
                 <td>${r.check_out || '-'}</td>
-                <td>${r.working_hours ? parseFloat(r.working_hours).toFixed(2) : '0.00'} hours</td>
-                <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+                <td style="font-weight:600; color:var(--ink-primary);">${hoursDisplay}</td>
+                <td>${statusBadge}</td>
             </tr>
         `;
     });
