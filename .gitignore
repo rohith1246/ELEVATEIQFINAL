@@ -20,10 +20,14 @@ uploads/
 .DS_Store
 Thumbs.db
 
-# Terraform Secrets, Cache & State
+# Terraform (Local Only)
+terraform/
+terraform_hostinger/
+*.tf
+*.tfvars
+*.tfvars.*
 *.tfstate
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl
-terraform_hostinger/terraform.tfvars
-terraform_hostinger/.terraform/
+
