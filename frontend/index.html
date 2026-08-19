@@ -194,12 +194,17 @@
                 animation:pulse 1.8s infinite;
             "></span>
             We're hiring 
-              <!-- ElevateIQ Brand Logo -->
+        </div>
+
+        <!-- Animated Logo -->
         <div style="
             display:flex;
+            flex-direction:row;
+            flex-wrap:wrap;
             justify-content:center;
             align-items:center;
-            margin-bottom:20px;
+            gap: 24px;
+            margin-bottom:30px;
             opacity:0;
             animation:fadeUp .9s ease forwards .15s;
         ">
@@ -207,9 +212,9 @@
               <img src="images/logo.png" alt="ElevateIQ Soft Tech Private Limited"
                    style="
                    width:auto;
-                   height: clamp(100px, 16vw, 150px);
+                   height: clamp(90px, 14vw, 140px);
                    object-fit:contain;
-                   filter: drop-shadow(0 0 25px rgba(63,208,255,0.3));
+                   filter: drop-shadow(0 0 20px rgba(63,208,255,0.25));
                    transition:.3s;
                    cursor:pointer;
                    "
@@ -219,9 +224,9 @@
         </div>
 
         <!-- Tagline -->
-        <h1 style="
+        <p style="
             max-width:650px;
-            margin:20px auto 0;
+            margin:26px auto 0;
             color:var(--ink-soft);
             font-size:22px;
             font-weight: 500;
@@ -230,7 +235,7 @@
             animation:fadeUp .9s ease forwards .4s;
         ">
             Elevate Your Business. Empower Your Future.
-        </h1>
+        </p>
 
         <!-- Call-to-action buttons -->
         <div style="
@@ -252,8 +257,6 @@
 <style>
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:translateY(0); } }
 @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
-</style>}
-}
 </style>
 
 
