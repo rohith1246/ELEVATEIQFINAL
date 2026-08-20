@@ -1235,61 +1235,127 @@ const layouts = {
     `,
 
     assessments: `
-        <!-- Sub-tab bar -->
+        <!-- Campus Hiring Command Center Sub-Tabs -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-            <h2 style="font-size:18px; margin:0;">Job Assessments</h2>
-            <div style="display:flex; gap:6px; background:rgba(255,255,255,0.05); padding:4px; border-radius:10px; border:1px solid var(--glass-border); flex-wrap:wrap;">
-                <button id="aTab_all" onclick="switchAssessTab('all')" class="btn-primary" style="padding:5px 14px; font-size:12px; border-radius:7px;">All</button>
-                <button id="aTab_Pending" onclick="switchAssessTab('Pending')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">Pending</button>
-                <button id="aTab_In Progress" onclick="switchAssessTab('In Progress')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">In Progress</button>
-                <button id="aTab_Completed" onclick="switchAssessTab('Completed')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--ink-soft);">Completed</button>
-                <button id="aTab_Flagged" onclick="switchAssessTab('Flagged')" class="btn-login" style="padding:5px 14px; font-size:12px; border-radius:7px; border:none; background:transparent; color:var(--red, #ef4444);">&#x1F6A9; Flagged</button>
+            <div>
+                <h2 style="font-size:20px; margin:0 0 4px; color:#fff;">🎓 Campus Drive Assessment Command Center</h2>
+                <p style="font-size:13px; color:var(--ink-soft); margin:0;">Live Coding Sandboxes, Automated Testcase Scoring & Placement Shortlists</p>
+            </div>
+            <div style="display:flex; gap:6px; background:rgba(255,255,255,0.05); padding:4px; border-radius:12px; border:1px solid var(--glass-border); flex-wrap:wrap;">
+                <button id="cNav_drives" onclick="switchCampusView('drives')" class="btn-primary" style="padding:7px 16px; font-size:12.5px; border-radius:8px;">🏫 Campus Drives</button>
+                <button id="cNav_leaderboard" onclick="switchCampusView('leaderboard')" class="btn-login" style="padding:7px 16px; font-size:12.5px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft);">🏆 Leaderboard & Shortlist</button>
+                <button id="cNav_coding" onclick="switchCampusView('coding')" class="btn-login" style="padding:7px 16px; font-size:12.5px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft);">💻 Coding Problems</button>
+                <button id="cNav_mcq" onclick="switchCampusView('mcq')" class="btn-login" style="padding:7px 16px; font-size:12.5px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft);">📝 MCQ Bank</button>
             </div>
         </div>
 
-        <!-- Stats row -->
-        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-bottom:20px; gap:14px;">
-            <div class="stat-card"><h3>Total Sent</h3><div class="val" id="astat_total">-</div></div>
-            <div class="stat-card"><h3>Pending</h3><div class="val" id="astat_pending">-</div></div>
-            <div class="stat-card"><h3>Completed</h3><div class="val" id="astat_completed">-</div></div>
-            <div class="stat-card" style="border-color:rgba(239,68,68,0.3);"><h3 style="color:#ef4444;">Flagged</h3><div class="val" id="astat_flagged" style="color:#ef4444;">-</div></div>
-        </div>
-
-        <!-- Assessments table -->
-        <div class="table-wrap" id="assessTableWrap">
-            <table>
-                <thead><tr>
-                    <th>Candidate</th><th>Email</th><th>Job</th>
-                    <th>Status</th><th>Score</th><th>Tab Switches</th>
-                    <th>Submitted At</th><th>Actions</th>
-                </tr></thead>
-                <tbody id="assessTableBody">
-                    <tr><td colspan="8" style="text-align:center;">Loading assessments...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Question Bank section -->
-        <div style="margin-top:40px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-                <h2 style="font-size:18px; margin:0;">Question Bank</h2>
-                <button onclick="document.getElementById('addQModal').style.display='flex'" class="btn-primary">+ Add Question</button>
-            </div>
-            <div style="margin-bottom:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label style="font-size:13px; color:var(--ink-soft);">Filter by Job:</label>
-                <select id="qBankJobFilter" onchange="loadQuestionBank()" style="padding:7px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none; font-size:13px;">
-                    <option value="">All Jobs</option>
-                </select>
+        <!-- ── VIEW 1: CAMPUS DRIVES ── -->
+        <div id="campusView_drives">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:16px; color:#fff; margin:0;">Active College & University Drives</h3>
+                <button onclick="document.getElementById('createDriveModal').style.display='flex'" class="btn-primary" style="padding:8px 18px; font-size:13px;">+ Create Campus Drive</button>
             </div>
             <div class="table-wrap">
                 <table>
                     <thead><tr>
-                        <th>Job</th><th>Question</th><th>Options (A/B/C/D)</th><th>Correct</th><th>Difficulty</th><th>Actions</th>
+                        <th>Drive Code</th><th>College / University</th><th>Title</th>
+                        <th>Target Batch</th><th>Duration</th><th>Candidates</th><th>Actions</th>
                     </tr></thead>
-                    <tbody id="qBankTableBody">
-                        <tr><td colspan="6" style="text-align:center;">Loading questions...</td></tr>
+                    <tbody id="campusDrivesTableBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading campus drives...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- ── VIEW 2: LEADERBOARD & SHORTLIST ── -->
+        <div id="campusView_leaderboard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="font-size:13px; color:var(--ink-soft);">Select Drive:</label>
+                    <select id="leaderboardDriveSelect" onchange="loadDriveLeaderboard()" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none; font-size:13px;">
+                        <option value="">Loading drives...</option>
+                    </select>
+                </div>
+                <button onclick="exportLeaderboardCsv()" class="btn-action btn-approve" style="padding:9px 18px; font-size:13px; margin:0; display:inline-flex; align-items:center; gap:6px;">
+                    📥 Export Placement Shortlist (CSV)
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Rank</th><th>Roll Number</th><th>Candidate Name</th><th>Branch / CGPA</th>
+                        <th>MCQ Score</th><th>Coding Score</th><th>Total Score</th><th>Percentage</th>
+                        <th>Anti-Cheat</th><th>Status</th>
+                    </tr></thead>
+                    <tbody id="leaderboardTableBody">
+                        <tr><td colspan="10" style="text-align:center;">Select a campus drive to view candidates.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── VIEW 3: CODING PROBLEMS BANK ── -->
+        <div id="campusView_coding" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:16px; color:#fff; margin:0;">Live Coding Challenges & Testcase Suites</h3>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Problem Title</th><th>Difficulty</th><th>Points</th><th>Time Limit</th><th>Testcases</th><th>Languages</th>
+                    </tr></thead>
+                    <tbody id="codingProblemsTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Loading coding problems...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── VIEW 4: MCQ QUESTION BANK ── -->
+        <div id="campusView_mcq" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:16px; color:#fff; margin:0;">Aptitude & Technical MCQ Bank</h3>
+                <button onclick="document.getElementById('addQModal').style.display='flex'" class="btn-primary" style="padding:8px 18px; font-size:13px;">+ Add MCQ</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Question</th><th>Options (A/B/C/D)</th><th>Correct</th><th>Difficulty</th><th>Actions</th>
+                    </tr></thead>
+                    <tbody id="qBankTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Loading questions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create Campus Drive Modal -->
+        <div class="modal" id="createDriveModal" style="display:none;">
+            <div class="modal-content" style="max-width:620px;">
+                <button class="close-modal" onclick="document.getElementById('createDriveModal').style.display='none'">&times;</button>
+                <h2 style="margin-bottom:6px; color:#fff;">Create Campus Hiring Drive</h2>
+                <p style="font-size:13px; color:var(--ink-soft); margin-bottom:20px;">Setup college placement assessment with live coding sandbox</p>
+                <form id="createDriveForm" onsubmit="submitCreateDrive(event)">
+                    <div class="form-grid">
+                        <div class="field"><label>Drive Code (Unique)</label><input type="text" id="cdCode" placeholder="e.g. JNTUK-2026-DRIVE" required style="text-transform:uppercase"></div>
+                        <div class="field"><label>College / University</label><input type="text" id="cdCollege" placeholder="e.g. JNTU Kakinada" required></div>
+                    </div>
+                    <div class="field"><label>Drive Title</label><input type="text" id="cdTitle" placeholder="e.g. Graduate Engineer Trainee (GET) Campus Drive" required></div>
+                    <div class="form-grid">
+                        <div class="field"><label>Target Batch / Year</label><input type="text" id="cdBatch" placeholder="e.g. 2025 / 2026" value="2025/2026"></div>
+                        <div class="field"><label>Allowed Branches</label><input type="text" id="cdBranches" placeholder="e.g. CSE, IT, ECE, AI/ML" value="CSE, IT, ECE, AI/ML"></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field"><label>Total Duration (Mins)</label><input type="number" id="cdDuration" value="90" required></div>
+                        <div class="field"><label>Cutoff Shortlist %</label><input type="number" id="cdCutoff" value="65" required></div>
+                    </div>
+                    <div class="field"><label>Passcode (Optional)</label><input type="text" id="cdPasscode" placeholder="e.g. CAMPUS2026"></div>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="button" onclick="document.getElementById('createDriveModal').style.display='none'" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin:0 !important;">Cancel</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin:0;">Create Drive</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1297,14 +1363,8 @@ const layouts = {
         <div class="modal" id="addQModal" style="display:none;">
             <div class="modal-content" style="max-width:600px;">
                 <button class="close-modal" onclick="document.getElementById('addQModal').style.display='none'">&times;</button>
-                <h2 style="margin-bottom:20px;">Add Assessment Question</h2>
+                <h2 style="margin-bottom:20px; color:#fff;">Add Assessment MCQ</h2>
                 <form id="addQForm" onsubmit="submitAddQuestion(event)">
-                    <div class="field">
-                        <label>Job (leave blank for global question)</label>
-                        <select id="aqJobId" style="width:100%; padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:#0c1928; color:white; outline:none;">
-                            <option value="">-- Global (all jobs) --</option>
-                        </select>
-                    </div>
                     <div class="field"><label>Question Text</label><textarea id="aqQuestion" style="width:100%; height:80px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:white; padding:10px; outline:none; resize:none;" required></textarea></div>
                     <div class="form-grid">
                         <div class="field"><label>Option A</label><input type="text" id="aqA" required></div>
@@ -1327,23 +1387,10 @@ const layouts = {
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:20px;">
-                        <button type="button" onclick="document.getElementById('addQModal').style.display='none'" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin-top:0 !important;">Cancel</button>
-                        <button type="submit" class="btn-primary" style="flex:1; margin-top:0;">Save Question</button>
+                        <button type="button" onclick="document.getElementById('addQModal').style.display='none'" class="btn-action btn-edit" style="width:auto !important; padding:12px 24px !important; margin:0 !important;">Cancel</button>
+                        <button type="submit" class="btn-primary" style="flex:1; margin:0;">Save MCQ</button>
                     </div>
                 </form>
-            </div>
-        </div>
-
-        <!-- View Answers Modal -->
-        <div class="modal" id="viewAnswersModal" style="display:none;">
-            <div class="modal-content" style="max-width:700px;">
-                <button class="close-modal" onclick="document.getElementById('viewAnswersModal').style.display='none'">&times;</button>
-                <h2 style="margin-bottom:6px;">Assessment Answer Review</h2>
-                <div id="viewAnswersMeta" style="color:var(--ink-soft); font-size:13px; margin-bottom:20px;"></div>
-                <div id="viewAnswersList" style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto;"></div>
-                <div style="margin-top:20px;">
-                    <button onclick="document.getElementById('viewAnswersModal').style.display='none'" class="btn-action btn-edit" style="width:100% !important; padding:12px !important; margin-top:0 !important;">Close</button>
-                </div>
             </div>
         </div>
     `,
@@ -2254,185 +2301,229 @@ async function submitResolveTicket(e) {
     }
 }
 
+
 // ═══════════════════════════════════════════════════════════════
-// ASSESSMENTS PANEL
+// CAMPUS DRIVES & LIVE CODING SANDBOX MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 
-let _allAssessments = [];
-let _currentAssessTab = 'all';
+let _allCampusDrives = [];
+let _currentCampusView = 'drives';
 
 async function loadAssessmentsPanel() {
-    try {
-        const data = await apiCall('/api/assessment/all');
-        _allAssessments = data;
-        // Compute stats
-        const total = data.length;
-        const pending = data.filter(a => a.status === 'Pending').length;
-        const completed = data.filter(a => a.status === 'Completed').length;
-        const flagged = data.filter(a => a.status === 'Flagged').length;
-        const s = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
-        s('astat_total', total); s('astat_pending', pending);
-        s('astat_completed', completed); s('astat_flagged', flagged);
+    switchCampusView('drives');
+    loadCampusDrives();
+}
 
-        renderAssessTable(_currentAssessTab);
-        loadQuestionBank();
-        populateJobDropdowns();
-    } catch(e) {
-        const tb = document.getElementById('assessTableBody');
-        if(tb) tb.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;">Failed to load assessments: ${e.message}</td></tr>`;
+function switchCampusView(view) {
+    _currentCampusView = view;
+    ['drives','leaderboard','coding','mcq'].forEach(v => {
+        const btn = document.getElementById(`cNav_${v}`);
+        const sec = document.getElementById(`campusView_${v}`);
+        if (btn) {
+            const isActive = v === view;
+            btn.className = isActive ? 'btn-primary' : 'btn-login';
+            btn.style.background = isActive ? '' : 'transparent';
+            btn.style.border = isActive ? '' : 'none';
+            btn.style.color = isActive ? '' : 'var(--ink-soft)';
+        }
+        if (sec) sec.style.display = (v === view ? 'block' : 'none');
+    });
+
+    if (view === 'drives') loadCampusDrives();
+    if (view === 'leaderboard') loadDriveLeaderboardOptions();
+    if (view === 'coding') loadCodingProblemsBank();
+    if (view === 'mcq') loadQuestionBank();
+}
+
+async function loadCampusDrives() {
+    const tbody = document.getElementById('campusDrivesTableBody');
+    if (!tbody) return;
+    try {
+        const drives = await apiCall('/api/assessment/admin/drives');
+        _allCampusDrives = drives;
+        if (!drives.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-soft);">No campus drives created yet. Click "+ Create Campus Drive".</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = drives.map(d => {
+            const link = `${window.location.origin}/assessment.html?drive=${d.drive_code}`;
+            return `<tr>
+                <td><strong style="color:var(--blue);">${d.drive_code}</strong></td>
+                <td><strong>${d.college_name}</strong></td>
+                <td style="font-size:13px;">${d.title}</td>
+                <td style="font-size:12px;">${d.target_batch || 'All'}</td>
+                <td>${d.total_duration_minutes} Mins</td>
+                <td><span style="font-weight:700;color:#00e676;">${d.completed_count || 0}</span> / ${d.total_candidates || 0} Registered</td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button onclick="copyDriveLink('${d.drive_code}')" class="btn-action btn-edit" style="font-size:11px;padding:5px 10px;margin:0;">🔗 Copy Link</button>
+                        <button onclick="viewDriveLeaderboard(${d.id})" class="btn-action btn-approve" style="font-size:11px;padding:5px 10px;margin:0;">🏆 Shortlist</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch(err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;">Failed to load drives: ${err.message}</td></tr>`;
     }
 }
 
-function switchAssessTab(tab) {
-    _currentAssessTab = tab;
-    ['all','Pending','In Progress','Completed','Flagged'].forEach(t => {
-        const btn = document.getElementById(`aTab_${t}`);
-        if (!btn) return;
-        const isActive = t === tab;
-        btn.className = isActive ? 'btn-primary' : 'btn-login';
-        btn.style.background = isActive ? '' : 'transparent';
-        btn.style.border = isActive ? '' : 'none';
-        btn.style.color = isActive ? '' : (t === 'Flagged' ? '#ef4444' : 'var(--ink-soft)');
+function copyDriveLink(code) {
+    const url = `${window.location.origin}/assessment.html?drive=${code}`;
+    navigator.clipboard.writeText(url).then(() => {
+        alert(`Campus Assessment Link Copied:
+${url}`);
     });
-    renderAssessTable(tab);
 }
 
-function statusBadge(status) {
-    const map = {
-        'Pending':     { bg:'rgba(255,145,0,.12)', color:'#ff9100', label:'⏳ Pending' },
-        'In Progress': { bg:'rgba(62,166,255,.12)', color:'#3ea6ff', label:'▶ In Progress' },
-        'Completed':   { bg:'rgba(0,230,118,.12)',  color:'#00e676', label:'✅ Completed' },
-        'Flagged':     { bg:'rgba(239,68,68,.12)',  color:'#ef4444', label:'🚩 Flagged' },
-        'Expired':     { bg:'rgba(255,255,255,.06)', color:'#6b7fa3', label:'⌛ Expired' },
-    };
-    const s = map[status] || { bg:'rgba(255,255,255,.05)', color:'#9baec8', label: status };
-    return `<span style="background:${s.bg};color:${s.color};padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;">${s.label}</span>`;
+function viewDriveLeaderboard(driveId) {
+    switchCampusView('leaderboard');
+    const sel = document.getElementById('leaderboardDriveSelect');
+    if (sel) {
+        sel.value = driveId;
+        loadDriveLeaderboard();
+    }
 }
 
-function renderAssessTable(tab) {
-    const rows = tab === 'all' ? _allAssessments : _allAssessments.filter(a => a.status === tab);
-    const tbody = document.getElementById('assessTableBody');
-    if (!tbody) return;
-    if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">No assessments found for this filter.</td></tr>`;
+async function loadDriveLeaderboardOptions() {
+    const sel = document.getElementById('leaderboardDriveSelect');
+    if (!sel) return;
+    try {
+        if (!_allCampusDrives.length) {
+            _allCampusDrives = await apiCall('/api/assessment/admin/drives');
+        }
+        sel.innerHTML = _allCampusDrives.map(d => `<option value="${d.id}">${d.college_name} (${d.drive_code})</option>`).join('');
+        loadDriveLeaderboard();
+    } catch(e) {}
+}
+
+async function loadDriveLeaderboard() {
+    const sel = document.getElementById('leaderboardDriveSelect');
+    const driveId = sel ? sel.value : null;
+    const tbody = document.getElementById('leaderboardTableBody');
+    if (!tbody || !driveId) return;
+
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Loading candidates...</td></tr>';
+    try {
+        const candidates = await apiCall(`/api/assessment/admin/drive/${driveId}/leaderboard`);
+        if (!candidates.length) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);">No candidates have taken the test for this drive yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = candidates.map((c, idx) => {
+            const isShortlisted = parseFloat(c.percentage || 0) >= parseFloat(c.cutoff_percentage || 60) && c.status === 'Completed';
+            const badge = isShortlisted
+                ? '<span style="background:rgba(0,230,118,.15);color:#00e676;padding:3px 10px;border-radius:6px;font-weight:700;font-size:11px;">★ SHORTLISTED</span>'
+                : `<span style="color:var(--ink-soft);font-size:12px;">${c.status}</span>`;
+
+            return `<tr>
+                <td style="font-weight:700;color:var(--blue);">#${idx + 1}</td>
+                <td><strong style="font-family:monospace;font-size:13px;">${c.roll_number}</strong></td>
+                <td>${c.student_name}</td>
+                <td style="font-size:12px;">${c.branch}<br><span style="color:var(--ink-soft);">CGPA: ${c.cgpa || 'N/A'}</span></td>
+                <td>${c.mcq_score} Pts</td>
+                <td style="color:#3ea6ff;font-weight:600;">${c.coding_score} Pts</td>
+                <td><strong style="color:#fff;">${c.total_score}</strong> / ${c.max_score || 350}</td>
+                <td><strong style="color:${isShortlisted ? '#00e676' : '#fff'};font-size:14px;">${c.percentage || 0}%</strong></td>
+                <td style="text-align:center;color:${c.tab_switches > 0 ? '#ef4444' : '#00e676'};">${c.tab_switches || 0}</td>
+                <td>${badge}</td>
+            </tr>`;
+        }).join('');
+    } catch(err) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#ef4444;">Error loading leaderboard: ${err.message}</td></tr>`;
+    }
+}
+
+function exportLeaderboardCsv() {
+    const sel = document.getElementById('leaderboardDriveSelect');
+    const driveId = sel ? sel.value : null;
+    if (!driveId) {
+        alert('Please select a campus drive first.');
         return;
     }
-    tbody.innerHTML = rows.map(a => {
-        const score = a.score !== null && a.score !== undefined
-            ? `${a.score}/${a.total_questions} (${parseFloat(a.percentage||0).toFixed(0)}%)`
-            : '—';
-        const submitted = a.completed_at ? new Date(a.completed_at).toLocaleString() : '—';
-        const switchColor = a.tab_switches >= 3 ? '#ef4444' : (a.tab_switches > 0 ? '#ff9100' : '#00e676');
-        return `<tr>
-            <td><strong>${a.candidate_name}</strong>${a.is_suspicious ? ' <span style="color:#ef4444;font-size:11px;">⚠️ Suspicious</span>' : ''}</td>
-            <td style="font-size:12px;">${a.email}</td>
-            <td style="font-size:12px;">${a.job_title}<br><span style="color:var(--ink-soft);font-size:11px;">${a.job_department||''}</span></td>
-            <td>${statusBadge(a.status)}</td>
-            <td style="font-weight:600;">${score}</td>
-            <td style="color:${switchColor};font-weight:600;text-align:center;">${a.tab_switches}</td>
-            <td style="font-size:12px;">${submitted}</td>
-            <td>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    ${a.status === 'Completed' || a.status === 'Flagged'
-                        ? `<button onclick="viewAssessmentAnswers(${a.id},'${a.candidate_name}')" class="btn-action btn-edit" style="font-size:11px;padding:5px 10px;margin-top:0;">👁 Answers</button>`
-                        : ''}
-                    ${a.status !== 'Completed'
-                        ? `<button onclick="resendAssessEmail(${a.id})" class="btn-action btn-approve" style="font-size:11px;padding:5px 10px;margin-top:0;">📧 Resend</button>`
-                        : ''}
-                </div>
-            </td>
-        </tr>`;
-    }).join('');
+    window.location.href = `/api/assessment/admin/drive/${driveId}/export`;
 }
 
-async function viewAssessmentAnswers(assessmentId, candidateName) {
-    const modal = document.getElementById('viewAnswersModal');
-    const meta = document.getElementById('viewAnswersMeta');
-    const list = document.getElementById('viewAnswersList');
-    if (!modal) return;
-    meta.textContent = `Candidate: ${candidateName} | Assessment ID: #${assessmentId}`;
-    list.innerHTML = '<div style="text-align:center;color:var(--ink-soft);">Loading answers...</div>';
-    modal.style.display = 'flex';
+async function loadCodingProblemsBank() {
+    const tbody = document.getElementById('codingProblemsTableBody');
+    if (!tbody) return;
     try {
-        const data = await apiCall(`/api/assessment/answers/${assessmentId}`);
-        if (!data.length) { list.innerHTML = '<div style="text-align:center;color:var(--ink-soft);">No answers recorded.</div>'; return; }
-        list.innerHTML = data.map((ans, i) => {
-            const isCorrect = ans.is_correct;
-            const border = isCorrect ? 'rgba(0,230,118,.3)' : 'rgba(239,68,68,.3)';
-            const icon = isCorrect ? '✅' : '❌';
-            const opts = ['a','b','c','d'].map(o =>
-                `<div style="font-size:12px;padding:3px 0;${ans.selected_option === o.toUpperCase() ? 'color:#3ea6ff;font-weight:600;' : 'color:#6b7fa3;'}">${o.toUpperCase()}: ${ans['option_'+o]}${ans.selected_option === o.toUpperCase() ? ' ◀ Answered' : ''}${ans.correct_option === o.toUpperCase() ? ' ✓ Correct' : ''}</div>`
-            ).join('');
-            return `<div style="background:rgba(255,255,255,.02);border:1px solid ${border};border-radius:10px;padding:14px;">
-                <div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;">Q${i+1} ${icon} — <span style="color:${isCorrect?'#00e676':'#ef4444'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></div>
-                <div style="font-size:14px;color:#fff;margin-bottom:10px;">${ans.question_text}</div>
-                ${opts}
-            </div>`;
+        const problems = await apiCall('/api/assessment/admin/coding-problems');
+        if (!problems.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);">No coding problems in bank.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = problems.map(p => {
+            const diffColor = p.difficulty === 'Easy' ? '#00e676' : (p.difficulty === 'Hard' ? '#ef4444' : '#ff9100');
+            return `<tr>
+                <td><strong>${p.title}</strong></td>
+                <td><span style="color:${diffColor};font-weight:700;font-size:12px;">${p.difficulty}</span></td>
+                <td>${p.points} Pts</td>
+                <td>${p.time_limit_seconds}s</td>
+                <td><span style="background:rgba(63,208,255,0.12);color:var(--blue);padding:3px 8px;border-radius:6px;font-weight:600;font-size:12px;">${p.testcase_count || 0} Cases</span></td>
+                <td style="font-size:12px;color:var(--ink-soft);">Python, JS, Java, C++</td>
+            </tr>`;
         }).join('');
-    } catch(e) {
-        list.innerHTML = `<div style="text-align:center;color:#ef4444;">Failed to load answers: ${e.message}</div>`;
+    } catch(err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">Failed to load coding problems: ${err.message}</td></tr>`;
     }
 }
 
-async function resendAssessEmail(assessmentId) {
+async function submitCreateDrive(e) {
+    e.preventDefault();
+    const payload = {
+        drive_code: document.getElementById('cdCode').value.trim().toUpperCase(),
+        college_name: document.getElementById('cdCollege').value.trim(),
+        title: document.getElementById('cdTitle').value.trim(),
+        target_batch: document.getElementById('cdBatch').value.trim(),
+        allowed_branches: document.getElementById('cdBranches').value.trim(),
+        total_duration_minutes: parseInt(document.getElementById('cdDuration').value) || 90,
+        cutoff_percentage: parseFloat(document.getElementById('cdCutoff').value) || 65.0,
+        passcode: document.getElementById('cdPasscode').value.trim()
+    };
+
     try {
-        await apiCall(`/api/assessment/resend/${assessmentId}`, 'POST');
-        alert('Assessment email resent successfully!');
-    } catch(e) {
-        alert('Failed to resend email: ' + e.message);
+        await apiCall('/api/assessment/admin/drives', 'POST', payload);
+        alert('Campus Drive created successfully!');
+        document.getElementById('createDriveModal').style.display = 'none';
+        document.getElementById('createDriveForm').reset();
+        loadCampusDrives();
+    } catch(err) {
+        alert('Failed to create drive: ' + err.message);
     }
 }
 
 async function loadQuestionBank() {
-    const jobFilter = document.getElementById('qBankJobFilter');
-    const jobId = jobFilter ? jobFilter.value : '';
     const tbody = document.getElementById('qBankTableBody');
     if (!tbody) return;
     try {
-        const url = jobId ? `/api/assessment/questions?job_id=${jobId}` : '/api/assessment/questions';
-        const data = await apiCall(url);
-        if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);">No questions in bank. Click "+ Add Question" to create one.</td></tr>'; return; }
+        const data = await apiCall('/api/assessment/questions');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">No MCQs found.</td></tr>';
+            return;
+        }
         tbody.innerHTML = data.map(q => {
             const diffColor = q.difficulty === 'Easy' ? '#00e676' : (q.difficulty === 'Hard' ? '#ef4444' : '#ff9100');
             return `<tr>
-                <td style="font-size:12px;">${q.job_title || '<em style="color:var(--ink-soft);">Global</em>'}</td>
-                <td style="font-size:13px;max-width:220px;">${q.question_text}</td>
+                <td style="font-size:13px;max-width:260px;">${q.question_text || q.question}</td>
                 <td style="font-size:11px;color:var(--ink-soft);">A: ${q.option_a}<br>B: ${q.option_b}<br>C: ${q.option_c}<br>D: ${q.option_d}</td>
-                <td><span style="background:rgba(0,230,118,.12);color:#00e676;padding:3px 10px;border-radius:6px;font-weight:700;">${q.correct_option}</span></td>
-                <td><span style="color:${diffColor};font-size:12px;font-weight:600;">${q.difficulty}</span></td>
+                <td><span style="background:rgba(0,230,118,.12);color:#00e676;padding:3px 10px;border-radius:6px;font-weight:700;">${q.correct_option || q.correct_answer}</span></td>
+                <td><span style="color:${diffColor};font-size:12px;font-weight:600;">${q.difficulty || 'Medium'}</span></td>
                 <td>
-                    <button onclick="deleteQuestion(${q.id})" class="btn-action btn-reject" style="font-size:11px;padding:5px 10px;margin-top:0;">🗑 Delete</button>
+                    <button onclick="deleteQuestion(${q.id})" class="btn-action btn-reject" style="font-size:11px;padding:5px 10px;margin:0;">🗑 Delete</button>
                 </td>
             </tr>`;
         }).join('');
     } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">Failed to load: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#ef4444;">Failed to load: ${e.message}</td></tr>`;
     }
-}
-
-async function populateJobDropdowns() {
-    try {
-        const jobs = await apiCall('/api/recruitment/jobs');
-        ['aqJobId','qBankJobFilter'].forEach(elId => {
-            const el = document.getElementById(elId);
-            if (!el) return;
-            const current = el.value;
-            // Keep first option, re-populate rest
-            while (el.options.length > 1) el.remove(1);
-            jobs.forEach(j => {
-                const opt = document.createElement('option');
-                opt.value = j.id; opt.textContent = j.title;
-                el.appendChild(opt);
-            });
-            el.value = current;
-        });
-    } catch(e) {}
 }
 
 async function submitAddQuestion(e) {
     e.preventDefault();
     const payload = {
-        job_id: document.getElementById('aqJobId').value || null,
         question_text: document.getElementById('aqQuestion').value.trim(),
         option_a: document.getElementById('aqA').value.trim(),
         option_b: document.getElementById('aqB').value.trim(),
@@ -2453,9 +2544,15 @@ async function submitAddQuestion(e) {
 }
 
 async function deleteQuestion(qId) {
-    if (!confirm('Delete this question? This cannot be undone.')) return;
+    if (!confirm('Delete this question?')) return;
     try {
         await apiCall(`/api/assessment/questions/${qId}`, 'DELETE');
+        loadQuestionBank();
+    } catch(e) {
+        alert('Failed to delete question: ' + e.message);
+    }
+}
+`, 'DELETE');
         loadQuestionBank();
     } catch(e) {
         alert('Failed to delete question: ' + e.message);

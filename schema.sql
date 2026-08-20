@@ -474,3 +474,101 @@ CREATE TABLE IF NOT EXISTS password_resets (
 
 CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
 CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+
+-- ==================== CAMPUS DRIVE & LIVE CODING SANDBOX ====================
+
+-- 35. Campus Drives
+CREATE TABLE IF NOT EXISTS campus_drives (
+    id SERIAL PRIMARY KEY,
+    drive_code VARCHAR(50) UNIQUE NOT NULL,
+    college_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    total_duration_minutes INT DEFAULT 90,
+    mcq_duration_minutes INT DEFAULT 30,
+    coding_duration_minutes INT DEFAULT 60,
+    passcode VARCHAR(50),
+    target_batch VARCHAR(50), -- e.g. '2025', '2026'
+    allowed_branches TEXT,    -- e.g. 'CSE, IT, ECE, AI/ML'
+    cutoff_percentage DECIMAL(5,2) DEFAULT 60.00,
+    is_active BOOLEAN DEFAULT TRUE,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 36. Coding Challenge Questions
+CREATE TABLE IF NOT EXISTS coding_problems (
+    id SERIAL PRIMARY KEY,
+    drive_id INT REFERENCES campus_drives(id) ON DELETE CASCADE, -- NULL for global problem bank
+    title VARCHAR(255) NOT NULL,
+    difficulty VARCHAR(20) DEFAULT 'Medium' CHECK (difficulty IN ('Easy','Medium','Hard')),
+    points INT DEFAULT 100,
+    problem_statement TEXT NOT NULL,
+    input_format TEXT,
+    output_format TEXT,
+    constraints TEXT,
+    time_limit_seconds INT DEFAULT 5,
+    memory_limit_mb INT DEFAULT 256,
+    starter_code_json JSONB DEFAULT '{}', -- templates for python, javascript, java, cpp
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 37. Coding Problem Test Cases
+CREATE TABLE IF NOT EXISTS coding_testcases (
+    id SERIAL PRIMARY KEY,
+    problem_id INT NOT NULL REFERENCES coding_problems(id) ON DELETE CASCADE,
+    input_data TEXT NOT NULL,
+    expected_output TEXT NOT NULL,
+    is_hidden BOOLEAN DEFAULT TRUE, -- false = public sample case, true = scoring hidden case
+    weight INT DEFAULT 10,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 38. Campus Drive Candidates
+CREATE TABLE IF NOT EXISTS campus_candidates (
+    id SERIAL PRIMARY KEY,
+    drive_id INT NOT NULL REFERENCES campus_drives(id) ON DELETE CASCADE,
+    token VARCHAR(100) UNIQUE NOT NULL,
+    student_name VARCHAR(255) NOT NULL,
+    roll_number VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    branch VARCHAR(100) NOT NULL,
+    cgpa DECIMAL(4,2),
+    status VARCHAR(20) DEFAULT 'Registered' CHECK (status IN ('Registered','In Progress','Completed','Disqualified','Expired')),
+    mcq_score INT DEFAULT 0,
+    coding_score INT DEFAULT 0,
+    total_score INT DEFAULT 0,
+    max_score INT DEFAULT 0,
+    percentage DECIMAL(5,2) DEFAULT 0.00,
+    tab_switches INT DEFAULT 0,
+    fullscreen_exits INT DEFAULT 0,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (drive_id, roll_number),
+    UNIQUE (drive_id, email)
+);
+
+-- 39. Candidate Coding Submissions
+CREATE TABLE IF NOT EXISTS coding_submissions (
+    id SERIAL PRIMARY KEY,
+    candidate_id INT NOT NULL REFERENCES campus_candidates(id) ON DELETE CASCADE,
+    problem_id INT NOT NULL REFERENCES coding_problems(id) ON DELETE CASCADE,
+    language VARCHAR(30) NOT NULL, -- 'python', 'javascript', 'java', 'cpp'
+    source_code TEXT NOT NULL,
+    passed_testcases INT DEFAULT 0,
+    total_testcases INT DEFAULT 0,
+    score INT DEFAULT 0,
+    execution_time_ms INT DEFAULT 0,
+    status VARCHAR(30) DEFAULT 'Submitted', -- 'Accepted', 'Wrong Answer', 'Time Limit Exceeded', 'Runtime Error', 'Compilation Error'
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (candidate_id, problem_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_campus_drives_code ON campus_drives(drive_code);
+CREATE INDEX IF NOT EXISTS idx_campus_candidates_drive ON campus_candidates(drive_id);
+CREATE INDEX IF NOT EXISTS idx_campus_candidates_token ON campus_candidates(token);
+CREATE INDEX IF NOT EXISTS idx_coding_testcases_problem ON coding_testcases(problem_id);
+CREATE INDEX IF NOT EXISTS idx_coding_submissions_candidate ON coding_submissions(candidate_id);
+
