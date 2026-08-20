@@ -1,1015 +1,384 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ElevateIQ Campus Assessment & Live Coding Sandbox</title>
+<title>Job Assessment — ElevateIQ</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="shortcut icon" href="images/logo.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap">
-
-<!-- Monaco Editor Loader -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#070b14;
-    --surface:#0d1527;
-    --surface-elevated:#121d36;
-    --glass:rgba(255,255,255,0.04);
-    --border:rgba(255,255,255,0.08);
-    --border-accent:rgba(63,208,255,0.3);
-    --cyan:#3fd0ff;
-    --blue:#0099ff;
-    --green:#00e676;
-    --orange:#ff7a00;
-    --red:#ff5252;
-    --text:#e2e8f0;
-    --muted:#8e9eb5;
-  }
-  body{
-    font-family:'Inter',sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-    overflow-x:hidden;
-    user-select:none;
-  }
+  :root{--bg:#060d1a;--surface:#0d1f36;--glass:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.1);--blue:#3ea6ff;--green:#00e676;--orange:#ff9100;--red:#ff5252;--text:#e0e6f0;--muted:#6b7fa3}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.25;pointer-events:none;z-index:0}
+  .orb1{width:500px;height:500px;background:radial-gradient(circle,#1a4a8a,transparent);top:-100px;left:-100px}
+  .orb2{width:400px;height:400px;background:radial-gradient(circle,#0a2a5a,transparent);bottom:-100px;right:-100px}
 
-  /* Orbs */
-  .orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.2;pointer-events:none;z-index:0}
-  .orb1{width:500px;height:500px;background:radial-gradient(circle,#164e8a,transparent);top:-100px;left:-100px}
-  .orb2{width:500px;height:500px;background:radial-gradient(circle,#ff7a00,transparent);bottom:-150px;right:-150px;opacity:.12}
+  /* ── Gate Screen ───────────────────────────────────────────── */
+  #gateScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(6,13,26,0.97);backdrop-filter:blur(10px)}
+  .gate-card{max-width:520px;width:90%;background:linear-gradient(135deg,#0d1f36,#091628);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;position:relative;z-index:1}
+  .gate-logo{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px}.gate-logo span{color:var(--blue)}
+  .gate-badge{display:inline-block;background:rgba(62,166,255,.15);border:1px solid rgba(62,166,255,.3);color:var(--blue);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:24px}
+  .gate-card h2{font-size:20px;margin-bottom:10px;color:#fff}
+  .gate-card p{color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px}
+  .rules-list{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:left;margin-bottom:24px}
+  .rules-list li{color:#9baec8;font-size:13px;padding:5px 0;display:flex;align-items:flex-start;gap:10px}
+  .rules-list li::before{content:'•';color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px}
+  .gate-warn{background:rgba(255,145,0,0.08);border:1px solid rgba(255,145,0,.3);border-radius:10px;padding:12px 16px;color:#ffb347;font-size:13px;margin-bottom:24px;text-align:left}
+  #startShareBtn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),#0066bb);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+  #startShareBtn:hover{opacity:.88}
+  #startShareBtn:disabled{opacity:.5;cursor:not-allowed}
+  #gateError{color:var(--red);font-size:13px;margin-top:12px;display:none}
 
-  /* ── Top Bar ── */
-  #topBar{
-    position:fixed;top:0;left:0;right:0;height:64px;z-index:100;
-    background:rgba(10,16,30,0.92);backdrop-filter:blur(16px);
-    border-bottom:1px solid var(--border);
-    padding:0 24px;display:flex;align-items:center;justify-content:space-between;
-  }
-  .tb-brand{display:flex;align-items:center;gap:12px}
-  .tb-logo-text{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px}
-  .tb-logo-text span{color:var(--cyan)}
-  .tb-badge{background:rgba(63,208,255,0.12);border:1px solid rgba(63,208,255,0.3);color:var(--cyan);font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase}
+  /* ── Top Bar ───────────────────────────────────────────────── */
+  #topBar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(6,13,26,0.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+  .tb-logo{font-size:18px;font-weight:800;color:#fff}.tb-logo span{color:var(--blue)}
+  .tb-meta{display:flex;align-items:center;gap:16px}
+  .tb-job{font-size:13px;color:var(--muted)}
+  #timerBadge{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;font-family:monospace;color:var(--text)}
+  #timerBadge.danger{background:rgba(255,82,82,.12);border-color:rgba(255,82,82,.4);color:var(--red)}
+  .prog-bar-wrap{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+  .prog-bar{width:120px;height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:99px;transition:width .4s}
 
-  /* Section Switcher Tabs */
-  .section-nav{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);padding:4px;border-radius:10px;border:1px solid var(--border)}
-  .sec-tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:none}
-  .sec-tab:hover{color:#fff}
-  .sec-tab.active{background:var(--surface-elevated);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:1px solid var(--border-accent)}
-  .sec-tab .count{font-size:11px;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:10px;margin-left:6px}
+  /* ── Anti-cheat warning banner ─────────────────────────────── */
+  #switchWarn{position:fixed;top:64px;left:0;right:0;z-index:49;background:rgba(255,82,82,0.12);border-bottom:1px solid rgba(255,82,82,.3);padding:8px 24px;display:none;align-items:center;gap:10px}
+  #switchWarn span{color:var(--red);font-size:13px;font-weight:600}
 
-  .tb-right{display:flex;align-items:center;gap:16px}
-  .proctor-pill{display:flex;align-items:center;gap:8px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);color:var(--green);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600}
-  .proctor-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-  @keyframes pulse{0%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+  /* ── Main test area ────────────────────────────────────────── */
+  #testArea{max-width:760px;margin:0 auto;padding:90px 20px 60px;position:relative;z-index:1}
+  #questionCounter{font-size:13px;color:var(--muted);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
 
-  #timerBadge{
-    background:rgba(255,255,255,0.06);border:1px solid var(--border);
-    border-radius:10px;padding:8px 16px;font-size:15px;font-weight:700;
-    font-family:'Fira Code',monospace;color:#fff;display:flex;align-items:center;gap:8px;
-  }
-  #timerBadge.danger{background:rgba(255,82,82,0.15);border-color:var(--red);color:var(--red);animation:pulse 1s infinite}
+  .q-card{background:linear-gradient(135deg,rgba(13,31,54,0.9),rgba(9,22,40,0.9));border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;animation:fadeSlide .35s ease}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .q-num{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .q-text{font-size:16px;font-weight:500;color:#fff;line-height:1.6;margin-bottom:20px}
+  .q-diff{display:inline-block;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;margin-bottom:14px}
+  .diff-Easy{background:rgba(0,230,118,.12);color:var(--green)}
+  .diff-Medium{background:rgba(255,145,0,.12);color:var(--orange)}
+  .diff-Hard{background:rgba(255,82,82,.12);color:var(--red)}
+  .options{display:grid;gap:10px}
+  .opt-btn{display:flex;align-items:center;gap:14px;width:100%;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;cursor:pointer;text-align:left;transition:all .2s;font-family:'Inter',sans-serif}
+  .opt-btn:hover{background:rgba(62,166,255,.08);border-color:rgba(62,166,255,.35)}
+  .opt-btn.selected{background:rgba(62,166,255,.12);border-color:var(--blue);color:#fff}
+  .opt-label{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+  .opt-btn.selected .opt-label{background:var(--blue);border-color:var(--blue);color:#fff}
 
-  .btn-submit-main{
-    background:linear-gradient(135deg,var(--green),#00b359);
-    border:none;color:#fff;font-weight:700;font-size:13.5px;
-    padding:9px 22px;border-radius:10px;cursor:pointer;transition:all .2s;
-  }
-  .btn-submit-main:hover{opacity:.9;transform:translateY(-1px)}
+  /* ── Submit section ────────────────────────────────────────── */
+  #submitSection{background:rgba(13,31,54,0.8);border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  #submitBtn{padding:14px 40px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--green),#00a854);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+  #submitBtn:hover{opacity:.88}
+  #submitBtn:disabled{opacity:.5;cursor:not-allowed}
+  .answered-count{font-size:13px;color:var(--muted)}
+  .answered-count strong{color:#fff}
 
-  /* ── Violation Toast ── */
-  #violationToast{
-    position:fixed;top:74px;left:50%;transform:translateX(-50%);z-index:200;
-    background:rgba(255,82,82,0.95);color:#fff;padding:12px 28px;border-radius:10px;
-    font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.5);
-    display:none;align-items:center;gap:12px;
-  }
-
-  /* ── REGISTRATION & GATE SCREEN ── */
-  #gateScreen{
-    position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;
-    background:rgba(7,11,20,0.97);backdrop-filter:blur(20px);padding:20px;
-  }
-  .gate-modal{
-    max-width:580px;width:100%;background:linear-gradient(145deg,#0d1527,#090e1c);
-    border:1px solid var(--border);border-radius:24px;padding:36px;
-    box-shadow:0 24px 60px rgba(0,0,0,0.7);position:relative;z-index:1;
-  }
-  .gate-logo{font-size:26px;font-weight:800;color:#fff;text-align:center;margin-bottom:4px}
-  .gate-logo span{color:var(--cyan)}
-  .gate-sub{text-align:center;color:var(--muted);font-size:14px;margin-bottom:24px}
-
-  .form-group{margin-bottom:14px}
-  .form-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-  .form-group input, .form-group select{
-    width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);
-    border:1px solid var(--border);border-radius:10px;color:#fff;font-size:14px;
-    font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;
-  }
-  .form-group input:focus, .form-group select:focus{border-color:var(--cyan)}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-  .rules-box{
-    background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;
-    padding:14px 18px;margin:18px 0;font-size:12.5px;color:var(--muted);line-height:1.6;
-  }
-  .rules-box strong{color:#fff}
-  .rules-box ul{list-style:none;margin-top:6px}
-  .rules-box li{padding:3px 0;display:flex;align-items:flex-start;gap:8px}
-  .rules-box li::before{content:"•";color:var(--cyan);font-weight:700}
-
-  .btn-start-drive{
-    width:100%;padding:15px;border:none;border-radius:12px;
-    background:linear-gradient(135deg,var(--cyan),var(--blue));
-    color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
-  }
-  .btn-start-drive:hover{opacity:.9;transform:translateY(-1px)}
-  #gateError{color:var(--red);font-size:13px;margin-top:12px;text-align:center;display:none}
-
-  /* ── SECTION 1: MCQ CONTAINER ── */
-  #mcqSection{
-    max-width:1100px;margin:84px auto 60px;padding:0 24px;display:grid;
-    grid-template-columns:1fr 300px;gap:24px;
-  }
-  .mcq-main{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px}
-  .mcq-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:14px}
-  .q-badge{font-size:12px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
-  .q-text{font-size:17px;font-weight:500;color:#fff;line-height:1.6;margin-bottom:28px}
-  .options-grid{display:grid;gap:12px}
-  .opt-btn{
-    display:flex;align-items:center;gap:16px;width:100%;padding:16px 20px;
-    background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:12px;
-    color:var(--text);font-size:14.5px;cursor:pointer;text-align:left;transition:all .2s;
-  }
-  .opt-btn:hover{background:rgba(63,208,255,0.06);border-color:rgba(63,208,255,0.3)}
-  .opt-btn.selected{background:rgba(63,208,255,0.12);border-color:var(--cyan);color:#fff}
-  .opt-key{
-    width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.06);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;
-  }
-  .opt-btn.selected .opt-key{background:var(--cyan);color:#000}
-
-  .mcq-actions{display:flex;justify-content:space-between;margin-top:32px;border-top:1px solid var(--border);padding-top:20px}
-  .btn-nav{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:#fff;padding:10px 22px;border-radius:10px;font-weight:600;cursor:pointer}
-  .btn-nav:hover{background:rgba(255,255,255,0.1)}
-  .btn-nav-primary{background:var(--cyan);color:#000;border:none}
-  .btn-nav-primary:hover{opacity:.9}
-
-  /* Palette Sidebar */
-  .palette-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px}
-  .palette-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:16px}
-  .palette-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-  .pal-btn{
-    aspect-ratio:1;border-radius:8px;border:1px solid var(--border);
-    background:rgba(255,255,255,0.03);color:var(--muted);font-size:13px;
-    font-weight:600;cursor:pointer;transition:all .15s;
-  }
-  .pal-btn:hover{background:rgba(255,255,255,0.08);color:#fff}
-  .pal-btn.answered{background:rgba(0,230,118,0.15);border-color:var(--green);color:var(--green)}
-  .pal-btn.current{border-color:var(--cyan);color:#fff;box-shadow:0 0 10px rgba(63,208,255,0.3)}
-
-  /* ── SECTION 2: LIVE CODING SANDBOX (SPLIT IDE) ── */
-  #codingSection{
-    display:none;position:fixed;top:64px;left:0;right:0;bottom:0;
-    grid-template-columns:42% 58%;background:var(--bg);overflow:hidden;
-  }
-
-  /* Left Pane: Problem Description */
-  .problem-pane{
-    border-right:1px solid var(--border);background:var(--surface);
-    display:flex;flex-direction:column;height:100%;overflow-y:auto;
-  }
-  .problem-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .prob-title{font-size:18px;font-weight:700;color:#fff}
-  .prob-diff{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase}
-  .diff-Easy{background:rgba(0,230,118,0.15);color:var(--green)}
-  .diff-Medium{background:rgba(255,122,0,0.15);color:var(--orange)}
-  .diff-Hard{background:rgba(255,82,82,0.15);color:var(--red)}
-
-  .problem-tabs{display:flex;gap:6px;padding:12px 24px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
-  .prob-tab-btn{background:none;border:none;color:var(--muted);font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:6px;cursor:pointer}
-  .prob-tab-btn.active{background:rgba(63,208,255,0.12);color:var(--cyan)}
-
-  .problem-body{padding:24px;line-height:1.7;color:#cbd5e1;font-size:14px;flex-grow:1}
-  .prob-section-title{font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 8px}
-  .code-block{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'Fira Code',monospace;font-size:13px;color:#fff;margin:10px 0;white-space:pre-wrap}
-
-  /* Right Pane: Monaco IDE */
-  .editor-pane{display:flex;flex-direction:column;height:100%;background:#1e1e1e}
-  .editor-toolbar{
-    height:44px;background:#181818;border-bottom:1px solid #2d2d2d;
-    display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;
-  }
-  .lang-select{
-    background:#252526;color:#fff;border:1px solid #3c3c3c;padding:5px 12px;
-    border-radius:6px;font-size:12.5px;font-weight:600;outline:none;
-  }
-  .editor-tools{display:flex;align-items:center;gap:10px}
-  .btn-editor-tool{background:none;border:none;color:#999;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:4px}
-  .btn-editor-tool:hover{color:#fff;background:#2d2d2d}
-
-  #monacoContainer{flex-grow:1;width:100%;height:100%;min-height:200px}
-
-  /* Bottom Console Drawer */
-  .console-drawer{
-    height:220px;background:#141414;border-top:1px solid #2d2d2d;
-    display:flex;flex-direction:column;flex-shrink:0;
-  }
-  .console-header{
-    height:36px;background:#1a1a1a;border-bottom:1px solid #2d2d2d;
-    display:flex;align-items:center;justify-content:space-between;padding:0 16px;
-  }
-  .console-tabs{display:flex;gap:4px}
-  .con-tab{background:none;border:none;color:#888;font-size:12px;font-weight:600;padding:6px 12px;border-radius:4px;cursor:pointer}
-  .con-tab.active{color:var(--cyan);background:#252526}
-
-  .console-actions{display:flex;align-items:center;gap:10px}
-  .btn-run-code{
-    background:#2d2d2d;border:1px solid #444;color:#fff;
-    font-size:12px;font-weight:700;padding:6px 16px;border-radius:6px;cursor:pointer;
-  }
-  .btn-run-code:hover{background:#3a3a3a}
-  .btn-submit-code{
-    background:linear-gradient(135deg,var(--green),#00b359);border:none;
-    color:#fff;font-size:12px;font-weight:700;padding:6px 18px;border-radius:6px;cursor:pointer;
-  }
-  .btn-submit-code:hover{opacity:.9}
-
-  .console-body{flex-grow:1;padding:12px 16px;overflow-y:auto;font-family:'Fira Code',monospace;font-size:12.5px;color:#ddd}
-  .tc-card{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 14px;margin-bottom:8px}
-  .tc-passed{border-left:4px solid var(--green)}
-  .tc-failed{border-left:4px solid var(--red)}
-  .tc-header{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#888;margin-bottom:6px}
-
-  /* ── RESULT SCREEN ── */
-  #resultScreen{
-    position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;
-    background:rgba(7,11,20,0.98);backdrop-filter:blur(20px);padding:24px;
-  }
-  .result-modal{
-    max-width:540px;width:100%;background:linear-gradient(145deg,#0d1527,#090e1c);
-    border:1px solid var(--border);border-radius:24px;padding:40px;text-align:center;
-  }
-  .res-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:16px}
-  .badge-shortlisted{background:rgba(0,230,118,0.15);border:1px solid var(--green);color:var(--green)}
-  .badge-completed{background:rgba(63,208,255,0.15);border:1px solid var(--cyan);color:var(--cyan)}
-  .res-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:6px}
-  .res-score{font-size:56px;font-weight:800;color:var(--cyan);line-height:1;margin:20px 0 6px}
-  .res-score-sub{font-size:14px;color:var(--muted);margin-bottom:24px}
-  .res-stats{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:24px;text-align:left}
-  .res-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13.5px}
-  .res-row:last-child{border-bottom:none}
-  .res-lbl{color:var(--muted)}.res-val{color:#fff;font-weight:600}
+  /* ── Result Screen ─────────────────────────────────────────── */
+  #resultScreen{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(6,13,26,0.97)}
+  .result-card{max-width:520px;width:90%;background:linear-gradient(135deg,#0d1f36,#091628);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;position:relative;z-index:1}
+  .result-icon{font-size:48px;margin-bottom:16px}
+  .result-card h2{font-size:24px;color:#fff;margin-bottom:8px}
+  .score-big{font-size:64px;font-weight:800;line-height:1;margin:20px 0 6px}
+  .score-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+  .result-info{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:left;margin-bottom:20px}
+  .ri-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px}
+  .ri-row:last-child{border-bottom:none}
+  .ri-label{color:var(--muted)}.ri-val{color:#fff;font-weight:600}
+  .result-msg{color:#9baec8;font-size:14px;line-height:1.7}
 </style>
 </head>
 <body>
 
+<!-- Orbs -->
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
-<!-- ── VIOLATION TOAST ── -->
-<div id="violationToast">
-  <span id="violationMsg">⚠️ Security Warning: Tab switch detected! (1/5)</span>
-</div>
-
-<!-- ── REGISTRATION & GATE SCREEN ── -->
+<!-- ── GATE SCREEN ─────────────────────────────────────────── -->
 <div id="gateScreen">
-  <div class="gate-modal">
-    <div class="gate-logo">Elevate<span>IQ</span> <span style="font-size:16px;color:var(--muted);font-weight:400">/ Campus Drive</span></div>
-    <div class="gate-sub" id="driveSubTitle">National Graduate Engineer Trainee (GET) Drive 2026</div>
-
-    <form id="campusRegForm" onsubmit="handleRegistration(event)">
-      <div class="form-group">
-        <label>Drive Code</label>
-        <input type="text" id="regDriveCode" value="ELEVATE-CAMPUS-2026" required readonly style="background:rgba(255,255,255,0.02);color:var(--cyan);font-weight:700">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="regName" placeholder="e.g. Rahul Sharma" required>
-        </div>
-        <div class="form-group">
-          <label>Hall Ticket / Roll Number</label>
-          <input type="text" id="regRoll" placeholder="e.g. 22A91A0501" required style="text-transform:uppercase">
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="regEmail" placeholder="e.g. rahul@gmail.com" required>
-        </div>
-        <div class="form-group">
-          <label>Mobile Number</label>
-          <input type="tel" id="regPhone" placeholder="e.g. 9876543210" required>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Branch / Department</label>
-          <select id="regBranch" required>
-            <option value="">Select Branch</option>
-            <option value="Computer Science & Engineering (CSE)">Computer Science & Engineering (CSE)</option>
-            <option value="Information Technology (IT)">Information Technology (IT)</option>
-            <option value="Artificial Intelligence & ML (AI/ML)">Artificial Intelligence & ML (AI/ML)</option>
-            <option value="Data Science & Analytics">Data Science & Analytics</option>
-            <option value="Electronics & Communication (ECE)">Electronics & Communication (ECE)</option>
-            <option value="Electrical Engineering (EEE)">Electrical Engineering (EEE)</option>
-            <option value="Other Technical Branch">Other Technical Branch</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Current CGPA / Percentage</label>
-          <input type="number" id="regCgpa" step="0.01" min="0" max="10" placeholder="e.g. 8.50" required>
-        </div>
-      </div>
-
-      <div class="form-group" id="passcodeGroup">
-        <label>Drive Passcode</label>
-        <input type="password" id="regPasscode" placeholder="Enter drive passcode (e.g. ELEVATE2026)" value="ELEVATE2026">
-      </div>
-
-      <div class="rules-box">
-        <strong>📋 Campus Assessment & Proctoring Guidelines:</strong>
-        <ul>
-          <li><strong>Fullscreen Mode:</strong> The assessment runs in locked fullscreen. Exiting triggers a violation flag.</li>
-          <li><strong>Tab Switching:</strong> Navigating away from the window is recorded. <strong>5 violations</strong> will auto-disqualify.</li>
-          <li><strong>Section 1 (MCQs):</strong> 15 questions testing core CS, logical aptitude, and algorithms.</li>
-          <li><strong>Section 2 (Live Coding):</strong> In-browser Monaco IDE with real-time testcase execution in Python, JS, Java, or C++.</li>
-        </ul>
-      </div>
-
-      <button type="submit" class="btn-start-drive" id="btnStartDrive">🚀 Start Campus Assessment</button>
-      <div id="gateError"></div>
-    </form>
+  <div class="gate-card">
+    <div class="gate-logo">Elevate<span>IQ</span></div>
+    <div class="gate-badge">Job Assessment</div>
+    <h2 id="gateTitle">Loading your assessment...</h2>
+    <p id="gateDesc">Please wait while we prepare your test.</p>
+    <ul class="rules-list" id="rulesList" style="display:none">
+      <li>This assessment has a <strong>30-minute</strong> timer — it starts when you click the button below.</li>
+      <li>Screen sharing is <strong>required</strong>. Your screen will be monitored during the test.</li>
+      <li>Switching tabs or windows is tracked. <strong>More than 3 switches</strong> will auto-submit your test.</li>
+      <li>Once submitted, you <strong>cannot retake</strong> the test.</li>
+      <li>Your results and a completion email will be sent after submission.</li>
+    </ul>
+    <div class="gate-warn" id="gateWarn" style="display:none">
+      ⚠️ <strong>Mandatory:</strong> You must share your screen to begin. Click the button, then select your screen or browser tab when prompted by your browser.
+    </div>
+    <button id="startShareBtn" style="display:none" onclick="beginAssessment()">🖥️ Share Screen & Start Test</button>
+    <div id="gateError"></div>
   </div>
 </div>
 
-<!-- ── TOP BAR ── -->
+<!-- ── TAB SWITCH WARNING ──────────────────────────────────── -->
+<div id="switchWarn">
+  <span id="switchWarnText">⚠️ Tab switch detected! Remaining warnings: 3</span>
+</div>
+
+<!-- ── TOP BAR ────────────────────────────────────────────── -->
 <div id="topBar" style="display:none">
-  <div class="tb-brand">
-    <div class="tb-logo-text">Elevate<span>IQ</span></div>
-    <div class="tb-badge" id="topDriveBadge">CAMPUS 2026</div>
-    <span style="color:var(--muted);font-size:13px" id="topStudentMeta">Rahul Sharma (22A91A0501)</span>
-  </div>
-
-  <div class="section-nav">
-    <button class="sec-tab active" id="tabMcq" onclick="switchSection('mcq')">
-      📝 Section 1: MCQs <span class="count" id="mcqCountBadge">15</span>
-    </button>
-    <button class="sec-tab" id="tabCoding" onclick="switchSection('coding')">
-      💻 Section 2: Coding Sandbox <span class="count" id="codingCountBadge">2</span>
-    </button>
-  </div>
-
-  <div class="tb-right">
-    <div class="proctor-pill">
-      <div class="dot"></div> Proctored
+  <div class="tb-logo">Elevate<span>IQ</span> <span style="color:var(--muted);font-size:14px;font-weight:400">/ Assessment</span></div>
+  <div class="tb-meta">
+    <div class="prog-bar-wrap">
+      <span id="qProgress">Q 0 / 0</span>
+      <div class="prog-bar"><div class="prog-bar-fill" id="progFill" style="width:0%"></div></div>
     </div>
-    <div id="timerBadge">90:00</div>
-    <button class="btn-submit-main" onclick="confirmFinalSubmit()">Submit Test</button>
+    <div id="timerBadge">30:00</div>
+  </div>
+  <div class="tb-job" id="tbJobTitle"></div>
+</div>
+
+<!-- ── MAIN TEST AREA ─────────────────────────────────────── -->
+<div id="testArea" style="display:none">
+  <div id="questionCounter">
+    <span id="answeredCount" class="answered-count">Answered: <strong>0</strong> / <strong>0</strong></span>
+  </div>
+  <div id="questionsContainer"></div>
+  <div id="submitSection">
+    <div class="answered-count">Make sure all questions are answered before submitting.</div>
+    <button id="submitBtn" onclick="confirmSubmit()">✅ Submit Assessment</button>
   </div>
 </div>
 
-<!-- ── SECTION 1: MCQ CONTAINER ── -->
-<div id="mcqSection" style="display:none">
-  <div class="mcq-main">
-    <div class="mcq-header">
-      <div class="q-badge" id="mcqNumBadge">Question 1 of 15</div>
-      <span style="font-size:12px;color:var(--muted)">10 Points</span>
-    </div>
-    <div class="q-text" id="mcqQuestionText">Loading question...</div>
-    <div class="options-grid" id="mcqOptionsContainer"></div>
-
-    <div class="mcq-actions">
-      <button class="btn-nav" onclick="prevMcq()" id="btnPrevMcq">← Previous</button>
-      <button class="btn-nav btn-nav-primary" onclick="nextMcq()" id="btnNextMcq">Next Question →</button>
-    </div>
-  </div>
-
-  <!-- Palette Sidebar -->
-  <div class="palette-box">
-    <div class="palette-title">Question Palette</div>
-    <div class="palette-grid" id="paletteGrid"></div>
-  </div>
-</div>
-
-<!-- ── SECTION 2: LIVE CODING SANDBOX ── -->
-<div id="codingSection">
-  <!-- Left Pane: Problem Description -->
-  <div class="problem-pane">
-    <div class="problem-header">
-      <div class="prob-title" id="probTitle">Two Sum Target Pairs</div>
-      <div class="prob-diff diff-Easy" id="probDiff">Easy</div>
-    </div>
-    <div class="problem-tabs" id="problemTabsContainer"></div>
-    <div class="problem-body" id="problemBody">
-      <!-- Dynamic Problem Description -->
-    </div>
-  </div>
-
-  <!-- Right Pane: Monaco IDE -->
-  <div class="editor-pane">
-    <div class="editor-toolbar">
-      <select class="lang-select" id="langSelect" onchange="changeLanguage()">
-        <option value="python">Python 3.11</option>
-        <option value="javascript">JavaScript (Node.js)</option>
-        <option value="java">Java 17</option>
-        <option value="cpp">C++ 17</option>
-      </select>
-      <div class="editor-tools">
-        <button class="btn-editor-tool" onclick="resetCodeTemplate()">↺ Reset Code</button>
-        <button class="btn-editor-tool" onclick="toggleEditorTheme()">🌓 Theme</button>
-      </div>
-    </div>
-
-    <div id="monacoContainer"></div>
-
-    <!-- Bottom Console Drawer -->
-    <div class="console-drawer">
-      <div class="console-header">
-        <div class="console-tabs">
-          <button class="con-tab active" id="tabSampleCases" onclick="switchConsoleTab('sample')">Sample Testcases</button>
-          <button class="con-tab" id="tabCustomInput" onclick="switchConsoleTab('custom')">Custom Input</button>
-          <button class="con-tab" id="tabSubmission" onclick="switchConsoleTab('submission')">Submission Results</button>
-        </div>
-        <div class="console-actions">
-          <button class="btn-run-code" onclick="runSampleCode()" id="btnRunCode">▶ Run Sample Cases</button>
-          <button class="btn-submit-code" onclick="submitProblemCode()" id="btnSubmitProblem">⚡ Submit Code</button>
-        </div>
-      </div>
-      <div class="console-body" id="consoleBody">
-        <div style="color:#777;font-size:12px;padding:10px">Click <strong>▶ Run Sample Cases</strong> to test against example cases, or <strong>⚡ Submit Code</strong> to evaluate against the hidden test suite.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── RESULT MODAL ── -->
+<!-- ── RESULT SCREEN ──────────────────────────────────────── -->
 <div id="resultScreen">
-  <div class="result-modal">
-    <div class="res-badge badge-completed" id="resBadge">Assessment Completed</div>
-    <div class="res-title">Campus Drive Result</div>
-    <div class="res-score" id="resPercentage">85%</div>
-    <div class="res-score-sub" id="resScoreSub">Total Score: 280 / 350 Points</div>
-
-    <div class="res-stats">
-      <div class="res-row"><span class="res-lbl">Candidate Name</span><span class="res-val" id="resName">-</span></div>
-      <div class="res-row"><span class="res-lbl">Roll Number</span><span class="res-val" id="resRoll">-</span></div>
-      <div class="res-row"><span class="res-lbl">MCQ Section Score</span><span class="res-val" id="resMcqScore">-</span></div>
-      <div class="res-row"><span class="res-lbl">Coding Sandbox Score</span><span class="res-val" id="resCodingScore">-</span></div>
-      <div class="res-row"><span class="res-lbl">Shortlist Status</span><span class="res-val" id="resShortlistStatus">-</span></div>
+  <div class="result-card">
+    <div class="result-icon" id="resultIcon">🎉</div>
+    <h2 id="resultTitle">Assessment Submitted!</h2>
+    <div class="score-big" id="resultScore" style="color:var(--green)">-</div>
+    <div class="score-sub" id="resultSub">correct answers</div>
+    <div class="result-info">
+      <div class="ri-row"><span class="ri-label">Score</span><span class="ri-val" id="riScore">-</span></div>
+      <div class="ri-row"><span class="ri-label">Questions</span><span class="ri-val" id="riTotal">-</span></div>
+      <div class="ri-row"><span class="ri-label">Status</span><span class="ri-val" id="riStatus">-</span></div>
     </div>
-
-    <p style="font-size:13px;color:var(--muted);line-height:1.6">Your test submission has been recorded with integrity timestamp. Results have been forwarded to the college placement cell.</p>
+    <p class="result-msg" id="resultMsg">A confirmation email has been sent to your inbox. Our team will review your results and be in touch.</p>
   </div>
 </div>
 
 <script>
-const API = '/api/assessment';
-let editor = null;
-let currentToken = null;
-let sessionData = null;
-let currentSection = 'mcq';
-let currentMcqIdx = 0;
-let userMcqAnswers = {};
-let currentProblemIdx = 0;
-let timeRemainingSec = 90 * 60;
+// ── State ────────────────────────────────────────────────────────
+const token = new URLSearchParams(location.search).get('token');
+let questions = [];
+let answers = {};
+let tabSwitches = 0;
 let timerInterval = null;
-let currentTheme = 'vs-dark';
+let secondsLeft = 30 * 60;
+let testStarted = false;
+let autoSubmitting = false;
+const API = '/api/assessment';
 
-// ── INIT MONACO EDITOR ──
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+// ── Helpers ──────────────────────────────────────────────────────
+function showGateError(msg) {
+  const el = document.getElementById('gateError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
 
-window.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const driveParam = urlParams.get('drive');
-  const tokenParam = urlParams.get('token');
+function pad(n) { return String(n).padStart(2,'0'); }
 
-  if (driveParam) {
-    document.getElementById('regDriveCode').value = driveParam;
-  }
-  if (tokenParam) {
-    currentToken = tokenParam;
-    loadSession(tokenParam);
-  }
-});
+function updateTimer() {
+  if (secondsLeft <= 0) { clearInterval(timerInterval); autoSubmit('time_expired'); return; }
+  secondsLeft--;
+  const m = Math.floor(secondsLeft/60), s = secondsLeft % 60;
+  const badge = document.getElementById('timerBadge');
+  badge.textContent = `${pad(m)}:${pad(s)}`;
+  badge.className = secondsLeft <= 300 ? 'danger' : '';
+}
 
-// ── REGISTRATION HANDLER ──
-async function handleRegistration(e) {
-  e.preventDefault();
-  const btn = document.getElementById('btnStartDrive');
-  const errDiv = document.getElementById('gateError');
-  errDiv.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Verifying & Initializing...';
+function updateProgress() {
+  const answered = Object.keys(answers).length;
+  const total = questions.length;
+  document.getElementById('answeredCount').innerHTML = `Answered: <strong>${answered}</strong> / <strong>${total}</strong>`;
+  document.getElementById('qProgress').textContent = `${answered} / ${total} answered`;
+  document.getElementById('progFill').style.width = total > 0 ? `${(answered/total)*100}%` : '0%';
+}
 
-  const payload = {
-    drive_code: document.getElementById('regDriveCode').value.trim(),
-    student_name: document.getElementById('regName').value.trim(),
-    roll_number: document.getElementById('regRoll').value.trim(),
-    email: document.getElementById('regEmail').value.trim(),
-    phone: document.getElementById('regPhone').value.trim(),
-    branch: document.getElementById('regBranch').value,
-    cgpa: parseFloat(document.getElementById('regCgpa').value) || null,
-    passcode: document.getElementById('regPasscode').value.trim()
-  };
-
+// ── Init: validate token ──────────────────────────────────────────
+async function init() {
+  if (!token) { document.getElementById('gateTitle').textContent = 'Invalid Link'; document.getElementById('gateDesc').textContent = 'No assessment token found in the URL. Please check your email for the correct link.'; return; }
   try {
-    const res = await fetch(`${API}/drive/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    const res = await fetch(`${API}/take/${token}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration failed.');
-
-    currentToken = data.token;
-    // Enter Fullscreen & load session
-    triggerFullscreen();
-    await loadSession(currentToken);
-  } catch (err) {
-    errDiv.textContent = '⚠️ ' + err.message;
-    errDiv.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '🚀 Start Campus Assessment';
-  }
-}
-
-// ── LOAD ASSESSMENT SESSION ──
-async function loadSession(token) {
-  try {
-    const res = await fetch(`${API}/drive/session/${token}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load assessment session.');
-
-    sessionData = data;
-    document.getElementById('gateScreen').style.display = 'none';
-    document.getElementById('topBar').style.display = 'flex';
-
-    // Set Top Bar
-    document.getElementById('topDriveBadge').textContent = data.drive.drive_code;
-    document.getElementById('topStudentMeta').textContent = `${data.candidate.student_name} (${data.candidate.roll_number})`;
-    document.getElementById('mcqCountBadge').textContent = data.mcqs.length;
-    document.getElementById('codingCountBadge').textContent = data.coding_problems.length;
-
-    // Start Timer
-    timeRemainingSec = (data.drive.total_duration_minutes || 90) * 60;
-    startTimer();
-
-    // Setup Anti-Cheat
-    setupAntiCheat();
-
-    // Render MCQs & Coding Tabs
-    renderMcqPalette();
-    renderCurrentMcq();
-    renderProblemTabs();
-
-    // Init Monaco Editor
-    initMonaco();
-
-    // Start Assessment on backend
-    fetch(`${API}/drive/start/${token}`, { method: 'POST' });
-
-    // Show initial section
-    switchSection('mcq');
-
-  } catch (err) {
-    alert('Error loading assessment: ' + err.message);
-  }
-}
-
-// ── MONACO EDITOR INITIALIZATION ──
-function initMonaco() {
-  require(['vs/editor/editor.main'], function() {
-    const container = document.getElementById('monacoContainer');
-    const prob = sessionData.coding_problems[currentProblemIdx];
-    const initialCode = getProblemCode(prob, 'python');
-
-    editor = monaco.editor.create(container, {
-      value: initialCode,
-      language: 'python',
-      theme: currentTheme,
-      automaticLayout: true,
-      fontSize: 14,
-      fontFamily: "'Fira Code', Consolas, monospace",
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      tabSize: 4,
-      bracketPairColorization: { enabled: true }
-    });
-
-    editor.onDidChangeModelContent(() => {
-      const code = editor.getValue();
-      const lang = document.getElementById('langSelect').value;
-      localStorage.setItem(`elevateiq_code_${prob.id}_${lang}`, code);
-    });
-  });
-}
-
-function getProblemCode(prob, lang) {
-  const saved = localStorage.getItem(`elevateiq_code_${prob.id}_${lang}`);
-  if (saved) return saved;
-  if (prob.saved_submission && prob.saved_submission.language === lang) {
-    return prob.saved_submission.source_code;
-  }
-  if (prob.starter_code_json && prob.starter_code_json[lang]) {
-    return prob.starter_code_json[lang];
-  }
-  return '# Write your solution here\n';
-}
-
-function changeLanguage() {
-  if (!editor || !sessionData) return;
-  const lang = document.getElementById('langSelect').value;
-  const prob = sessionData.coding_problems[currentProblemIdx];
-  const monacoLang = lang === 'cpp' ? 'cpp' : (lang === 'javascript' ? 'javascript' : (lang === 'java' ? 'java' : 'python'));
-
-  monaco.editor.setModelLanguage(editor.getModel(), monacoLang);
-  editor.setValue(getProblemCode(prob, lang));
-}
-
-function resetCodeTemplate() {
-  if (!editor || !sessionData) return;
-  if (!confirm('Reset code to default template? Your current edits for this language will be cleared.')) return;
-  const lang = document.getElementById('langSelect').value;
-  const prob = sessionData.coding_problems[currentProblemIdx];
-  localStorage.removeItem(`elevateiq_code_${prob.id}_${lang}`);
-  const defaultCode = (prob.starter_code_json && prob.starter_code_json[lang]) || '';
-  editor.setValue(defaultCode);
-}
-
-function toggleEditorTheme() {
-  if (!monaco) return;
-  currentTheme = currentTheme === 'vs-dark' ? 'vs' : 'vs-dark';
-  monaco.editor.setTheme(currentTheme);
-}
-
-// ── SECTION SWITCHING ──
-function switchSection(sec) {
-  currentSection = sec;
-  document.getElementById('tabMcq').classList.toggle('active', sec === 'mcq');
-  document.getElementById('tabCoding').classList.toggle('active', sec === 'coding');
-
-  if (sec === 'mcq') {
-    document.getElementById('mcqSection').style.display = 'grid';
-    document.getElementById('codingSection').style.display = 'none';
-  } else {
-    document.getElementById('mcqSection').style.display = 'none';
-    document.getElementById('codingSection').style.display = 'grid';
-    if (editor) editor.layout();
-  }
-}
-
-// ── SECTION 1: MCQ LOGIC ──
-function renderMcqPalette() {
-  const grid = document.getElementById('paletteGrid');
-  grid.innerHTML = '';
-  sessionData.mcqs.forEach((q, idx) => {
-    const btn = document.createElement('button');
-    btn.className = `pal-btn ${idx === currentMcqIdx ? 'current' : ''} ${userMcqAnswers[q.id] ? 'answered' : ''}`;
-    btn.textContent = idx + 1;
-    btn.onclick = () => selectMcq(idx);
-    grid.appendChild(btn);
-  });
-}
-
-function renderCurrentMcq() {
-  const q = sessionData.mcqs[currentMcqIdx];
-  if (!q) return;
-
-  document.getElementById('mcqNumBadge').textContent = `Question ${currentMcqIdx + 1} of ${sessionData.mcqs.length}`;
-  document.getElementById('mcqQuestionText').textContent = q.question_text || q.question;
-
-  const container = document.getElementById('mcqOptionsContainer');
-  container.innerHTML = '';
-
-  ['A', 'B', 'C', 'D'].forEach(opt => {
-    const text = q[`option_${opt.toLowerCase()}`];
-    if (!text) return;
-
-    const btn = document.createElement('button');
-    const isSelected = userMcqAnswers[q.id] === opt;
-    btn.className = `opt-btn ${isSelected ? 'selected' : ''}`;
-    btn.innerHTML = `<div class="opt-key">${opt}</div> <div>${text}</div>`;
-    btn.onclick = () => {
-      userMcqAnswers[q.id] = opt;
-      renderCurrentMcq();
-      renderMcqPalette();
-    };
-    container.appendChild(btn);
-  });
-
-  document.getElementById('btnPrevMcq').disabled = (currentMcqIdx === 0);
-  document.getElementById('btnNextMcq').textContent = (currentMcqIdx === sessionData.mcqs.length - 1) ? 'Go to Coding Sandbox →' : 'Next Question →';
-}
-
-function selectMcq(idx) {
-  currentMcqIdx = idx;
-  renderCurrentMcq();
-  renderMcqPalette();
-}
-
-function prevMcq() {
-  if (currentMcqIdx > 0) selectMcq(currentMcqIdx - 1);
-}
-
-function nextMcq() {
-  if (currentMcqIdx < sessionData.mcqs.length - 1) {
-    selectMcq(currentMcqIdx + 1);
-  } else {
-    switchSection('coding');
-  }
-}
-
-// ── SECTION 2: CODING SANDBOX LOGIC ──
-function renderProblemTabs() {
-  const container = document.getElementById('problemTabsContainer');
-  container.innerHTML = '';
-  sessionData.coding_problems.forEach((p, idx) => {
-    const btn = document.createElement('button');
-    btn.className = `prob-tab-btn ${idx === currentProblemIdx ? 'active' : ''}`;
-    btn.textContent = `Problem ${idx + 1}: ${p.title.substring(0, 18)}...`;
-    btn.onclick = () => selectProblem(idx);
-    container.appendChild(btn);
-  });
-  renderCurrentProblem();
-}
-
-function selectProblem(idx) {
-  currentProblemIdx = idx;
-  renderProblemTabs();
-  renderCurrentProblem();
-  if (editor) {
-    const lang = document.getElementById('langSelect').value;
-    const prob = sessionData.coding_problems[currentProblemIdx];
-    editor.setValue(getProblemCode(prob, lang));
-  }
-}
-
-function renderCurrentProblem() {
-  const p = sessionData.coding_problems[currentProblemIdx];
-  if (!p) return;
-
-  document.getElementById('probTitle').textContent = p.title;
-  const diffEl = document.getElementById('probDiff');
-  diffEl.textContent = p.difficulty;
-  diffEl.className = `prob-diff diff-${p.difficulty}`;
-
-  let sampleHtml = '';
-  if (p.sample_testcases && p.sample_testcases.length) {
-    p.sample_testcases.forEach((tc, idx) => {
-      sampleHtml += `
-        <div class="prob-section-title">Example ${idx + 1}</div>
-        <div style="font-size:12px;color:var(--muted)">Input:</div>
-        <div class="code-block">${tc.input_data}</div>
-        <div style="font-size:12px;color:var(--muted)">Expected Output:</div>
-        <div class="code-block">${tc.expected_output}</div>
-      `;
-    });
-  }
-
-  document.getElementById('problemBody').innerHTML = `
-    <div style="margin-bottom:16px">${p.problem_statement.replace(/\n/g, '<br>')}</div>
-    ${p.input_format ? `<div class="prob-section-title">Input Format</div><div style="color:var(--muted);font-size:13px">${p.input_format}</div>` : ''}
-    ${p.output_format ? `<div class="prob-section-title">Output Format</div><div style="color:var(--muted);font-size:13px">${p.output_format}</div>` : ''}
-    ${p.constraints ? `<div class="prob-section-title">Constraints</div><div class="code-block">${p.constraints}</div>` : ''}
-    ${sampleHtml}
-  `;
-}
-
-// ── CODE EXECUTION (RUN & SUBMIT) ──
-async function runSampleCode() {
-  if (!editor || !sessionData) return;
-  const btn = document.getElementById('btnRunCode');
-  const consoleBody = document.getElementById('consoleBody');
-  btn.disabled = true;
-  btn.textContent = '⏳ Running...';
-  consoleBody.innerHTML = '<div style="color:#aaa;font-size:12px">Executing code against sample test cases...</div>';
-
-  const prob = sessionData.coding_problems[currentProblemIdx];
-  const payload = {
-    token: currentToken,
-    problem_id: prob.id,
-    language: document.getElementById('langSelect').value,
-    source_code: editor.getValue()
-  };
-
-  try {
-    const res = await fetch(`${API}/code/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Execution failed.');
-
-    renderConsoleResults(data);
-  } catch (err) {
-    consoleBody.innerHTML = `<div style="color:var(--red);font-size:13px">❌ Error: ${err.message}</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '▶ Run Sample Cases';
-  }
-}
-
-async function submitProblemCode() {
-  if (!editor || !sessionData) return;
-  const btn = document.getElementById('btnSubmitProblem');
-  const consoleBody = document.getElementById('consoleBody');
-  btn.disabled = true;
-  btn.textContent = '⏳ Evaluating...';
-  consoleBody.innerHTML = '<div style="color:#aaa;font-size:12px">Evaluating against hidden testcase suite...</div>';
-
-  const prob = sessionData.coding_problems[currentProblemIdx];
-  const payload = {
-    token: currentToken,
-    problem_id: prob.id,
-    language: document.getElementById('langSelect').value,
-    source_code: editor.getValue()
-  };
-
-  try {
-    const res = await fetch(`${API}/code/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Submission failed.');
-
-    renderSubmissionResults(data);
-  } catch (err) {
-    consoleBody.innerHTML = `<div style="color:var(--red);font-size:13px">❌ Submission Error: ${err.message}</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '⚡ Submit Code';
-  }
-}
-
-function renderConsoleResults(data) {
-  const con = document.getElementById('consoleBody');
-  if (data.results && data.results.length) {
-    let html = `<div style="font-weight:700;margin-bottom:8px;color:${data.all_passed ? 'var(--green)' : 'var(--red)'}">
-      Status: ${data.overall_status} (${data.passed_count}/${data.total_count} Sample Cases Passed)
-    </div>`;
-
-    data.results.forEach((r, idx) => {
-      html += `
-        <div class="tc-card ${r.passed ? 'tc-passed' : 'tc-failed'}">
-          <div class="tc-header">
-            <span>Case ${idx + 1}: ${r.status}</span>
-            <span>${r.execution_time_ms} ms</span>
-          </div>
-          <div style="font-size:11px;color:#aaa">Input: <span style="color:#fff">${r.input_data || ''}</span></div>
-          <div style="font-size:11px;color:#aaa">Expected: <span style="color:#fff">${r.expected_output || ''}</span></div>
-          <div style="font-size:11px;color:#aaa">Your Output: <span style="color:${r.passed ? '#00e676' : '#ff5252'}">${r.actual_output || ''}</span></div>
-          ${r.stderr ? `<div style="font-size:11px;color:#ff5252;margin-top:4px">Stderr: ${r.stderr}</div>` : ''}
-        </div>
-      `;
-    });
-    con.innerHTML = html;
-  } else {
-    con.innerHTML = `<pre style="color:#fff">${data.actual_output || data.stderr || 'Execution completed with no output.'}</pre>`;
-  }
-}
-
-function renderSubmissionResults(data) {
-  const con = document.getElementById('consoleBody');
-  con.innerHTML = `
-    <div style="padding:8px">
-      <div style="font-size:16px;font-weight:800;color:${data.all_passed ? 'var(--green)' : 'var(--orange)'}">
-        ${data.overall_status} • Score: ${data.score}/${data.max_score} Points
-      </div>
-      <div style="color:var(--muted);font-size:12.5px;margin-top:4px">
-        Passed <strong>${data.passed_count}</strong> of <strong>${data.total_count}</strong> testcases.
-      </div>
-    </div>
-  `;
-}
-
-// ── ANTI-CHEAT & PROCTORING ──
-function triggerFullscreen() {
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
-}
-
-function setupAntiCheat() {
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && currentToken) {
-      reportViolation('tab_switch');
-    }
-  });
-
-  window.addEventListener('blur', () => {
-    if (currentToken) reportViolation('tab_switch');
-  });
-
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && currentToken) {
-      reportViolation('fullscreen_exit');
-    }
-  });
-
-  // Disable context menu
-  document.addEventListener('contextmenu', e => e.preventDefault());
-}
-
-async function reportViolation(vtype) {
-  try {
-    const res = await fetch(`${API}/drive/tab-switch/${currentToken}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ violation_type: vtype })
-    });
-    const data = await res.json();
-    if (data.is_disqualified) {
-      alert('You have exceeded maximum allowed security violations. Your assessment has been disqualified.');
-      location.reload();
+    if (!res.ok) {
+      document.getElementById('gateTitle').textContent = 'Cannot Start Assessment';
+      document.getElementById('gateDesc').textContent = data.error || 'Unknown error.';
       return;
     }
-
-    const toast = document.getElementById('violationToast');
-    const msg = document.getElementById('violationMsg');
-    msg.textContent = `⚠️ Security Warning: ${vtype === 'fullscreen_exit' ? 'Fullscreen exited' : 'Tab switch detected'}! (${data.total_violations}/${data.max_violations})`;
-    toast.style.display = 'flex';
-    setTimeout(() => { toast.style.display = 'none'; }, 4000);
-  } catch (e) {}
+    questions = data.questions || [];
+    document.getElementById('gateTitle').textContent = `Hi, ${data.candidate_name}!`;
+    document.getElementById('gateDesc').textContent = `You are about to begin the assessment for: ${data.job_title}`;
+    document.getElementById('tbJobTitle').textContent = data.job_title;
+    document.getElementById('rulesList').style.display = 'block';
+    document.getElementById('gateWarn').style.display = 'block';
+    document.getElementById('startShareBtn').style.display = 'block';
+  } catch(e) {
+    document.getElementById('gateTitle').textContent = 'Connection Error';
+    document.getElementById('gateDesc').textContent = 'Could not reach the server. Please check your internet and refresh.';
+  }
 }
 
-// ── TIMER ──
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timeRemainingSec--;
-    if (timeRemainingSec <= 0) {
-      clearInterval(timerInterval);
-      alert('Time limit reached! Auto-submitting assessment.');
-      confirmFinalSubmit(true);
-      return;
-    }
-
-    const m = Math.floor(timeRemainingSec / 60);
-    const s = timeRemainingSec % 60;
-    const badge = document.getElementById('timerBadge');
-    badge.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    if (timeRemainingSec < 300) badge.classList.add('danger');
-  }, 1000);
-}
-
-// ── FINAL SUBMIT ──
-async function confirmFinalSubmit(auto = false) {
-  if (!auto && !confirm('Are you sure you want to submit your entire assessment? You will not be able to modify your answers or code.')) {
+// ── Begin: Screen share + start API call ─────────────────────────
+async function beginAssessment() {
+  const btn = document.getElementById('startShareBtn');
+  btn.disabled = true; btn.textContent = 'Requesting screen share...';
+  let screenGranted = false;
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    screenGranted = true;
+    stream.getTracks().forEach(t => t.stop()); // stop immediately; just need permission
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '🖥️ Share Screen & Start Test';
+    showGateError('⚠️ Screen sharing is required to begin the assessment. Please allow screen sharing when prompted.');
     return;
   }
 
+  try {
+    await fetch(`${API}/start/${token}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ screen_share_granted: screenGranted })
+    });
+  } catch(e) {}
+
+  // Show test
+  document.getElementById('gateScreen').style.display = 'none';
+  document.getElementById('topBar').style.display = 'flex';
+  document.getElementById('testArea').style.display = 'block';
+  testStarted = true;
+  renderQuestions();
+  startTimer();
+  attachTabSwitchDetection();
+}
+
+// ── Render questions ──────────────────────────────────────────────
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  questions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard_${q.id}`;
+    card.innerHTML = `
+      <div class="q-num">Question ${i+1} of ${questions.length}</div>
+      <div class="q-diff diff-${q.difficulty || 'Medium'}">${q.difficulty || 'Medium'}</div>
+      <div class="q-text">${q.question_text}</div>
+      <div class="options" id="opts_${q.id}">
+        ${['A','B','C','D'].map(opt => `
+          <button class="opt-btn" id="opt_${q.id}_${opt}" onclick="selectAnswer(${q.id},'${opt}')">
+            <span class="opt-label">${opt}</span>
+            <span>${q['option_'+opt.toLowerCase()]}</span>
+          </button>
+        `).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+  updateProgress();
+}
+
+function selectAnswer(qId, opt) {
+  answers[qId] = opt;
+  ['A','B','C','D'].forEach(o => {
+    const btn = document.getElementById(`opt_${qId}_${o}`);
+    if(btn) btn.classList.toggle('selected', o === opt);
+  });
+  updateProgress();
+}
+
+// ── Timer ─────────────────────────────────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+// ── Tab switch detection ──────────────────────────────────────────
+function attachTabSwitchDetection() {
+  document.addEventListener('visibilitychange', async () => {
+    if (!testStarted || autoSubmitting) return;
+    if (document.hidden) {
+      tabSwitches++;
+      try {
+        const res = await fetch(`${API}/tab-switch/${token}`, { method:'POST' });
+        const data = await res.json();
+        const warn = document.getElementById('switchWarn');
+        const warnText = document.getElementById('switchWarnText');
+        const remaining = Math.max(0, 3 - data.tab_switches);
+        warnText.textContent = `⚠️ Tab switch detected! Warnings remaining: ${remaining}`;
+        warn.style.display = 'flex';
+        setTimeout(() => { warn.style.display = 'none'; }, 4000);
+        if (data.auto_submit) { autoSubmit('tab_limit'); }
+      } catch(e) {}
+    }
+  });
+}
+
+// ── Submit flow ───────────────────────────────────────────────────
+async function confirmSubmit() {
+  const unanswered = questions.length - Object.keys(answers).length;
+  if (unanswered > 0) {
+    if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) return;
+  }
+  await doSubmit();
+}
+
+async function autoSubmit(reason) {
+  if (autoSubmitting) return;
+  autoSubmitting = true;
+  clearInterval(timerInterval);
+  await doSubmit(reason);
+}
+
+async function doSubmit(reason) {
+  const btn = document.getElementById('submitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
   clearInterval(timerInterval);
   try {
-    const res = await fetch(`${API}/drive/submit/${currentToken}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mcq_answers: userMcqAnswers })
+    const res = await fetch(`${API}/submit/${token}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ answers })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Submission error.');
-
-    document.getElementById('topBar').style.display = 'none';
-    document.getElementById('mcqSection').style.display = 'none';
-    document.getElementById('codingSection').style.display = 'none';
-
-    document.getElementById('resPercentage').textContent = `${data.percentage}%`;
-    document.getElementById('resScoreSub').textContent = `Total Score: ${data.total_score} / ${data.max_score} Points`;
-    document.getElementById('resName').textContent = data.student_name;
-    document.getElementById('resRoll').textContent = data.roll_number;
-    document.getElementById('resMcqScore').textContent = `${data.mcq_score} Pts`;
-    document.getElementById('resCodingScore').textContent = `${data.coding_score} Pts`;
-
-    const badge = document.getElementById('resBadge');
-    const statusVal = document.getElementById('resShortlistStatus');
-    if (data.is_shortlisted) {
-      badge.className = 'res-badge badge-shortlisted';
-      badge.textContent = '🎉 Qualified / Shortlisted';
-      statusVal.textContent = 'Shortlisted for Interview';
-      statusVal.style.color = 'var(--green)';
-    } else {
-      badge.className = 'res-badge badge-completed';
-      badge.textContent = 'Assessment Submitted';
-      statusVal.textContent = 'Completed (Under Review)';
-    }
-
-    document.getElementById('resultScreen').style.display = 'flex';
-
-  } catch (err) {
-    alert('Submission failed: ' + err.message);
+    showResult(data, reason);
+  } catch(e) {
+    showResult({ score:0, total:questions.length, percentage:0, status:'Error' }, reason);
   }
 }
+
+function showResult(data, reason) {
+  document.getElementById('testArea').style.display = 'none';
+  document.getElementById('topBar').style.display = 'none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display = 'flex';
+  const pct = data.percentage || 0;
+  const color = pct >= 80 ? 'var(--green)' : (pct >= 60 ? '#ffeb3b' : 'var(--red)');
+  document.getElementById('resultScore').textContent = `${pct.toFixed(0)}%`;
+  document.getElementById('resultScore').style.color = color;
+  document.getElementById('resultSub').textContent = `${data.score || 0} / ${data.total || questions.length} correct answers`;
+  document.getElementById('riScore').textContent = `${pct.toFixed(1)}%`;
+  document.getElementById('riTotal').textContent = data.total || questions.length;
+  document.getElementById('riStatus').textContent = data.status || 'Submitted';
+
+  let msg = 'A confirmation email with your score has been sent to your inbox. Our recruiter team will review your application and be in touch shortly.';
+  let icon = '🎉';
+  if (reason === 'tab_limit') {
+    msg = 'Your test was auto-submitted due to excessive tab switching and has been flagged for review. You will still receive an email confirmation.';
+    icon = '⚠️';
+    document.getElementById('resultTitle').textContent = 'Assessment Auto-Submitted';
+  } else if (reason === 'time_expired') {
+    msg = 'Time ran out and your answers have been submitted automatically. Check your email for the results.';
+    icon = '⏱️';
+    document.getElementById('resultTitle').textContent = 'Time Expired — Submitted';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
