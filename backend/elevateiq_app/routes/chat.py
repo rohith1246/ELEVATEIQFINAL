@@ -260,8 +260,8 @@ def chat_create_conversation():
             if not name:
                 name = "New Group Chat"
                 
-            if not (is_admin or is_tl):
-                return jsonify({"error": "Only Admins and Team Leaders can create groups."}), 403
+            if user.get("role") not in ["admin", "team_leader", "employee"] and not is_tl:
+                return jsonify({"error": "Only staff members can create groups."}), 403
         else:
             if not member_ids:
                 return jsonify({"error": "Member ID is required for direct messages"}), 400
@@ -374,6 +374,7 @@ def chat_list_conversations():
             cursor.execute(
                 """
                 SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
+                       (SELECT m.id FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message_id,
                        (SELECT m.content FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message,
                        (SELECT m.sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message_time,
                        (SELECT COUNT(*) FROM messages m 
@@ -394,6 +395,7 @@ def chat_list_conversations():
             cursor.execute(
                 """
                 SELECT c.id, c.type, c.name as group_name, c.created_by, c.created_at,
+                       (SELECT m.id FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message_id,
                        (SELECT m.content FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message,
                        (SELECT m.sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message_time,
                        (SELECT COUNT(*) FROM messages m 
@@ -411,8 +413,9 @@ def chat_list_conversations():
             conversations = cursor.fetchall()
             
         for c in conversations:
-            if c["last_message_time"]:
+            if c.get("last_message_time"):
                 c["last_message_time"] = c["last_message_time"].isoformat()
+                c["last_message_at"] = c["last_message_time"]
             c["is_group"] = (c["type"] == "group")
             c["name"] = c.get("group_name") or c.get("name") or "Group Chat"
             
@@ -526,19 +529,6 @@ def chat_get_messages(conv_id):
                 (conv_id,)
             )
             members_list = cursor.fetchall()
-            
-            if not members_list:
-                cursor.execute(
-                    """
-                    SELECT u.id, u.name, u.email, u.role, e.designation,
-                           (u.last_seen IS NOT NULL AND ABS(EXTRACT(EPOCH FROM (NOW() - u.last_seen))) < 300) as is_online
-                    FROM users u
-                    LEFT JOIN employees e ON u.id = e.user_id
-                    WHERE u.role IN ('employee', 'admin', 'team_leader') AND u.status = 'active'
-                    ORDER BY u.name ASC
-                    """
-                )
-                members_list = cursor.fetchall()
                 
         conv_payload = {
             "id": conv["id"],
@@ -632,6 +622,12 @@ def chat_send_message(conv_id):
         )
         conn.commit()
 
+        sender_name = user.get("name")
+        if not sender_name:
+            cursor.execute("SELECT name FROM users WHERE id = %s", (user["id"],))
+            _u = cursor.fetchone()
+            sender_name = (_u.get("name") if isinstance(_u, dict) else _u[0]) if _u else "User"
+
         try:
             event_payload = json.dumps({
                 "type": "message",
@@ -640,7 +636,7 @@ def chat_send_message(conv_id):
                     "id": msg_id,
                     "conversation_id": conv_id,
                     "sender_id": user["id"],
-                    "sender_name": user["name"],
+                    "sender_name": sender_name,
                     "content": content,
                     "sent_at": sent_at
                 }
@@ -663,7 +659,7 @@ def chat_send_message(conv_id):
             "id": msg_id,
             "conversation_id": conv_id,
             "sender_id": user["id"],
-            "sender_name": user["name"],
+            "sender_name": sender_name,
             "content": content,
             "sent_at": sent_at
         }), 201
@@ -759,6 +755,12 @@ def chat_upload_file(conv_id):
         )
         conn.commit()
         
+        sender_name = user.get("name")
+        if not sender_name:
+            cursor.execute("SELECT name FROM users WHERE id = %s", (user["id"],))
+            _u = cursor.fetchone()
+            sender_name = (_u.get("name") if isinstance(_u, dict) else _u[0]) if _u else "User"
+
         try:
             event_payload = json.dumps({
                 "type": "message",
@@ -767,7 +769,7 @@ def chat_upload_file(conv_id):
                     "id": msg_id,
                     "conversation_id": conv_id,
                     "sender_id": user["id"],
-                    "sender_name": user["name"],
+                    "sender_name": sender_name,
                     "content": content,
                     "file_url": file_url,
                     "file_name": original_filename,
@@ -794,7 +796,7 @@ def chat_upload_file(conv_id):
             "id": msg_id,
             "conversation_id": conv_id,
             "sender_id": user["id"],
-            "sender_name": user["name"],
+            "sender_name": sender_name,
             "content": content,
             "file_url": file_url,
             "file_name": original_filename,
@@ -951,6 +953,9 @@ def chat_tl_groups():
 
 
 @chat_bp.route("/chat/groups/<int:conv_id>/members", methods=["POST"])
+@chat_bp.route("/api/chat/groups/<int:conv_id>/members", methods=["POST"])
+@chat_bp.route("/chat/conversations/<int:conv_id>/members", methods=["POST"])
+@chat_bp.route("/api/chat/conversations/<int:conv_id>/members", methods=["POST"])
 def chat_group_add_member(conv_id):
     """
     Adds a new member to an existing group conversation.
@@ -976,8 +981,11 @@ def chat_group_add_member(conv_id):
             return jsonify({"error": "Group conversation not found"}), 404
             
         is_creator = conv.get("created_by") == user.get("id")
-        if not (is_admin or is_tl or is_creator):
-            return jsonify({"error": "Only Admins, Team Leaders, or the group creator can add members."}), 403
+        cursor.execute("SELECT 1 FROM conversation_members WHERE conversation_id = %s AND user_id = %s", (conv_id, user["id"]))
+        is_member = cursor.fetchone() is not None
+
+        if not (is_admin or is_tl or is_creator or is_member):
+            return jsonify({"error": "Only group members, Team Leaders, or Admins can add members."}), 403
             
         cursor.execute(
             "INSERT INTO conversation_members (conversation_id, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
