@@ -14,12 +14,18 @@ let activeOversightConversationId = null;
 let activeOversightType = null;
 let allUsers = [];
 
-// Periodic presence heartbeat ping (updates last_seen every 20 seconds)
+// Periodic presence heartbeat ping (updates last_seen when tab is active)
 setInterval(() => {
-    if (currentUser) {
+    if (currentUser && !document.hidden) {
         apiCall('/chat/heartbeat', 'POST').catch(() => {});
     }
-}, 20000);
+}, 30000);
+
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && currentUser) {
+        apiCall('/chat/heartbeat', 'POST').catch(() => {});
+    }
+});
 
 function formatToIST(dateStr) {
     if (!dateStr) return '';
@@ -200,15 +206,18 @@ async function refreshDMList() {
         
         list.forEach(c => {
             const isSelected = activeConversationId === c.id;
-            const badgeHtml = c.unread_count > 0 ? `<span class="badge">${c.unread_count}</span>` : '';
+            const badgeHtml = c.unread_count > 0 ? `<span class="badge" style="background:var(--orange); color:#fff; font-size:10px; font-weight:700; border-radius:100px; padding:2px 7px; min-width:18px; text-align:center;">${c.unread_count}</span>` : '';
             const lastMsg = c.last_message ? c.last_message : 'No messages yet';
-            const name = c.dm_user ? c.dm_user.name : 'Unknown Employee';
+            const name = c.dm_user ? c.dm_user.name : 'Colleague';
+            const isOnline = c.dm_user && (c.dm_user.is_online === true || c.dm_user.is_online === 'true' || c.dm_user.is_online === 1);
+            const avatarHtml = getUserAvatarHtml(name, 36, isOnline);
             
             container.innerHTML += `
-                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectDMConversation(${c.id}, '${name.replace(/'/g, "\\'")}')">
-                    <div>
-                        <div class="title">${name}</div>
-                        <div class="subtitle">${lastMsg}</div>
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectDMConversation(${c.id}, '${name.replace(/'/g, "\\'")}')" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; margin-bottom:4px; cursor:pointer; transition:all 0.2s ease;">
+                    ${avatarHtml}
+                    <div style="flex:1; min-width:0;">
+                        <div class="title" style="font-weight:600; font-size:13.5px; color:#fff; margin-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(name)}</div>
+                        <div class="subtitle" style="font-size:11.5px; color:var(--ink-soft); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(lastMsg)}</div>
                     </div>
                     <div>${badgeHtml}</div>
                 </div>
@@ -243,6 +252,10 @@ async function selectDMConversation(id, partnerName) {
     try {
         await apiCall(`/chat/conversations/${id}/read`, "POST");
     } catch(e) {}
+    
+    if (typeof clearConversationNotifications === "function") {
+        clearConversationNotifications(id);
+    }
     
     await refreshDMThread(true);
     await refreshDMList();
@@ -476,24 +489,31 @@ async function loadUsersForDM() {
 
 function renderDMUsersList(users) {
     const listContainer = document.getElementById("dmUsersList");
+    if (!listContainer) return;
     listContainer.innerHTML = "";
-    if (users.length === 0) {
-        listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-soft);">No colleagues found.</div>';
+    if (!users || users.length === 0) {
+        listContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--ink-soft); font-size:13px;">No colleagues found.</div>';
         return;
     }
     users.forEach(u => {
         const isOnline = u.is_online === true || u.is_online === 'true' || u.is_online === 1;
         const statusBadge = isOnline 
-            ? '<span class="status-tag status-active" style="font-size:10px; padding:2px 6px;">Online</span>' 
-            : '<span class="status-tag status-offline" style="font-size:10px; padding:2px 6px;">Offline</span>';
+            ? '<span style="color:#10b981; font-size:11px; display:inline-flex; align-items:center; gap:3px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span> Online</span>' 
+            : '<span style="color:var(--ink-soft); font-size:11px; display:inline-flex; align-items:center; gap:3px;"><span style="width:6px; height:6px; border-radius:50%; background:#64748b;"></span> Offline</span>';
         
-        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="background:rgba(255, 122, 0, 0.15); border:1px solid rgba(255, 122, 0, 0.3); color:var(--orange); font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">${u.role.toUpperCase()}</span>` : '';
+        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="background:rgba(255, 122, 0, 0.15); border:1px solid rgba(255, 122, 0, 0.3); color:var(--orange); font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:100px; margin-left:6px;">${u.role.toUpperCase()}</span>` : '';
+        const avatarHtml = getUserAvatarHtml(u.name, 36, isOnline);
 
         listContainer.innerHTML += `
-            <div class="user-select-row" onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--glass-border); cursor:pointer; transition: background 0.15s ease;">
-                <div>
-                    <div style="font-weight:600; font-size:13px; color:#fff;">${escapeHTML(u.name)} ${roleLabel}</div>
-                    <div style="font-size:11px; color:var(--ink-soft);">${escapeHTML(u.email)}</div>
+            <div class="user-select-row" onclick="startDMWithUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px; cursor:pointer; transition:all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                    ${avatarHtml}
+                    <div style="min-width:0;">
+                        <div style="font-weight:600; font-size:13.5px; color:#fff; display:flex; align-items:center; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                            ${escapeHTML(u.name)} ${roleLabel}
+                        </div>
+                        <div style="font-size:11.5px; color:var(--ink-soft); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(u.email)}</div>
+                    </div>
                 </div>
                 <div>${statusBadge}</div>
             </div>
@@ -502,8 +522,12 @@ function renderDMUsersList(users) {
 }
 
 function filterDMUsers() {
-    const q = document.getElementById("dmUserSearch").value.toLowerCase();
-    const filtered = allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    const q = (document.getElementById("dmUserSearch") ? document.getElementById("dmUserSearch").value : "").toLowerCase();
+    const filtered = (allUsers || []).filter(u => 
+        (u.name || '').toLowerCase().includes(q) || 
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.role || '').toLowerCase().includes(q)
+    );
     renderDMUsersList(filtered);
 }
 
@@ -532,10 +556,9 @@ async function loadGroupsPanel() {
     document.getElementById("groupPlaceholder").style.display = "flex";
     initChatSSE();
     
-    const isTLOrAdmin = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader;
     const btnCreate = document.getElementById("btnCreateGroupSidebar");
     if (btnCreate) {
-        btnCreate.style.display = isTLOrAdmin ? "block" : "none";
+        btnCreate.style.display = (currentUser && currentUser.role !== 'client') ? "inline-flex" : "none";
     }
     
     await refreshGroupList();
@@ -565,14 +588,21 @@ async function refreshGroupList() {
         
         list.forEach(c => {
             const isSelected = activeGroupConversationId === c.id;
-            const badgeHtml = c.unread_count > 0 ? `<span class="badge">${c.unread_count}</span>` : '';
+            const badgeHtml = c.unread_count > 0 ? `<span class="badge" style="background:var(--orange); color:#fff; font-size:10px; font-weight:700; border-radius:100px; padding:2px 7px; min-width:18px; text-align:center;">${c.unread_count}</span>` : '';
             const lastMsg = c.last_message ? c.last_message : 'No messages yet';
+            const groupName = c.group_name || 'Group Chat';
+            const avatarHtml = `
+                <div style="width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg, rgba(255, 122, 0, 0.2), rgba(255, 122, 0, 0.4)); border:1px solid rgba(255, 122, 0, 0.35); display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:16px; flex-shrink:0;">
+                    👥
+                </div>
+            `;
             
             container.innerHTML += `
-                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectGroupConversation(${c.id}, '${c.group_name.replace(/'/g, "\\'")}')">
-                    <div>
-                        <div class="title">👥 ${escapeHTML(c.group_name)}</div>
-                        <div class="subtitle">${escapeHTML(lastMsg)}</div>
+                <div class="chat-list-item ${isSelected ? 'active' : ''}" onclick="selectGroupConversation(${c.id}, '${groupName.replace(/'/g, "\\'")}')" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; margin-bottom:4px; cursor:pointer; transition:all 0.2s ease;">
+                    ${avatarHtml}
+                    <div style="flex:1; min-width:0;">
+                        <div class="title" style="font-weight:600; font-size:13.5px; color:#fff; margin-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(groupName)}</div>
+                        <div class="subtitle" style="font-size:11.5px; color:var(--ink-soft); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(lastMsg)}</div>
                     </div>
                     <div>${badgeHtml}</div>
                 </div>
@@ -607,18 +637,17 @@ async function selectGroupConversation(id, name) {
         await apiCall(`/chat/conversations/${id}/read`, "POST");
     } catch(e) {}
     
+    if (typeof clearConversationNotifications === "function") {
+        clearConversationNotifications(id);
+    }
+    
     const actionsArea = document.getElementById("groupActionsArea");
     if (actionsArea) {
-        const isTLOrAdmin = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader;
-        if (isTLOrAdmin) {
-            actionsArea.innerHTML = `
-                <button type="button" onclick="openAddMemberModal(${id})" class="btn-primary" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Add Team Members">
-                    + Add Employee
-                </button>
-            `;
-        } else {
-            actionsArea.innerHTML = '';
-        }
+        actionsArea.innerHTML = `
+            <button type="button" onclick="openAddMemberModal(${id})" class="btn-primary" style="padding:7px 14px; font-size:12px; font-weight:700; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:6px; margin:0; background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; box-shadow:0 2px 8px rgba(16,185,129,0.25);" title="Add Team Members">
+                <span style="font-size:14px;">+</span> Add Member
+            </button>
+        `;
     }
     
     await refreshGroupThread(true);
@@ -639,23 +668,28 @@ async function refreshGroupThread(forceScroll = false) {
         }
         lastGroupMessagesJson = messagesJson;
 
-        const membersToRender = (res.members && res.members.length > 0) ? res.members : (allUsers || []);
+        const membersToRender = res.members || [];
         const membersCount = membersToRender.length;
         const onlineCount = membersToRender.filter(m => m.is_online === true || m.is_online === 'true' || m.is_online === 1).length;
         const groupTitleElem = document.getElementById("groupActiveTitle") || document.getElementById("groupTitleHeader");
         const isCanDelete = currentUser.role === 'admin' || currentUser.role === 'team_leader' || currentUser.is_team_leader || (res.conversation && res.conversation.created_by === currentUser.id);
+        
         const deleteBtnHtml = isCanDelete ? `
-            <button type="button" onclick="deleteCurrentGroup(${activeGroupConversationId})" class="btn-action btn-reject" style="padding:6px 12px; font-size:12px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Delete Group">
-                🗑️ Delete Group
+            <button type="button" onclick="deleteCurrentGroup(${activeGroupConversationId})" class="btn-action btn-reject" style="padding:6px 12px; font-size:11.5px; height:auto; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin:0;" title="Delete Group">
+                🗑️ Delete
             </button>
         ` : '';
 
         if (groupTitleElem) {
             groupTitleElem.innerHTML = `
-                <div class="title-area" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div class="title-area" style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:12px;">
                     <div>
-                        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${escapeHTML((res.conversation && res.conversation.group_name) || 'Group Chat')}</h3>
-                        <div class="meta" style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">${membersCount} Members &bull; ${onlineCount} Online</div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #fff; display:flex; align-items:center; gap:8px;">
+                            <span>👥</span> ${escapeHTML((res.conversation && res.conversation.group_name) || 'Group Chat')}
+                        </h3>
+                        <div class="meta" style="font-size: 11.5px; color: var(--ink-soft); margin-top: 3px;">
+                            ${membersCount} ${membersCount === 1 ? 'member' : 'members'} &bull; <span style="color:#10b981;">● ${onlineCount} online</span>
+                        </div>
                     </div>
                     ${deleteBtnHtml}
                 </div>
@@ -667,23 +701,33 @@ async function refreshGroupThread(forceScroll = false) {
         
         messagesDiv.innerHTML = "";
         
-        res.messages.forEach(m => {
-            const isMine = m.sender_id === currentUser.id;
-            const bubbleClass = isMine ? 'outgoing' : 'incoming';
-            const senderHtml = isMine ? '' : `<div class="sender">${escapeHTML(m.sender_name)}</div>`;
-            const timeStr = formatToIST(m.sent_at);
-            const attachmentHtml = renderMessageAttachment(m);
-            const bodyHtml = m.content ? `<div>${formatMessageBody(m.content)}</div>` : '';
-            
-            messagesDiv.innerHTML += `
-                <div class="msg-bubble ${bubbleClass}">
-                    ${senderHtml}
-                    ${bodyHtml}
-                    ${attachmentHtml}
-                    <div class="time">${timeStr}</div>
+        if (res.messages.length === 0) {
+            messagesDiv.innerHTML = `
+                <div style="padding:40px 20px; text-align:center; color:var(--ink-soft); margin:auto;">
+                    <div style="font-size:36px; margin-bottom:10px;">👋</div>
+                    <div style="font-size:15px; font-weight:600; color:#fff;">Welcome to ${(res.conversation && res.conversation.group_name) || 'Group Chat'}!</div>
+                    <div style="font-size:12px; margin-top:4px;">Start collaborating by sending a message or sharing files below.</div>
                 </div>
             `;
-        });
+        } else {
+            res.messages.forEach(m => {
+                const isMine = m.sender_id === currentUser.id;
+                const bubbleClass = isMine ? 'outgoing' : 'incoming';
+                const senderHtml = isMine ? '' : `<div class="sender" style="font-weight:700; color:#60a5fa; margin-bottom:4px; font-size:12px;">${escapeHTML(m.sender_name)}</div>`;
+                const timeStr = formatToIST(m.sent_at);
+                const attachmentHtml = renderMessageAttachment(m);
+                const bodyHtml = m.content ? `<div>${formatMessageBody(m.content)}</div>` : '';
+                
+                messagesDiv.innerHTML += `
+                    <div class="msg-bubble ${bubbleClass}">
+                        ${senderHtml}
+                        ${bodyHtml}
+                        ${attachmentHtml}
+                        <div class="time">${timeStr}</div>
+                    </div>
+                `;
+            });
+        }
         
         if (forceScroll || isAtBottom) {
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -692,28 +736,45 @@ async function refreshGroupThread(forceScroll = false) {
         const membersList = document.getElementById("groupMembersList");
         if (membersList) {
             membersList.innerHTML = "";
+            
+            // Add top quick Add Member button in pane
+            membersList.innerHTML += `
+                <button type="button" onclick="openAddMemberModal(${activeGroupConversationId})" style="background:rgba(16,185,129,0.12); border:1px dashed rgba(16,185,129,0.4); color:#34d399; font-weight:600; font-size:12px; padding:8px 12px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:6px; transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.2)'" onmouseout="this.style.background='rgba(16,185,129,0.12)'">
+                    <span>+</span> Add Team Member
+                </button>
+            `;
+
             if (membersToRender.length === 0) {
-                membersList.innerHTML = `<div style="padding:12px; color:var(--ink-soft); font-size:12px; text-align:center;">No members listed.</div>`;
+                membersList.innerHTML += `<div style="padding:12px; color:var(--ink-soft); font-size:12px; text-align:center;">No members listed.</div>`;
             } else {
                 membersToRender.forEach(m => {
-                    const roleBadge = (m.role === 'admin' || m.role === 'team_leader') ? `<span style="color:var(--orange); font-size:9px; font-weight:700; margin-left:4px;">${m.role.toUpperCase()}</span>` : '';
+                    const roleBadge = (m.role === 'admin' || m.role === 'team_leader') 
+                        ? `<span style="font-size:9.5px; background:rgba(255,122,0,0.15); color:var(--orange); border:1px solid rgba(255,122,0,0.3); padding:1px 5px; border-radius:4px; margin-left:4px; font-weight:700;">${m.role === 'team_leader' ? 'TL' : 'ADMIN'}</span>` 
+                        : '';
                     const isOnline = m.is_online === true || m.is_online === 'true' || m.is_online === 1;
                     const statusDot = isOnline 
-                        ? '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#00e676; display:inline-block; margin-right:4px;"></span> Online' 
-                        : '<span style="width:6.5px; height:6.5px; border-radius:50%; background:#707a8a; display:inline-block; margin-right:4px;"></span> Offline';
+                        ? '<span style="color:#10b981; font-size:10.5px; display:inline-flex; align-items:center; gap:3px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span> Online</span>' 
+                        : '<span style="color:var(--ink-soft); font-size:10.5px; display:inline-flex; align-items:center; gap:3px;"><span style="width:6px; height:6px; border-radius:50%; background:#64748b;"></span> Offline</span>';
 
                     const canRemoveMember = isCanDelete && m.id !== currentUser.id;
                     const removeBtnHtml = canRemoveMember ? `
-                        <button type="button" onclick="removeGroupMember(${activeGroupConversationId}, ${m.id}, '${escapeHTML(m.name).replace(/'/g, "\\'")}')" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer; padding:2px 4px; border-radius:4px;" title="Remove Member">
+                        <button type="button" onclick="removeGroupMember(${activeGroupConversationId}, ${m.id}, '${escapeHTML(m.name).replace(/'/g, "\\'")}')" style="background:none; border:none; color:#ef4444; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Remove from group">
                             ✕
                         </button>
                     ` : '';
 
+                    const avatarHtml = getUserAvatarHtml(m.name, 28, isOnline);
+
                     membersList.innerHTML += `
-                        <div class="member-card" style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div class="name">${escapeHTML(m.name)} ${roleBadge}</div>
-                                <div class="status" style="font-size:11px; display:flex; align-items:center; color:${isOnline ? '#00e676' : 'var(--ink-soft)'};">${statusDot}</div>
+                        <div class="member-card" style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:10px;">
+                            <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                                ${avatarHtml}
+                                <div style="min-width:0;">
+                                    <div class="name" style="font-weight:600; font-size:12px; color:#fff; display:flex; align-items:center; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                                        ${escapeHTML(m.name)} ${roleBadge}
+                                    </div>
+                                    <div class="status" style="margin-top:2px;">${statusDot}</div>
+                                </div>
                             </div>
                             <div>${removeBtnHtml}</div>
                         </div>
@@ -736,28 +797,115 @@ async function removeGroupMember(groupId, userId, name) {
     }
 }
 
+// Helper to generate consistent avatar initials & gradient background
+function getUserAvatarHtml(name, size = 36, isOnline = false) {
+    const initials = (name || '?')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
+    // Deterministic gradient based on name hash
+    const colors = [
+        ['#3b82f6', '#1d4ed8'],
+        ['#10b981', '#047857'],
+        ['#f59e0b', '#b45309'],
+        ['#8b5cf6', '#6d28d9'],
+        ['#ec4899', '#be185d'],
+        ['#06b6d4', '#0e7490']
+    ];
+    let hash = 0;
+    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    const pair = colors[Math.abs(hash) % colors.length];
+
+    const onlineDot = isOnline 
+        ? `<span style="position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; background:#10b981; border:2px solid #0c1222;"></span>` 
+        : '';
+
+    return `
+        <div style="position:relative; width:${size}px; height:${size}px; flex-shrink:0;">
+            <div style="width:${size}px; height:${size}px; border-radius:50%; background:linear-gradient(135deg, ${pair[0]}, ${pair[1]}); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:${size * 0.38}px; letter-spacing:0.5px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                ${initials}
+            </div>
+            ${onlineDot}
+        </div>
+    `;
+}
+
 /**
  * Launches modal dialog for creating a new workspace group channel.
  */
+let createGroupUsersList = [];
+
 async function openCreateGroupModal() {
-    document.getElementById("newGroupName").value = "";
+    if (document.getElementById("newGroupName")) document.getElementById("newGroupName").value = "";
+    if (document.getElementById("createGroupSearchInput")) document.getElementById("createGroupSearchInput").value = "";
+    if (document.getElementById("selectedMemberCount")) document.getElementById("selectedMemberCount").textContent = "0 selected";
+    
     openModal("createGroupModal");
+    
     const container = document.getElementById("createGroupMembersList");
-    container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">Loading available colleagues...</div>';
+    if (!container) return;
+    container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-soft); font-size:13px;">Loading colleagues directory...</div>';
+    
     try {
         allUsers = await apiCall("/chat/users");
-        container.innerHTML = "";
-        allUsers.forEach(u => {
-            container.innerHTML += `
-                <label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px; cursor:pointer; color:#fff;">
-                    <input type="checkbox" name="groupMember" value="${u.id}" />
-                    <span>${escapeHTML(u.name)} (${escapeHTML(u.email)})</span>
-                </label>
-            `;
-        });
+        createGroupUsersList = allUsers || [];
+        renderCreateGroupMembersList(createGroupUsersList);
     } catch(e) {
-        container.innerHTML = '<div style="padding:15px; text-align:center; color:red;">Failed to load user list.</div>';
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444; font-size:13px;">Failed to load users list.</div>';
     }
+}
+
+function filterCreateGroupMembers() {
+    const q = (document.getElementById("createGroupSearchInput") ? document.getElementById("createGroupSearchInput").value : "").toLowerCase();
+    const filtered = createGroupUsersList.filter(u => 
+        (u.name || '').toLowerCase().includes(q) || 
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.role || '').toLowerCase().includes(q)
+    );
+    renderCreateGroupMembersList(filtered);
+}
+
+function renderCreateGroupMembersList(list) {
+    const container = document.getElementById("createGroupMembersList");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (list.length === 0) {
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-soft); font-size:12.5px;">No colleagues found.</div>';
+        return;
+    }
+
+    list.forEach(u => {
+        const isOnline = u.is_online === true || u.is_online === 'true' || u.is_online === 1;
+        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="font-size:10px; background:rgba(255,122,0,0.15); color:var(--orange); border:1px solid rgba(255,122,0,0.3); padding:1px 6px; border-radius:100px; margin-left:6px; font-weight:700;">${u.role.toUpperCase()}</span>` : '';
+        const avatarHtml = getUserAvatarHtml(u.name, 32, isOnline);
+
+        container.innerHTML += `
+            <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:10px; cursor:pointer; gap:10px; transition:all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                    ${avatarHtml}
+                    <div style="flex:1; min-width:0; text-align:left;">
+                        <div style="font-weight:600; font-size:13px; color:#fff; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <span>${escapeHTML(u.name)}</span>
+                            ${roleLabel}
+                        </div>
+                        <div style="font-size:11px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">${escapeHTML(u.email)}</div>
+                    </div>
+                </div>
+                <input type="checkbox" name="groupMember" value="${u.id}" onchange="updateCreateGroupSelectedCount()" style="width:16px; height:16px; accent-color:var(--orange); cursor:pointer; flex-shrink:0;" />
+            </label>
+        `;
+    });
+}
+
+function updateCreateGroupSelectedCount() {
+    const checked = document.querySelectorAll('#createGroupMembersList input[type="checkbox"]:checked');
+    const badge = document.getElementById("selectedMemberCount");
+    if (badge) badge.textContent = `${checked.length} selected`;
 }
 
 async function submitCreateGroup(e) {
@@ -784,49 +932,92 @@ async function submitCreateGroup(e) {
     }
 }
 
+// =========================================================================
+// ADD MEMBERS TO EXISTING GROUP MODAL
+// =========================================================================
+
 let activeAddGroupMembersList = [];
 
 async function openAddMemberModal(groupId) {
+    if (!groupId) groupId = activeGroupConversationId;
+    if (!groupId) {
+        alert("Please select a group first.");
+        return;
+    }
+    
     openModal("addGroupMemberModal");
-    const container = document.getElementById("addMemberSearchList");
-    container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">Loading directory...</div>';
-    document.getElementById("addMemberSearch").value = "";
+    
+    const container = document.getElementById("addGroupMembersList");
+    if (container) {
+        container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--ink-soft); font-size:13px;"><span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Loading colleagues directory...</div>';
+    }
+    if (document.getElementById("addMemberSearchInput")) {
+        document.getElementById("addMemberSearchInput").value = "";
+    }
     
     try {
         const res = await apiCall(`/chat/conversations/${groupId}/messages`);
         const existingMemberIds = new Set((res.members || []).map(m => m.id));
         
         allUsers = await apiCall("/chat/users");
-        activeAddGroupMembersList = allUsers.filter(u => !existingMemberIds.has(u.id));
+        activeAddGroupMembersList = (allUsers || []).filter(u => !existingMemberIds.has(u.id));
         
         renderAddGroupMembersList(activeAddGroupMembersList);
     } catch(e) {
-        container.innerHTML = '<div style="padding:15px; text-align:center; color:red;">Failed to load employees.</div>';
+        console.error("Error loading colleagues for group:", e);
+        if (container) {
+            container.innerHTML = '<div style="padding:24px; text-align:center; color:#ef4444; font-size:13px;">Failed to load employees. Please try again.</div>';
+        }
     }
 }
 
 function filterAddGroupMembers() {
-    const q = document.getElementById("addMemberSearch").value.toLowerCase();
-    const filtered = activeAddGroupMembersList.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    const q = (document.getElementById("addMemberSearchInput") ? document.getElementById("addMemberSearchInput").value : "").toLowerCase();
+    const filtered = activeAddGroupMembersList.filter(u => 
+        (u.name || '').toLowerCase().includes(q) || 
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.role || '').toLowerCase().includes(q)
+    );
     renderAddGroupMembersList(filtered);
 }
 
 function renderAddGroupMembersList(list) {
-    const container = document.getElementById("addMemberSearchList");
+    const container = document.getElementById("addGroupMembersList");
+    if (!container) return;
     container.innerHTML = "";
+
     if (list.length === 0) {
-        container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--ink-soft);">All eligible colleagues are already members.</div>';
+        container.innerHTML = `
+            <div style="padding:30px 15px; text-align:center; color:var(--ink-soft);">
+                <div style="font-size:28px; margin-bottom:8px;">✨</div>
+                <div style="font-size:13px; font-weight:600; color:#fff;">All eligible colleagues are already in this group!</div>
+                <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Everyone on your team has been added.</div>
+            </div>
+        `;
         return;
     }
+
     list.forEach(u => {
+        const isOnline = u.is_online === true || u.is_online === 'true' || u.is_online === 1;
+        const roleLabel = (u.role === 'admin' || u.role === 'team_leader') ? `<span style="font-size:9.5px; background:rgba(255,122,0,0.15); color:var(--orange); border:1px solid rgba(255,122,0,0.3); padding:1px 5px; border-radius:4px; margin-left:6px; font-weight:700;">${u.role.toUpperCase()}</span>` : '';
+        const avatarHtml = getUserAvatarHtml(u.name, 36, isOnline);
+
         container.innerHTML += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--glass-border);">
-                <div>
-                    <div style="font-weight:600; font-size:13px; color:#fff;">${escapeHTML(u.name)}</div>
-                    <div style="font-size:11px; color:var(--ink-soft);">${escapeHTML(u.email)}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px; margin-bottom:6px; gap:12px; transition:all 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                    ${avatarHtml}
+                    <div style="flex:1; min-width:0; text-align:left;">
+                        <div style="font-weight:600; font-size:13.5px; color:#ffffff; line-height:1.3; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <span>${escapeHTML(u.name)}</span>
+                            ${roleLabel}
+                        </div>
+                        <div style="font-size:11.5px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                            ${escapeHTML(u.email)}
+                        </div>
+                    </div>
                 </div>
-                <button type="button" class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="addGroupMember(${activeGroupConversationId}, ${u.id}, this)">
-                    + Add
+                <button type="button" onclick="addGroupMember(${activeGroupConversationId}, ${u.id}, this)" style="width:auto !important; min-width:76px; height:32px; padding:0 14px !important; font-size:12px !important; font-weight:700 !important; border-radius:8px !important; background:linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color:#ffffff !important; border:none !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; gap:4px; flex-shrink:0 !important; cursor:pointer !important; box-shadow:0 2px 8px rgba(16,185,129,0.25);">
+                    <span style="font-size:14px; font-weight:bold;">+</span> Add
                 </button>
             </div>
         `;
@@ -834,20 +1025,24 @@ function renderAddGroupMembersList(list) {
 }
 
 async function addGroupMember(groupId, userId, btn) {
+    if (!groupId) groupId = activeGroupConversationId;
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "Adding...";
+        btn.innerHTML = `<span>⏳</span> Adding...`;
     }
     try {
         await apiCall(`/chat/groups/${groupId}/members`, "POST", { user_id: userId });
         activeAddGroupMembersList = activeAddGroupMembersList.filter(u => u.id !== userId);
         renderAddGroupMembersList(activeAddGroupMembersList);
         await refreshGroupThread(false);
+        if (typeof showGlobalAlert === "function") {
+            showGlobalAlert("Member Added", "Team member joined the group successfully!", "success");
+        }
     } catch(e) {
         alert(e.message || "Failed to add member.");
         if (btn) {
             btn.disabled = false;
-            btn.textContent = "+ Add";
+            btn.innerHTML = `<span>+</span> Add`;
         }
     }
 }
